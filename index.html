@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locatm - Pocket ATM & Stock Market</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase Client Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- টপ হেডার -->
+  <header>
+    <div class="logo-wrap">
+      <span class="brand-logo" id="brandTitle">Locatm</span>
+      <span class="token-badge" id="tokenBadge">LTM Token</span>
+    </div>
+    <div class="header-right">
+      <div class="token-badge" style="color:var(--gold); border-color:var(--gold);">👑 VIP Level 1</div>
+      <button class="btn btn-outline" style="padding:6px 10px;" onclick="openModal('profileModal')">👤 Profile</button>
+      <button class="btn btn-outline" style="padding:6px 10px;" onclick="openModal('videoModal')">📺 Tutorial</button>
+    </div>
+  </header>
+
+  <!-- লাইভ মারকুই নোটিস -->
+  <div class="marquee-bar">
+    <marquee id="marqueeText">📢 স্বাগতম Locatm-এ! আপনার লোকাল ভেরিফাইড এজেন্টের সাথে ফেস-টু-ফেস দেখা করে ইনস্ট্যান্ট ক্যাশ-আউট করুন। ডেইলি টপ ইনভেস্টর পাবেন আকর্ষণীয় প্রাইজমানি!</marquee>
+  </div>
+
+  <div class="container">
+    
+    <!-- ওয়ালেট ব্যালেন্স ড্যাশবোর্ড -->
+    <div class="wallet-card">
+      <div class="wallet-item">
+        <h4>💳 Main Balance</h4>
+        <p id="mainBalance">$0.00</p>
+      </div>
+      <div class="wallet-item">
+        <h4>🔒 Locked / Invested</h4>
+        <p id="lockedBalance">$0.00</p>
+      </div>
+      <div class="wallet-item">
+        <h4>🪙 Native Token (LTM)</h4>
+        <p><span id="coinBalance">0.0000</span> <small style="font-size:12px; color:var(--accent);" id="coinUsdVal">($0.00)</small></p>
+      </div>
+      <div class="wallet-item">
+        <h4>📈 Total Profit Earned</h4>
+        <p class="profit-text" id="totalProfit">$0.00</p>
+      </div>
+    </div>
+
+    <!-- প্রধান অ্যাকশন বাটনসমূহ -->
+    <div class="action-grid">
+      <button class="btn btn-primary" onclick="openModal('depositModal')">➕ Deposit</button>
+      <button class="btn btn-accent" onclick="openModal('withdrawModal')">➖ Withdraw</button>
+      <button class="btn btn-outline" onclick="openModal('p2pModal')">🔄 P2P Transfer</button>
+      <button class="btn btn-gold" onclick="scrollToSection('agentSection')">📍 Cashout Agent</button>
+      <button class="btn btn-outline" onclick="openModal('swapModal')">🪙 Trade LTM</button>
+      <button class="btn btn-outline" onclick="openModal('referralModal')">👥 Refer & Earn</button>
+    </div>
+
+    <!-- স্পনসর ব্যানার সেকশন -->
+    <div class="sponsor-box" id="sponsorSpace">
+      🎬 <strong>SPONSOR AD SPOT</strong><br>
+      <small>অফিসিয়াল স্পনসর পার্টনার ব্যানার বা ভিডিও ডিসপ্লে স্পেস (অ্যাডমিন নিয়ন্ত্রিত)</small>
+    </div>
+
+    <!-- ২৪ ঘণ্টার স্টক মার্কেট (১০০+ ইউনিক কোম্পানি) -->
+    <div class="section-head">
+      <h3>🌐 Global Stock Market (100+ Companies)</h3>
+      <small style="color:var(--text-muted);">২৪ ঘণ্টা সাইকেল • হিডেন অটো-রিটার্ন</small>
+    </div>
+    <div class="stock-grid" id="stockGridContainer">
+      <!-- জাভাস্ক্রিপ্ট স্বয়ংক্রিয়ভাবে ১০০+ কোম্পানি রেন্ডার করবে -->
+    </div>
+
+    <!-- চলমান ইনভেস্টমেন্ট ট্র্যাকার -->
+    <div class="section-head">
+      <h3>⏳ Active Investments</h3>
+    </div>
+    <div id="activeInvestmentsList" style="margin-bottom: 25px;">
+      <div style="background:var(--bg-card); border:1px solid var(--border); padding:15px; border-radius:10px; color:var(--text-muted); font-size:13px; text-align:center;">
+        বর্তমানে কোনো সক্রিয় ইনভেস্টমেন্ট নেই। উপরের যেকোনো কোম্পানিতে ইনভেস্ট করুন।
+      </div>
+    </div>
+
+    <!-- লোকাল এজেন্ট ক্যাশ-আউট নেটওয়ার্ক -->
+    <div class="section-head" id="agentSection">
+      <h3>📍 Nearby Verified Agents (ফেস-টু-ফেস ক্যাশ-আউট)</h3>
+      <button class="btn btn-outline" style="font-size:12px; padding:5px 10px;" onclick="openModal('agentApplyModal')">Become an Agent</button>
+    </div>
+    
+    <!-- লোকেশন ফিল্টার বার -->
+    <div class="agent-filter-box">
+      <select class="input-field" id="filterDistrict" onchange="filterAgents()">
+        <option value="">সকল জেলা</option>
+        <option value="গাজীপুর">গাজীপুর</option>
+        <option value="ঢাকা">ঢাকা</option>
+        <option value="নারায়ণগঞ্জ">নারায়ণগঞ্জ</option>
+      </select>
+      <select class="input-field" id="filterThana" onchange="filterAgents()">
+        <option value="">সকল থানা</option>
+        <option value="কোনাবাড়ী">কোনাবাড়ী</option>
+        <option value="জয়দেবপুর">জয়দেবপুর</option>
+        <option value="টঙ্গী">টঙ্গী</option>
+      </select>
+      <input type="text" class="input-field" id="filterArea" placeholder="এলাকা / বাজার (যেমন: মৌচাক)" onkeyup="filterAgents()">
+    </div>
+
+    <div class="agent-list" id="agentListContainer">
+      <!-- এজেন্ট কার্ড ডায়নামিকালি আসবে -->
+    </div>
+
+    <!-- লিডারবোর্ড ও ডেইলি বাউন্টি -->
+    <div class="section-head">
+      <h3>🏆 Leaderboard & Top Earners</h3>
+    </div>
+    <div class="leaderboard-card">
+      <div class="leader-row" style="font-weight:700; color:var(--text-muted);">
+        <span>মেম্বার / ইউজার</span>
+        <span>ক্যাটাগরি</span>
+        <span>পুরস্কার / রিওয়ার্ড</span>
+      </div>
+      <div class="leader-row">
+        <span>🥇 User_8829 (গাজীপুর)</span>
+        <span style="color:var(--gold);">Daily Top Investor</span>
+        <span style="color:var(--accent);">+$25.00 Bonus</span>
+      </div>
+      <div class="leader-row">
+        <span>🥈 User_4190 (কোনাবাড়ী)</span>
+        <span style="color:#38bdf8;">Top Referral Leader (85 Ref)</span>
+        <span style="color:var(--accent);">+$50.00 Milestone</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- মোবাইল ফিক্সড বটম ন্যাভিগেশন -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <span>🏠</span>
+      <span>Home</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('stockGridContainer')">
+      <span>💼</span>
+      <span>Stocks</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('agentSection')">
+      <span>📍</span>
+      <span>Agents</span>
+    </div>
+    <div class="nav-item" onclick="openModal('referralModal')">
+      <span>👥</span>
+      <span>Refer</span>
+    </div>
+    <div class="nav-item" onclick="openModal('profileModal')">
+      <span>👤</span>
+      <span>Profile</span>
+    </div>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- সর্বজনীন ডাবল কনফার্মেশন মডাল (YES / NO) -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <h3 style="color:var(--primary);">⚠️ লেনদেন নিশ্চিতকরণ</h3>
+      <p id="confirmMessage" style="font-size:14px; margin: 10px 0; color:var(--text-muted);"></p>
+      <div class="modal-btns">
+        <button class="btn btn-danger" onclick="closeModal('confirmModal')">না (Cancel)</button>
+        <button class="btn btn-accent" id="confirmOkBtn">হ্যাঁ (Confirm)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ইনভেস্টমেন্ট মডাল -->
+  <div class="modal-overlay" id="investModal">
+    <div class="modal-box">
+      <h3 id="investModalTitle">Invest in Stock</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">২৪ ঘণ্টা সাইকেল। লাভ ও মূল টাকা স্বয়ংক্রিয়ভাবে আপনার মেইন ব্যালেন্সে জমা হবে।</p>
+      <label style="font-size:12px;">ইনভেস্টমেন্ট অ্যামাউন্ট ($):</label>
+      <input type="number" id="investAmountInput" class="input-field" value="10" min="0.1" step="0.1" style="margin:6px 0 15px;">
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('investModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitInvestOrder()">Invest Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- উইথড্রাল মডাল (সোশ্যাল ভিডিও রিভিউ ডিসকাউন্ট গেটওয়ে সহ) -->
+  <div class="modal-overlay" id="withdrawModal">
+    <div class="modal-box">
+      <h3>➖ ব্যালেন্স উত্তোলন (Withdraw)</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">কোম্পানি থেকে সরাসরি উইথড্রাল প্রতি সপ্তাহের নির্ধারিত দিনে প্রসেস হয়। তাৎক্ষণিক ক্যাশ পেতে লোকাল এজেন্টের মাধ্যমে তুলুন।</p>
+      
+      <label style="font-size:12px;">উইথড্রাল অ্যামাউন্ট ($):</label>
+      <input type="number" id="withdrawAmount" class="input-field" placeholder="মিনিমাম $৫০" style="margin-bottom:10px;">
+
+      <!-- ভাইরাল রিভিউ ডিসকাউন্ট বক্স -->
+      <div style="background:#0b1329; border:1px solid #1d4ed8; padding:12px; border-radius:8px; margin-bottom:12px;">
+        <span style="font-size:12px; color:#38bdf8; font-weight:700;">🎁 স্পেশাল ফি ডিসকাউন্ট ও বোনাস গেট:</span>
+        <p style="font-size:11px; color:var(--text-muted); margin:4px 0 8px;">Facebook বা TikTok-এ Locatm-এর পজিটিভ রিভিউ ভিডিও লিংক দিন এবং পান সম্পূর্ণ ০% ফি + $১ ইনস্ট্যান্ট বোনাস!</p>
+        <input type="url" id="socialReviewUrl" class="input-field" placeholder="ভিডিওর লিংক দিন (ঐচ্ছিক)">
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('withdrawModal')">Cancel</button>
+        <button class="btn btn-accent" onclick="submitWithdraw()">উত্তোলন রিকোয়েস্ট পাঠান</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- রেফারেল হাব ও প্রফিট শেয়ারিং মডাল -->
+  <div class="modal-overlay" id="referralModal">
+    <div class="modal-box">
+      <h3>👥 Refer & Profit Share Hub</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">আপনার রেফারে জয়েন করা মেম্বারদের ২৪ ঘণ্টার উপার্জিত <strong>লাভ (Profit)</strong> থেকে আপনি পাবেন ১০% সরাসরি কমিশন!</p>
+      
+      <div style="background:#0b0f19; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">
+        <label style="font-size:11px; color:var(--text-muted);">আপনার ইউনিক রেফারেল লিংক:</label>
+        <input type="text" id="myRefLink" class="input-field" value="https://locatm.com/?ref=USER9981" readonly style="margin-top:4px;">
+        <button class="btn btn-outline" style="width:100%; margin-top:8px; font-size:12px;" onclick="copyRefLink()">📋 কপি লিংক</button>
+      </div>
+
+      <div style="font-size:12px; color:var(--text-muted);">
+        <p>• টোটাল রেফারেল মেম্বার: <strong style="color:#fff;" id="refCount">০ জন</strong></p>
+        <p>• রেফারেল থেকে উপার্জিত মোট কমিশন: <strong style="color:var(--accent);" id="refEarnings">$0.00</strong></p>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('referralModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- এজেন্ট হওয়ার আবেদন মডাল (Full KYC) -->
+  <div class="modal-overlay" id="agentApplyModal">
+    <div class="modal-box">
+      <h3>📍 Apply for Verified Agent Node</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">এজেন্ট হয়ে প্রতি ক্যাশ-আউটে ১০% পর্যন্ত কমিশন লাভ করুন। আবেদনের জন্য সম্পূর্ণ সঠিক তথ্য দেওয়া বাধ্যতামূলক।</p>
+      
+      <input type="text" id="agentNidName" class="input-field" placeholder="এনআইডি অনুযায়ী পূর্ণ নাম" style="margin-bottom:8px;">
+      <input type="text" id="agentNidNumber" class="input-field" placeholder="জাতীয় পরিচয়পত্র (NID) নম্বর" style="margin-bottom:8px;">
+      <input type="tel" id="agentPhone" class="input-field" placeholder="প্রাথমিক ফোন নম্বর (বিকাশ/নগদ)" style="margin-bottom:8px;">
+      <input type="tel" id="agentAltPhone" class="input-field" placeholder="জরুরি বিকল্প হোয়াটসঅ্যাপ নম্বর" style="margin-bottom:8px;">
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+        <input type="text" id="agentDistrict" class="input-field" placeholder="জেলা (যেমন: গাজীপুর)">
+        <input type="text" id="agentThana" class="input-field" placeholder="থানা (যেমন: কোনাবাড়ী)">
+      </div>
+      <input type="text" id="agentArea" class="input-field" placeholder="বাজার / লোকাল এলাকা (যেমন: মৌচাক বাজার)" style="margin-bottom:8px;">
+      <input type="text" id="agentShopName" class="input-field" placeholder="দোকানের নাম / সুনির্দিষ্ট ঠিকানা" style="margin-bottom:12px;">
+
+      <p style="font-size:11px; color:var(--gold);">* এজেন্ট অ্যাকাউন্ট সিকিউরিটি ফি $১০০ যা ড্যাশবোর্ড থেকে হোল্ড হবে।</p>
+      
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('agentApplyModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAgentApplication()">আবেদন জমা দিন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- টিউটোরিয়াল ভিডিও মডাল -->
+  <div class="modal-overlay" id="videoModal">
+    <div class="modal-box">
+      <h3>📺 কাজের নিয়ম ও ভিডিও টিউটোরিয়াল</h3>
+      <div style="background:#000; height:220px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); margin:12px 0;">
+        <span id="videoPlaceholder">[YouTube Tutorial Video Player]</span>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('videoModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- স্ক্রিপ্ট ফাইল কানেকশন -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
