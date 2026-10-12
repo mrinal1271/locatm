@@ -15,7 +15,7 @@
       background: rgba(11, 16, 32, 0.95);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--glass-border);
-      padding: 14px 20px;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -25,28 +25,27 @@
     }
     .admin-overview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
     }
     .overview-card {
       background: linear-gradient(135deg, rgba(20, 28, 50, 0.8), rgba(10, 15, 30, 0.9));
       border: 1px solid var(--glass-border-bright);
       border-radius: var(--card-radius);
-      padding: 20px;
+      padding: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.4);
       position: relative;
-      overflow: hidden;
     }
     .overview-card h4 {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 8px;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
     }
     .overview-card p {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 900;
       color: #fff;
     }
@@ -54,19 +53,18 @@
       background: var(--bg-card);
       border: 1px solid var(--glass-border);
       border-radius: var(--card-radius);
-      padding: 18px;
+      padding: 16px;
       overflow-x: auto;
-      margin-bottom: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12px;
       text-align: left;
     }
     th, td {
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--glass-border);
       white-space: nowrap;
     }
@@ -74,7 +72,7 @@
       color: var(--text-muted);
       font-weight: 700;
       text-transform: uppercase;
-      font-size: 11px;
+      font-size: 10px;
     }
     .admin-panel-section {
       display: none;
@@ -86,11 +84,11 @@
 </head>
 <body>
 
-  <!-- ================= ১. সিকিউর অ্যাডমিন লগইন গেটওয়ে ================= -->
+  <!-- ১. সিকিউর অ্যাডমিন লগইন -->
   <div id="adminAuthScreen" class="modal-overlay active" style="z-index:9999;">
-    <div class="modal-box" style="max-width:380px;">
-      <div style="text-align:center; margin-bottom:18px;">
-        <h2 style="color:#ef4444; font-size:24px;">🔒 Root Master Login</h2>
+    <div class="modal-box" style="max-width:360px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <h2 style="color:#ef4444; font-size:22px;">🔒 Root Master Login</h2>
         <p style="font-size:12px; color:var(--text-muted);">Cloud Authorization Required</p>
       </div>
       <input type="email" id="adminLogEmail" class="input-field" placeholder="অ্যাডমিন ইমেইল">
@@ -99,29 +97,29 @@
     </div>
   </div>
 
-  <!-- ================= ২. অ্যাডমিন মূল ইন্টারফেস ================= -->
+  <!-- ২. মূল ড্যাশবোর্ড ইন্টারফেস -->
   <div id="adminDashboardWrapper" style="display:none;">
 
     <!-- টপবার -->
     <div class="admin-navbar">
-      <div style="display:flex; align-items:center; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
         <button class="icon-btn" onclick="toggleAdminDrawer(true)" title="কন্ট্রোল মেনু">☰</button>
-        <span class="brand-logo" style="font-size:20px;">Locatm Admin</span>
+        <span class="brand-logo" style="font-size:18px;">Locatm Admin</span>
       </div>
       
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:11px; color:var(--accent); font-weight:800; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); padding:6px 12px; border-radius:10px;" id="liveSyncStatus">🟢 Live Realtime Sync</span>
-        <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="window.open('index.html', '_blank')">🌐 Client App</button>
-        <button class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="adminLogout()">Logout</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:10px; color:var(--accent); font-weight:800; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); padding:5px 8px; border-radius:8px;">🟢 Live Sync</span>
+        <button class="btn btn-outline" style="padding:5px 8px; font-size:11px;" onclick="window.open('index.html', '_blank')">Client App</button>
+        <button class="btn btn-danger" style="padding:5px 8px; font-size:11px;" onclick="adminLogout()">Logout</button>
       </div>
     </div>
 
-    <!-- ৩-ডট সাইডবার ড্রয়ার মেনু -->
+    <!-- সাইড ড্রয়ার মেনু -->
     <div class="drawer-overlay" id="adminDrawerOverlay" onclick="toggleAdminDrawer(false)"></div>
     <div class="drawer-content" id="adminDrawerMenu">
       <div class="drawer-header">
-        <h3 style="color:#38bdf8; font-size:18px;">মাস্টার কন্ট্রোল মেনু</h3>
-        <button class="icon-btn" style="width:32px; height:32px;" onclick="toggleAdminDrawer(false)">✕</button>
+        <h3 style="color:#38bdf8; font-size:16px;">মাস্টার কন্ট্রোল মেনু</h3>
+        <button class="icon-btn" style="width:28px; height:28px;" onclick="toggleAdminDrawer(false)">✕</button>
       </div>
 
       <ul class="drawer-links">
@@ -163,7 +161,7 @@
         </li>
         <li>
           <button class="drawer-btn" onclick="switchAdminSection('secStocks')">
-            <div class="btn-icon-wrap bg-trd">📈</div>
+            <div class="btn-icon-wrap bg-his">📈</div>
             <span>১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট</span>
           </button>
         </li>
@@ -189,9 +187,9 @@
     </div>
 
     <!-- কন্টেইনার -->
-    <div class="container" style="margin-top:24px;">
+    <div class="container" style="margin-top:20px;">
 
-      <!-- ================= সেকশন ১: ড্যাশবোর্ড ওভারভিউ (সক্রিয় ইনভেস্টমেন্ট মেট্রিকসহ) ================= -->
+      <!-- সেকশন ১: ড্যাশবোর্ড ওভারভিউ (মোট সক্রিয় ইনভেস্টমেন্ট মেট্রিকসহ) -->
       <div id="secOverview" class="admin-panel-section active">
         <div class="section-title">
           <span>📊 প্ল্যাটফর্ম লাইভ মেট্রিক্স ও ওভারভিউ</span>
@@ -210,7 +208,6 @@
             <h4>মোট পেইড উত্তোলন</h4>
             <p id="statTotalWithdraw" style="color:var(--gold);">$0.00</p>
           </div>
-          <!-- নতুন মেট্রিক: সক্রিয় ইনভেস্টমেন্ট ভলিউম -->
           <div class="overview-card">
             <h4>মোট সক্রিয় স্টক ইনভেস্টমেন্ট</h4>
             <p id="statActiveInvestments" style="color:#38bdf8;">$0.00</p>
@@ -220,59 +217,48 @@
             <p id="statLtmRate" style="color:#a78bfa;">$0.10</p>
           </div>
           <div class="overview-card">
-            <h4>মোট কয়েন হোল্ডিং ভলিউম</h4>
-            <p id="statTotalCoinsHeld" style="color:#22d3ee;">0.00 LTM</p>
-          </div>
-          <div class="overview-card">
             <h4>পেন্ডিং উত্তোলন রিকোয়েস্ট</h4>
             <p id="statPendingWithdrawals" style="color:#ef4444;">0 টি</p>
           </div>
         </div>
 
-        <!-- মাস্টার ফিচার সুইচসমূহ -->
+        <!-- মাস্টার ফিচার সুইচ -->
         <div class="section-title">
           <span>⚡ গ্লোবাল ফিচার মাস্টার অন/অফ সুইচ</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:28px;">
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:24px;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong>এজেন্ট ক্যাশ-আউট নেটওয়ার্ক</strong><br>
               <small style="color:var(--text-muted);">মেম্বার ও এজেন্ট সুবিধা</small>
             </div>
-            <input type="checkbox" id="switchAgent" style="width:20px; height:20px;" onchange="toggleMasterFeature('agent_system', this.checked)">
+            <input type="checkbox" id="switchAgent" style="width:18px; height:18px;" onchange="toggleMasterFeature('agent_system', this.checked)">
           </div>
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong>কোম্পানি সরাসরি উত্তোলন</strong><br>
               <small style="color:var(--text-muted);">টাকা তোলার রিকোয়েস্ট গ্রহণ</small>
             </div>
-            <input type="checkbox" id="switchWithdraw" style="width:20px; height:20px;" checked onchange="toggleMasterFeature('withdrawals', this.checked)">
+            <input type="checkbox" id="switchWithdraw" style="width:18px; height:18px;" checked onchange="toggleMasterFeature('withdrawals', this.checked)">
           </div>
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong>স্টক ইনভেস্টমেন্ট সাইকেল</strong><br>
               <small style="color:var(--text-muted);">২৪ ঘণ্টার ইনভেস্টমেন্ট</small>
             </div>
-            <input type="checkbox" id="switchInvest" style="width:20px; height:20px;" checked onchange="toggleMasterFeature('investments', this.checked)">
+            <input type="checkbox" id="switchInvest" style="width:18px; height:18px;" checked onchange="toggleMasterFeature('investments', this.checked)">
           </div>
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong>P2P ট্রান্সফার সিস্টেম</strong><br>
-              <small style="color:var(--text-muted);">ইউজার-টু-ইউজার এসক্রো</small>
+              <small style="color:var(--text-muted);">ইউজার-টু-ইউজার ফান্ড</small>
             </div>
-            <input type="checkbox" id="switchP2P" style="width:20px; height:20px;" checked onchange="toggleMasterFeature('p2p', this.checked)">
-          </div>
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <strong>Trade LTM সোয়াপ</strong><br>
-              <small style="color:var(--text-muted);">কয়েন কেনা ও বেচা</small>
-            </div>
-            <input type="checkbox" id="switchTrade" style="width:20px; height:20px;" checked onchange="toggleMasterFeature('trade_ltm', this.checked)">
+            <input type="checkbox" id="switchP2P" style="width:18px; height:18px;" checked onchange="toggleMasterFeature('p2p', this.checked)">
           </div>
         </div>
       </div>
 
-      <!-- ================= সেকশন ২: পেন্ডিং ট্রানজেকশন ================= -->
+      <!-- সেকশন ২: পেন্ডিং ট্রানজেকশন -->
       <div id="secPending" class="admin-panel-section">
         <div class="section-title">
           <span>⏳ পেন্ডিং ডিপোজিট ও উত্তোলন রিকোয়েস্ট</span>
@@ -284,7 +270,7 @@
                 <th>User ID</th>
                 <th>টাইপ</th>
                 <th>পরিমাণ</th>
-                <th>মেথড ও TrxID/ঠিকানা</th>
+                <th>মেথড ও TrxID</th>
                 <th>তারিখ</th>
                 <th>সিদ্ধান্ত</th>
               </tr>
@@ -294,7 +280,7 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৩: ইউজার ম্যানেজমেন্ট ================= -->
+      <!-- সেকশন ৩: ইউজার ম্যানেজমেন্ট -->
       <div id="secUsers" class="admin-panel-section">
         <div class="section-title">
           <span>👥 সকল ইউজার অডিট ও ব্যালেন্স কন্ট্রোল</span>
@@ -319,27 +305,26 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৪: ওয়ান-ক্লিক লাইভ চ্যাট সাপোর্ট (রিপ্লাই, এডিট, ডিলিট) ================= -->
+      <!-- সেকশন ৪: ওয়ান-ক্লিক লাইভ চ্যাট সাপোর্ট -->
       <div id="secMessages" class="admin-panel-section">
         <div class="section-title">
           <span>💬 ইউজার লাইভ চ্যাট হেল্পডেস্ক</span>
         </div>
 
-        <div style="display:flex; gap:8px; margin-bottom:14px;">
-          <button class="btn btn-primary" id="chatFilterUnread" style="padding:6px 12px; font-size:12px;" onclick="filterAdminMessages('unread')">অদেখা মেসেজ (Unread)</button>
-          <button class="btn btn-outline" id="chatFilterAll" style="padding:6px 12px; font-size:12px;" onclick="filterAdminMessages('all')">সকল মেসেজ (All)</button>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <button class="btn btn-primary" id="chatFilterUnread" style="padding:6px 12px; font-size:11px;" onclick="filterAdminMessages('unread')">অদেখা মেসেজ (Unread)</button>
+          <button class="btn btn-outline" id="chatFilterAll" style="padding:6px 12px; font-size:11px;" onclick="filterAdminMessages('all')">সকল মেসেজ (All)</button>
         </div>
 
-        <!-- সরাসরি রিপ্লাই বক্স -->
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:18px; max-width:650px; margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <strong style="color:#38bdf8; font-size:14px;" id="replyTargetLabel">প্রাপক নির্বাচন করুন (নিচের তালিকায় ক্লিক করুন)</strong>
-            <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="clearReplyTarget()">Reset</button>
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px; max-width:600px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:#38bdf8; font-size:13px;" id="replyTargetLabel">প্রাপক নির্বাচন করুন (মেসেজে ক্লিক করুন)</strong>
+            <button class="btn btn-outline" style="padding:4px 6px; font-size:10px;" onclick="clearReplyTarget()">Reset</button>
           </div>
-          <input type="text" id="adminMsgTargetUserId" class="input-field" placeholder="User ID (ক্লিক করলে অটো বসবে)">
-          <textarea id="adminMsgContent" class="input-field" rows="2" placeholder="রিপ্লাই মেসেজ লিখুন..."></textarea>
+          <input type="text" id="adminMsgTargetUserId" class="input-field" placeholder="User ID">
+          <textarea id="adminMsgContent" class="input-field" rows="2" placeholder="রিপ্লাই লিখুন..."></textarea>
           <input type="hidden" id="editingMsgId" value="">
-          <div style="display:flex; gap:10px;">
+          <div style="display:flex; gap:8px;">
             <button class="btn btn-primary" id="sendReplyBtn" onclick="sendAdminDirectMessage()">রিপ্লাই পাঠান</button>
             <button class="btn btn-outline" id="cancelEditBtn" style="display:none;" onclick="cancelMessageEdit()">এডিট বাতিল</button>
           </div>
@@ -362,17 +347,17 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৫: ডিপোজিট মেথডস ================= -->
+      <!-- সেকশন ৫: ডিপোজিট মেথডস -->
       <div id="secDepositMethods" class="admin-panel-section">
         <div class="section-title">
           <span>💳 ডিপোজিট মেথডস কনফিগারেশন</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px;">
-            <h4 style="color:#34d399; margin-bottom:12px;">➕ নতুন ডিপোজিট মেথড যোগ করুন</h4>
-            <input type="text" id="newDepName" class="input-field" placeholder="মেথডের নাম (যেমন: বিকাশ পার্সোনাল, Binance USDT)">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
+            <h4 style="color:#34d399; margin-bottom:10px;">➕ নতুন ডিপোজিট মেথড</h4>
+            <input type="text" id="newDepName" class="input-field" placeholder="মেথডের নাম (যেমন: বিকাশ Personal)">
             <input type="text" id="newDepAddress" class="input-field" placeholder="ওয়ালেট অ্যাড্রেস বা ফোন নম্বর">
-            <textarea id="newDepNote" class="input-field" rows="2" placeholder="ইউজারের জন্য নির্দেশনা/নোট..."></textarea>
+            <textarea id="newDepNote" class="input-field" rows="2" placeholder="নির্দেশনা/নোট..."></textarea>
             <button class="btn btn-accent" style="width:100%;" onclick="saveNewDepositMethod()">মেথড সেভ করুন</button>
           </div>
           <div class="table-container">
@@ -390,19 +375,19 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৬: উত্তোলন মেথডস ও ফি ================= -->
+      <!-- সেকশন ৬: উত্তোলন মেথডস ও ফি -->
       <div id="secWithdrawMethods" class="admin-panel-section">
         <div class="section-title">
           <span>💸 উত্তোলন মেথডস ও ফি কনফিগারেশন</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px;">
-            <h4 style="color:#fbbf24; margin-bottom:12px;">➕ নতুন উত্তোলন মেথড যোগ করুন</h4>
-            <input type="text" id="newWtdName" class="input-field" placeholder="মেথডের নাম (যেমন: বিকাশ Personal, Binance TRC20)">
-            <button class="btn btn-accent" style="width:100%; margin-bottom:18px;" onclick="saveNewWithdrawMethod()">মেথড সেভ করুন</button>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
+            <h4 style="color:#fbbf24; margin-bottom:10px;">➕ নতুন উত্তোলন মেথড</h4>
+            <input type="text" id="newWtdName" class="input-field" placeholder="মেথডের নাম (যেমন: বিকাশ Personal)">
+            <button class="btn btn-accent" style="width:100%; margin-bottom:16px;" onclick="saveNewWithdrawMethod()">মেথড সেভ করুন</button>
 
-            <h4 style="color:#fbbf24; margin-bottom:12px;">⚙️ উত্তোলন প্রসেসিং ফি রেট (%)</h4>
-            <div style="display:flex; gap:10px;">
+            <h4 style="color:#fbbf24; margin-bottom:8px;">⚙️ উত্তোলন প্রসেসিং ফি (%)</h4>
+            <div style="display:flex; gap:8px;">
               <input type="number" id="settingWtdFeeInput" class="input-field" step="0.1" style="margin-bottom:0;" placeholder="যেমন: 2.0">
               <button class="btn btn-primary" onclick="saveWithdrawFee()">সেভ ফি</button>
             </div>
@@ -421,18 +406,18 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৭: ১০০+ স্টক কমিশন রেঞ্জ ও টাইমার বুস্ট ================= -->
+      <!-- সেকশন ৭: ১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট -->
       <div id="secStocks" class="admin-panel-section">
         <div class="section-title">
-          <span>📈 ১০০+ স্টক কমিশন রেঞ্জ ও স্পেশাল টাইমার বুস্ট</span>
+          <span>📈 ১০০+ স্টক কমিশন রেঞ্জ ও টাইমার বুস্ট</span>
         </div>
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px; margin-bottom:20px;">
-          <h4 style="color:#38bdf8; margin-bottom:10px;">গ্লোবাল অটো-কমিশন রেঞ্জ (-৫% থেকে +৫% বা ইচ্ছামতো)</h4>
-          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-            <label style="font-size:12px;">মিনিমাম (%):</label>
-            <input type="number" id="autoMinPercent" class="input-field" style="width:90px; margin-bottom:0;" value="-5.0" step="0.1">
-            <label style="font-size:12px;">ম্যাক্সিমাম (%):</label>
-            <input type="number" id="autoMaxPercent" class="input-field" style="width:90px; margin-bottom:0;" value="5.0" step="0.1">
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px; margin-bottom:16px;">
+          <h4 style="color:#38bdf8; margin-bottom:8px;">গ্লোবাল অটো-কমিশন রেঞ্জ (-৫% থেকে +৫%)</h4>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <label style="font-size:11px;">মিনিমাম (%):</label>
+            <input type="number" id="autoMinPercent" class="input-field" style="width:80px; margin-bottom:0;" value="-5.0" step="0.1">
+            <label style="font-size:11px;">ম্যাক্সিমাম (%):</label>
+            <input type="number" id="autoMaxPercent" class="input-field" style="width:80px; margin-bottom:0;" value="5.0" step="0.1">
             <button class="btn btn-accent" onclick="saveGlobalStockRange()">সেভ রেঞ্জ</button>
           </div>
         </div>
@@ -441,7 +426,6 @@
           <table>
             <thead>
               <tr>
-                <th>লোগো</th>
                 <th>কোম্পানি</th>
                 <th>টিকার</th>
                 <th>ম্যানুয়াল রেট (%)</th>
@@ -454,15 +438,14 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৮: এজেন্ট আবেদন ও সিকিউরিটি ফি ================= -->
+      <!-- সেকশন ৮: এজেন্ট আবেদন ও সিকিউরিটি ফি -->
       <div id="secAgents" class="admin-panel-section">
         <div class="section-title">
           <span>📍 এজেন্ট আবেদন ও সিকিউরিটি ফি কন্ট্রোল</span>
         </div>
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px; margin-bottom:20px; max-width:550px;">
-          <h4 style="color:#f87171; margin-bottom:10px;">এজেন্ট হওয়ার সিকিউরিটি ফি ($)</h4>
-          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">আবেদন জমা দেওয়ার সময় আবেদনকারীর মেইন ব্যালেন্স থেকে এই ডলার কাটা হবে।</p>
-          <div style="display:flex; gap:10px;">
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px; margin-bottom:16px; max-width:480px;">
+          <h4 style="color:#f87171; margin-bottom:8px;">এজেন্ট সিকিউরিটি ফি ($)</h4>
+          <div style="display:flex; gap:8px;">
             <input type="number" id="settingAgentFeeInput" class="input-field" style="margin-bottom:0;" placeholder="যেমন: 10.0">
             <button class="btn btn-primary" onclick="saveAgentSecurityFee()">সেভ ফি</button>
           </div>
@@ -485,16 +468,16 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ৯: লাইভ বাটন ও ভিডিও ================= -->
+      <!-- সেকশন ৯: লাইভ বাটন ও ভিডিও -->
       <div id="secButtons" class="admin-panel-section">
         <div class="section-title">
           <span>⚡ লাইভ আপডেট বাটন ও ভিডিও কন্ট্রোল</span>
         </div>
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px; max-width:600px; margin-bottom:20px;">
-          <h4 style="color:#38bdf8; margin-bottom:12px;">🏏 হোমপেজে নতুন বাটন যোগ করুন</h4>
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px; max-width:540px; margin-bottom:16px;">
+          <h4 style="color:#38bdf8; margin-bottom:10px;">🏏 নতুন বাটন যোগ করুন</h4>
           <input type="text" id="customButtonTitleInput" class="input-field" placeholder="বাটনের শিরোনাম (যেমন: 🏏 লাইভ ক্রিকেট)">
-          <input type="text" id="customButtonUrlInput" class="input-field" placeholder="URL লিংক (যেমন: https://...)">
-          <label style="font-size:12px; display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <input type="text" id="customButtonUrlInput" class="input-field" placeholder="URL লিংক (https://...)">
+          <label style="font-size:11px; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
             <input type="checkbox" id="customButtonEmbedCheck" checked> ইন-অ্যাপ প্লেয়ারে চলবে?
           </label>
           <button class="btn btn-primary" onclick="saveCustomButton()">বাটন যোগ করুন</button>
@@ -514,63 +497,52 @@
         </div>
       </div>
 
-      <!-- ================= সেকশন ১০: ফি, রোডম্যাপ, নোটিস ও সেটিংস ================= -->
+      <!-- সেকশন ১০: সেটিংস -->
       <div id="secSettings" class="admin-panel-section">
         <div class="section-title">
-          <span>⚙️ সেন্ট্রাল সেটিংস, নোটিস ও রোডম্যাপ</span>
+          <span>⚙️ সেন্ট্রাল সেটিংস ও নোটিস</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
-          
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px;">
-            <h4 style="color:var(--gold); margin-bottom:10px;">🪙 LTM লাইভ মার্কেট দর ($)</h4>
-            <div style="display:flex; gap:10px; margin-bottom:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
+            <h4 style="color:var(--gold); margin-bottom:8px;">🪙 LTM লাইভ মার্কেট দর ($)</h4>
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
               <input type="number" id="settingLtmRateInput" class="input-field" step="0.01" style="margin-bottom:0;">
               <button class="btn btn-primary" onclick="saveLtmRate()">Update</button>
             </div>
 
-            <h4 style="color:#38bdf8; margin-bottom:10px;">🔄 P2P ফান্ড ট্রান্সফার ফি (%)</h4>
-            <div style="display:flex; gap:10px; margin-bottom:16px;">
+            <h4 style="color:#38bdf8; margin-bottom:8px;">🔄 P2P ফান্ড ট্রান্সফার ফি (%)</h4>
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
               <input type="number" id="settingP2pFeeInput" class="input-field" step="0.1" style="margin-bottom:0;">
               <button class="btn btn-primary" onclick="saveP2pFee()">Update</button>
             </div>
 
-            <h4 style="color:#34d399; margin-bottom:10px;">👥 রেফারেল বোনাস রেট (%)</h4>
-            <div style="display:flex; gap:10px; margin-bottom:16px;">
+            <h4 style="color:#34d399; margin-bottom:8px;">👥 রেফারেল বোনাস রেট (%)</h4>
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
               <input type="number" id="settingRefRateInput" class="input-field" step="0.5" style="margin-bottom:0;">
               <button class="btn btn-primary" onclick="saveReferralCommission()">Update</button>
             </div>
+          </div>
 
-            <h4 style="color:#38bdf8; margin-bottom:10px;">📢 মারকুই রানিং নোটিস</h4>
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
+            <h4 style="color:var(--accent); margin-bottom:8px;">🎉 প্রথমবার সাইট ওপেনিং নোটিস (Welcome)</h4>
+            <textarea id="settingWelcomeInput" class="input-field" rows="2"></textarea>
+            <button class="btn btn-accent" style="width:100%; margin-bottom:14px;" onclick="saveWelcomeNotice()">সেভ নোটিস</button>
+
+            <h4 style="color:#38bdf8; margin-bottom:8px;">📢 মারকুই রানিং নোটিস</h4>
             <textarea id="settingMarqueeInput" class="input-field" rows="2"></textarea>
             <button class="btn btn-accent" style="width:100%;" onclick="saveMarqueeNotice()">সেভ মারকুই</button>
           </div>
-
-          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:20px;">
-            <h4 style="color:var(--accent); margin-bottom:10px;">🎉 প্রথমবার সাইট ওপেনিং নোটিস (Welcome)</h4>
-            <textarea id="settingWelcomeInput" class="input-field" rows="3" placeholder="ইউজার সাইটে প্রথমবার ঢুকলে যে পপআপ আসবে..."></textarea>
-            <button class="btn btn-accent" style="width:100%; margin-bottom:16px;" onclick="saveWelcomeNotice()">সেভ ওয়েলকাম নোটিস</button>
-
-            <h4 style="color:#38bdf8; margin-bottom:10px;">📺 কাজের ভিডিও লিংক (YouTube Embed)</h4>
-            <input type="text" id="settingVideoUrlInput" class="input-field" placeholder="https://www.youtube.com/embed/...">
-            <button class="btn btn-primary" style="width:100%; margin-bottom:16px;" onclick="saveTutorialVideo()">ভিডিও সেট করুন</button>
-
-            <h4 style="color:#38bdf8; margin-bottom:10px;">🏢 নতুন কোম্পানি রোডম্যাপ পোস্ট</h4>
-            <input type="text" id="companyPostTitleInput" class="input-field" placeholder="পোস্টের শিরোনাম">
-            <textarea id="companyPostContentInput" class="input-field" rows="2" placeholder="রোডম্যাপ বা কোম্পানির পরিকল্পনা..."></textarea>
-            <button class="btn btn-accent" style="width:100%;" onclick="saveCompanyPost()">রোডম্যাপ পাবলিশ করুন</button>
-          </div>
-
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- ডাবল কনফার্মেশন মোডাল -->
+  <!-- কনফার্মেশন মোডাল -->
   <div class="modal-overlay" id="adminConfirmModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;">⚠️ নিশ্চিতকরণ</h3>
-      <p id="adminConfirmMessage" style="font-size:14px; margin:14px 0; color:var(--text-muted);"></p>
+      <p id="adminConfirmMessage" style="font-size:13px; margin:12px 0; color:var(--text-muted);"></p>
       <div class="modal-btns">
         <button class="btn btn-danger" onclick="closeAdminConfirm()">না (Cancel)</button>
         <button class="btn btn-accent" id="adminConfirmOkBtn">হ্যাঁ (Confirm)</button>
@@ -578,26 +550,23 @@
     </div>
   </div>
 
-  <!-- ইউজার ব্যালেন্স এডিটর মোডাল -->
+  <!-- ব্যালেন্স এডিটর মোডাল -->
   <div class="modal-overlay" id="adminEditUserModal">
     <div class="modal-box">
       <h3>✏️ ইউজার ব্যালেন্স এডিটর (<span id="editUserTargetIdText" style="color:#38bdf8;"></span>)</h3>
-      <div style="margin:14px 0;">
-        <label style="font-size:12px; color:var(--text-muted);">মেইন ব্যালেন্স ($):</label>
+      <div style="margin:12px 0;">
+        <label style="font-size:11px; color:var(--text-muted);">মেইন ব্যালেন্স ($):</label>
         <input type="number" id="editUserMainBal" class="input-field">
 
-        <label style="font-size:12px; color:var(--text-muted);">LTM কয়েন ব্যালেন্স:</label>
+        <label style="font-size:11px; color:var(--text-muted);">LTM কয়েন ব্যালেন্স:</label>
         <input type="number" id="editUserLtmBal" class="input-field">
 
-        <label style="font-size:12px; color:var(--text-muted);">লকড / ইনভেস্টেড ব্যালেন্স ($):</label>
+        <label style="font-size:11px; color:var(--text-muted);">লকড / ইনভেস্টেড ব্যালেন্স ($):</label>
         <input type="number" id="editUserLockedBal" class="input-field">
-
-        <label style="font-size:12px; color:var(--text-muted);">ভিআইপি লেভেল:</label>
-        <input type="number" id="editUserVipLevel" class="input-field">
       </div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeAdminEditUserModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="submitUserBalanceChanges()">Save Changes</button>
+        <button class="btn btn-primary" onclick="submitUserBalanceChanges()">Save</button>
       </div>
     </div>
   </div>

@@ -1,9 +1,7 @@
 /**
  * ====================================================================
- * Locatm - Ultra Master Admin Engine (admin.js) [Realtime Sync & Live Chat]
+ * Locatm - Ultra Master Admin Engine (admin.js) [Realtime Sync Engine]
  * ====================================================================
- * রিয়েল-টাইম অটো-সিঙ্ক (রিফ্রেশ ছাড়া লাইভ আপডেট), মোট সক্রিয় ইনভেস্টমেন্ট মেট্রিক,
- * ওয়ান-ক্লিক লাইভ চ্যাট রিপ্লাই, আনরিড/রিড ফিল্টার, মেসেজ এডিট ও ডিলিট।
  */
 
 let pendingAdminAction = null;
@@ -32,112 +30,18 @@ let adminSettings = {
   custom_buttons: []
 };
 
-// ১০০+ স্টক কোম্পানি
+// স্টক কোম্পানি তালিকা
 const ADMIN_STOCKS = [
-  { id: 1, name: "Apple Inc.", ticker: "AAPL", logo: "https://logo.clearbit.com/apple.com" },
-  { id: 2, name: "Microsoft Corp.", ticker: "MSFT", logo: "https://logo.clearbit.com/microsoft.com" },
-  { id: 3, name: "Google Alphabet", ticker: "GOOGL", logo: "https://logo.clearbit.com/google.com" },
-  { id: 4, name: "Amazon.com Inc.", ticker: "AMZN", logo: "https://logo.clearbit.com/amazon.com" },
-  { id: 5, name: "Nvidia Corp.", ticker: "NVDA", logo: "https://logo.clearbit.com/nvidia.com" },
-  { id: 6, name: "Tesla Motors", ticker: "TSLA", logo: "https://logo.clearbit.com/tesla.com" },
-  { id: 7, name: "Meta Platforms", ticker: "META", logo: "https://logo.clearbit.com/meta.com" },
-  { id: 8, name: "Berkshire Hathaway", ticker: "BRK", logo: "https://logo.clearbit.com/berkshirehathaway.com" },
-  { id: 9, name: "Taiwan Semi (TSMC)", ticker: "TSM", logo: "https://logo.clearbit.com/tsmc.com" },
-  { id: 10, name: "Tencent Holdings", ticker: "TCEHY", logo: "https://logo.clearbit.com/tencent.com" },
-  { id: 11, name: "Samsung Electronics", ticker: "SSNG", logo: "https://logo.clearbit.com/samsung.com" },
-  { id: 12, name: "Visa International", ticker: "V", logo: "https://logo.clearbit.com/visa.com" },
-  { id: 13, name: "Mastercard Inc.", ticker: "MA", logo: "https://logo.clearbit.com/mastercard.com" },
-  { id: 14, name: "JPMorgan Chase", ticker: "JPM", logo: "https://logo.clearbit.com/jpmorganchase.com" },
-  { id: 15, name: "Johnson & Johnson", ticker: "JNJ", logo: "https://logo.clearbit.com/jnj.com" },
-  { id: 16, name: "Walmart Global", ticker: "WMT", logo: "https://logo.clearbit.com/walmart.com" },
-  { id: 17, name: "Procter & Gamble", ticker: "PG", logo: "https://logo.clearbit.com/pg.com" },
-  { id: 18, name: "Oracle Corp.", ticker: "ORCL", logo: "https://logo.clearbit.com/oracle.com" },
-  { id: 19, name: "ASML Holding", ticker: "ASML", logo: "https://logo.clearbit.com/asml.com" },
-  { id: 20, name: "Toyota Motor Corp.", ticker: "TM", logo: "https://logo.clearbit.com/toyota.com" },
-  { id: 21, name: "Alibaba Group", ticker: "BABA", logo: "https://logo.clearbit.com/alibaba.com" },
-  { id: 22, name: "Coca-Cola Company", ticker: "KO", logo: "https://logo.clearbit.com/coca-cola.com" },
-  { id: 23, name: "PepsiCo International", ticker: "PEP", logo: "https://logo.clearbit.com/pepsico.com" },
-  { id: 24, name: "Costco Wholesale", ticker: "COST", logo: "https://logo.clearbit.com/costco.com" },
-  { id: 25, name: "Netflix Streaming", ticker: "NFLX", logo: "https://logo.clearbit.com/netflix.com" },
-  { id: 26, name: "Broadcom Inc.", ticker: "AVGO", logo: "https://logo.clearbit.com/broadcom.com" },
-  { id: 27, name: "Cisco Systems", ticker: "CSCO", logo: "https://logo.clearbit.com/cisco.com" },
-  { id: 28, name: "Adobe Creative", ticker: "ADBE", logo: "https://logo.clearbit.com/adobe.com" },
-  { id: 29, name: "Walt Disney Co.", ticker: "DIS", logo: "https://logo.clearbit.com/thewaltdisneycompany.com" },
-  { id: 30, name: "Shell Energy", ticker: "SHEL", logo: "https://logo.clearbit.com/shell.com" },
-  { id: 31, name: "Exxon Mobil", ticker: "XOM", logo: "https://logo.clearbit.com/corporate.exxonmobil.com" },
-  { id: 32, name: "Chevron Oil", ticker: "CVX", logo: "https://logo.clearbit.com/chevron.com" },
-  { id: 33, name: "Sony Group", ticker: "SONY", logo: "https://logo.clearbit.com/sony.com" },
-  { id: 34, name: "Intel Corp.", ticker: "INTC", logo: "https://logo.clearbit.com/intel.com" },
-  { id: 35, name: "AMD Micro Devices", ticker: "AMD", logo: "https://logo.clearbit.com/amd.com" },
-  { id: 36, name: "Qualcomm Tech", ticker: "QCOM", logo: "https://logo.clearbit.com/qualcomm.com" },
-  { id: 37, name: "Nike Athletics", ticker: "NKE", logo: "https://logo.clearbit.com/nike.com" },
-  { id: 38, name: "McDonald's Corp.", ticker: "MCD", logo: "https://logo.clearbit.com/mcdonalds.com" },
-  { id: 39, name: "Starbucks Coffee", ticker: "SBUX", logo: "https://logo.clearbit.com/starbucks.com" },
-  { id: 40, name: "Pfizer Health", ticker: "PFE", logo: "https://logo.clearbit.com/pfizer.com" },
-  { id: 41, name: "AstraZeneca", ticker: "AZN", logo: "https://logo.clearbit.com/astrazeneca.com" },
-  { id: 42, name: "Novartis Pharma", ticker: "NVS", logo: "https://logo.clearbit.com/novartis.com" },
-  { id: 43, name: "SAP Software", ticker: "SAP", logo: "https://logo.clearbit.com/sap.com" },
-  { id: 44, name: "Siemens Energy", ticker: "SIE", logo: "https://logo.clearbit.com/siemens.com" },
-  { id: 45, name: "IBM Computing", ticker: "IBM", logo: "https://logo.clearbit.com/ibm.com" },
-  { id: 46, name: "Airbus Aerospace", ticker: "AIR", logo: "https://logo.clearbit.com/airbus.com" },
-  { id: 47, name: "Boeing Aviation", ticker: "BA", logo: "https://logo.clearbit.com/boeing.com" },
-  { id: 48, name: "SpaceX Starlink", ticker: "SPCX", logo: "https://logo.clearbit.com/spacex.com" },
-  { id: 49, name: "Uber Technologies", ticker: "UBER", logo: "https://logo.clearbit.com/uber.com" },
-  { id: 50, name: "Spotify Music", ticker: "SPOT", logo: "https://logo.clearbit.com/spotify.com" },
-  { id: 51, name: "Airbnb Travel", ticker: "ABNB", logo: "https://logo.clearbit.com/airbnb.com" },
-  { id: 52, name: "Shopify E-Commerce", ticker: "SHOP", logo: "https://logo.clearbit.com/shopify.com" },
-  { id: 53, name: "PayPal Payments", ticker: "PYPL", logo: "https://logo.clearbit.com/paypal.com" },
-  { id: 54, name: "Square Block", ticker: "SQ", logo: "https://logo.clearbit.com/squareup.com" },
-  { id: 55, name: "Robinhood Finance", ticker: "HOOD", logo: "https://logo.clearbit.com/robinhood.com" },
-  { id: 56, name: "Binance Ecosystem", ticker: "BNB", logo: "https://logo.clearbit.com/binance.com" },
-  { id: 57, name: "Coinbase Global", ticker: "COIN", logo: "https://logo.clearbit.com/coinbase.com" },
-  { id: 58, name: "Sony Music", ticker: "SME", logo: "https://logo.clearbit.com/sonymusic.com" },
-  { id: 59, name: "Nintendo Corp.", ticker: "NTDOY", logo: "https://logo.clearbit.com/nintendo.com" },
-  { id: 60, name: "EA Electronic Arts", ticker: "EA", logo: "https://logo.clearbit.com/ea.com" },
-  { id: 61, name: "Target Retail", ticker: "TGT", logo: "https://logo.clearbit.com/target.com" },
-  { id: 62, name: "LVMH Luxury", ticker: "MC", logo: "https://logo.clearbit.com/lvmh.com" },
-  { id: 63, name: "Hermes Fashion", ticker: "RMS", logo: "https://logo.clearbit.com/hermes.com" },
-  { id: 64, name: "Ferrari Motors", ticker: "RACE", logo: "https://logo.clearbit.com/ferrari.com" },
-  { id: 65, name: "Porsche Auto", ticker: "P911", logo: "https://logo.clearbit.com/porsche.com" },
-  { id: 66, name: "BMW Group", ticker: "BMW", logo: "https://logo.clearbit.com/bmw.com" },
-  { id: 67, name: "Mercedes-Benz", ticker: "MBG", logo: "https://logo.clearbit.com/mercedes-benz.com" },
-  { id: 68, name: "Audi Motors", ticker: "AUDI", logo: "https://logo.clearbit.com/audi.com" },
-  { id: 69, name: "Honda Motor", ticker: "HMC", logo: "https://logo.clearbit.com/honda.com" },
-  { id: 70, name: "Hyundai Auto", ticker: "HYMTF", logo: "https://logo.clearbit.com/hyundai.com" },
-  { id: 71, name: "FedEx Express", ticker: "FDX", logo: "https://logo.clearbit.com/fedex.com" },
-  { id: 72, name: "UPS Logistics", ticker: "UPS", logo: "https://logo.clearbit.com/ups.com" },
-  { id: 73, name: "DHL Global", ticker: "DPW", logo: "https://logo.clearbit.com/dhl.com" },
-  { id: 74, name: "Baidu Search", ticker: "BIDU", logo: "https://logo.clearbit.com/baidu.com" },
-  { id: 75, name: "JD.com Retail", ticker: "JD", logo: "https://logo.clearbit.com/jd.com" },
-  { id: 76, name: "Xiaomi Tech", ticker: "XIACF", logo: "https://logo.clearbit.com/mi.com" },
-  { id: 77, name: "BYD Electric Auto", ticker: "BYDDY", logo: "https://logo.clearbit.com/byd.com" },
-  { id: 78, name: "Foxconn Industry", ticker: "HNHPF", logo: "https://logo.clearbit.com/foxconn.com" },
-  { id: 79, name: "Dell Technologies", ticker: "DELL", logo: "https://logo.clearbit.com/dell.com" },
-  { id: 80, name: "HP Computers", ticker: "HPQ", logo: "https://logo.clearbit.com/hp.com" },
-  { id: 81, name: "Lenovo Group", ticker: "LNVGY", logo: "https://logo.clearbit.com/lenovo.com" },
-  { id: 82, name: "Canon Optics", ticker: "CAJ", logo: "https://logo.clearbit.com/canon.com" },
-  { id: 83, name: "Nikon Imaging", ticker: "NINOY", logo: "https://logo.clearbit.com/nikon.com" },
-  { id: 84, name: "Panasonic Corp.", ticker: "PCRFY", logo: "https://logo.clearbit.com/panasonic.com" },
-  { id: 85, name: "LG Electronics", ticker: "LG", logo: "https://logo.clearbit.com/lg.com" },
-  { id: 86, name: "Tata Motors Global", ticker: "TTM", logo: "https://logo.clearbit.com/tatamotors.com" },
-  { id: 87, name: "Infosys Tech", ticker: "INFY", logo: "https://logo.clearbit.com/infosys.com" },
-  { id: 88, name: "Reliance Industries", ticker: "RIGD", logo: "https://logo.clearbit.com/ril.com" },
-  { id: 89, name: "Unilever Consumer", ticker: "UL", logo: "https://logo.clearbit.com/unilever.com" },
-  { id: 90, name: "Nestle Nutrition", ticker: "NSRGY", logo: "https://logo.clearbit.com/nestle.com" },
-  { id: 91, name: "Mondelez Snacks", ticker: "MDLZ", logo: "https://logo.clearbit.com/mondelezinternational.com" },
-  { id: 92, name: "Danone Dairy", ticker: "DANOY", logo: "https://logo.clearbit.com/danone.com" },
-  { id: 93, name: "Rolex Holdings", ticker: "ROLX", logo: "https://logo.clearbit.com/rolex.com" },
-  { id: 94, name: "Zara Inditex", ticker: "IDEXY", logo: "https://logo.clearbit.com/zara.com" },
-  { id: 95, name: "H&M Fashion", ticker: "HNNMY", logo: "https://logo.clearbit.com/hm.com" },
-  { id: 96, name: "Puma Sportswear", ticker: "PUMSY", logo: "https://logo.clearbit.com/puma.com" },
-  { id: 97, name: "Lego Group", ticker: "LEGO", logo: "https://logo.clearbit.com/lego.com" },
-  { id: 98, name: "Colgate-Palmolive", ticker: "CL", logo: "https://logo.clearbit.com/colgatepalmolive.com" },
-  { id: 99, name: "Red Bull Energy", ticker: "RDBL", logo: "https://logo.clearbit.com/redbull.com" },
-  { id: 100, name: "Monster Beverage", ticker: "MNST", logo: "https://logo.clearbit.com/monsterenergy.com" },
-  { id: 101, name: "Zoom Communications", ticker: "ZM", logo: "https://logo.clearbit.com/zoom.us" },
-  { id: 102, name: "Slack Technologies", ticker: "WORK", logo: "https://logo.clearbit.com/slack.com" },
-  { id: 103, name: "Dropbox Cloud", ticker: "DBX", logo: "https://logo.clearbit.com/dropbox.com" },
-  { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com" }
+  { id: 1, name: "Apple Inc.", ticker: "AAPL" },
+  { id: 2, name: "Microsoft Corp.", ticker: "MSFT" },
+  { id: 3, name: "Google Alphabet", ticker: "GOOGL" },
+  { id: 4, name: "Amazon.com Inc.", ticker: "AMZN" },
+  { id: 5, name: "Nvidia Corp.", ticker: "NVDA" },
+  { id: 6, name: "Tesla Motors", ticker: "TSLA" },
+  { id: 7, name: "Meta Platforms", ticker: "META" },
+  { id: 8, name: "Berkshire Hathaway", ticker: "BRK" },
+  { id: 9, name: "Taiwan Semi (TSMC)", ticker: "TSM" },
+  { id: 10, name: "Tencent Holdings", ticker: "TCEHY" }
 ];
 
 function getDB() {
@@ -152,7 +56,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkAdminSession();
 });
 
-// প্ল্যাটফর্ম সেটিংস লোড
 async function fetchPlatformSettings() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -169,7 +72,6 @@ async function fetchPlatformSettings() {
   }
 }
 
-// সেশন চেক
 function checkAdminSession() {
   const isAuth = sessionStorage.getItem("locatm_admin_auth");
   if (isAuth === "true") {
@@ -204,7 +106,7 @@ function adminLogout() {
   window.location.reload();
 }
 
-// ================= অ্যাডমিন রিয়েল-টাইম লিসেনার (কোনো রিফ্রেশ লাগবে না) =================
+// রিয়েল-টাইম লিসেনার (কোনো রিফ্রেশ লাগবে না)
 function initAdminRealtimeListener() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -212,7 +114,6 @@ function initAdminRealtimeListener() {
   adminRealtimeChannels.forEach(ch => dbClient.removeChannel(ch));
   adminRealtimeChannels = [];
 
-  // ১. ট্রানজেকশন লাইভ সিঙ্ক (ইউজার ডিপোজিট/উইথড্র দিলে সাথে সাথে টেবিল আপডেট)
   const txChan = dbClient.channel('admin-tx-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, async () => {
       await loadPendingTransactions();
@@ -221,7 +122,6 @@ function initAdminRealtimeListener() {
     .subscribe();
   adminRealtimeChannels.push(txChan);
 
-  // ২. লাইভ চ্যাট মেসেজ সিঙ্ক (মেসেজ এলে টেবিল আপডেট ও অ্যালার্ট)
   const msgChan = dbClient.channel('admin-msg-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'user_messages' }, async () => {
       await loadAdminSentMessages();
@@ -229,7 +129,6 @@ function initAdminRealtimeListener() {
     .subscribe();
   adminRealtimeChannels.push(msgChan);
 
-  // ৩. ইনভেস্টমেন্ট সিঙ্ক
   const invChan = dbClient.channel('admin-inv-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'investments' }, async () => {
       await loadPlatformOverview();
@@ -238,7 +137,6 @@ function initAdminRealtimeListener() {
   adminRealtimeChannels.push(invChan);
 }
 
-// সাইডবার ড্রয়ার
 function toggleAdminDrawer(open) {
   const d = document.getElementById("adminDrawerMenu");
   const o = document.getElementById("adminDrawerOverlay");
@@ -258,7 +156,6 @@ function switchAdminSection(secId) {
   if (target) target.classList.add('active');
 }
 
-// ডেটা লোড
 async function loadAllAdminData() {
   await loadPlatformOverview();
   await loadUserAuditList();
@@ -272,7 +169,6 @@ async function loadAllAdminData() {
   syncMasterTogglesUI();
 }
 
-// প্ল্যাটফর্ম ওভারভিউ মেট্রিক্স (সক্রিয় ইনভেস্টমেন্ট হিসাবসহ)
 async function loadPlatformOverview() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -281,16 +177,6 @@ async function loadPlatformOverview() {
     const { count: userCount } = await dbClient.from('users').select('*', { count: 'exact', head: true });
     document.getElementById("statTotalUsers").innerText = `${userCount || 0} জন`;
 
-    const { data: users } = await dbClient.from('users').select('ltm_balance');
-    let totalLtm = 0;
-    if (users) {
-      users.forEach(u => {
-        totalLtm += parseFloat(u.ltm_balance || 0);
-      });
-    }
-    document.getElementById("statTotalCoinsHeld").innerText = `${totalLtm.toFixed(2)} LTM`;
-
-    // সক্রিয় ইনভেস্টমেন্ট হিসাব
     const { data: activeInvs } = await dbClient.from('investments').select('amount').eq('status', 'active');
     let totalActiveInvAmount = 0;
     if (activeInvs) {
@@ -300,7 +186,6 @@ async function loadPlatformOverview() {
     }
     document.getElementById("statActiveInvestments").innerText = `$${totalActiveInvAmount.toFixed(2)}`;
 
-    // ট্রানজেকশন হিসেব
     const { data: txs } = await dbClient.from('transactions').select('type, amount, status');
     let depTotal = 0, withTotal = 0, pendingWithdraws = 0;
     if (txs) {
@@ -326,7 +211,6 @@ async function loadPlatformOverview() {
     document.getElementById("settingRefRateInput").value = parseFloat(adminSettings.referral_commission_percent || 10.0);
     document.getElementById("settingMarqueeInput").value = adminSettings.marquee_notice || "";
     document.getElementById("settingWelcomeInput").value = adminSettings.welcome_notice || "";
-    document.getElementById("settingVideoUrlInput").value = adminSettings.tutorial_video_url || "";
   } catch (e) {
     console.error("Overview error:", e);
   }
@@ -338,11 +222,10 @@ function syncMasterTogglesUI() {
   document.getElementById("switchWithdraw").checked = toggles.withdrawals !== false;
   document.getElementById("switchInvest").checked = toggles.investments !== false;
   document.getElementById("switchP2P").checked = toggles.p2p !== false;
-  document.getElementById("switchTrade").checked = toggles.trade_ltm !== false;
 }
 
 async function toggleMasterFeature(featureKey, isEnabled) {
-  adminConfirmAction(`আপনি কি নিশ্চিতভাবে এই ফিচারটি ${isEnabled ? 'চালু' : 'বন্ধ'} করতে চান?`, async () => {
+  adminConfirmAction(`ফিচারটি ${isEnabled ? 'চালু' : 'বন্ধ'} করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.feature_toggles) adminSettings.feature_toggles = {};
     adminSettings.feature_toggles[featureKey] = isEnabled;
@@ -351,11 +234,10 @@ async function toggleMasterFeature(featureKey, isEnabled) {
       key: 'feature_toggles',
       value: adminSettings.feature_toggles
     });
-    alert("ফিচার স্ট্যাটাস সফলভাবে আপডেট হয়েছে!");
+    alert("আপডেট হয়েছে!");
   });
 }
 
-// ইউজার ম্যানেজমেন্ট
 async function loadUserAuditList() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -383,7 +265,7 @@ function renderUserAuditTable(users) {
       <td>$${parseFloat(u.locked_balance || 0).toFixed(2)}</td>
       <td style="color:var(--text-dim);">${u.referred_by || 'Direct'}</td>
       <td>
-        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openAdminEditUserModal('${u.user_id}')">✏️ Edit</button>
+        <button class="btn btn-outline" style="padding:3px 6px; font-size:10px;" onclick="openAdminEditUserModal('${u.user_id}')">✏️ Edit</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -409,7 +291,6 @@ function openAdminEditUserModal(userId) {
   document.getElementById("editUserMainBal").value = activeEditingUser.main_balance;
   document.getElementById("editUserLtmBal").value = activeEditingUser.ltm_balance;
   document.getElementById("editUserLockedBal").value = activeEditingUser.locked_balance;
-  document.getElementById("editUserVipLevel").value = activeEditingUser.vip_level || 1;
 
   document.getElementById("adminEditUserModal").classList.add("active");
 }
@@ -423,24 +304,20 @@ async function submitUserBalanceChanges() {
   const newMain = parseFloat(document.getElementById("editUserMainBal").value);
   const newLtm = parseFloat(document.getElementById("editUserLtmBal").value);
   const newLocked = parseFloat(document.getElementById("editUserLockedBal").value);
-  const newVip = parseInt(document.getElementById("editUserVipLevel").value);
 
   adminConfirmAction(`ইউজার ${activeEditingUser.user_id}-এর ব্যালেন্স পরিবর্তন করতে চান?`, async () => {
     const dbClient = getDB();
     const { error } = await dbClient.from('users').update({
       main_balance: newMain,
       ltm_balance: newLtm,
-      locked_balance: newLocked,
-      vip_level: newVip
+      locked_balance: newLocked
     }).eq('user_id', activeEditingUser.user_id);
 
     if (!error) {
       closeAdminEditUserModal();
       await loadUserAuditList();
       await loadPlatformOverview();
-      alert("ইউজার ব্যালেন্স সফলভাবে আপডেট হয়েছে!");
-    } else {
-      alert("ব্যালেন্স আপডেট ব্যর্থ: " + error.message);
+      alert("ব্যালেন্স আপডেট হয়েছে!");
     }
   });
 }
@@ -456,7 +333,7 @@ async function loadPendingTransactions() {
 
   const { data: txs, error } = await dbClient.from('transactions').select('*').eq('status', 'pending').order('created_at', { ascending: false });
   if (error || !txs || txs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">বর্তমানে কোনো পেন্ডিং রিকোয়েস্ট নেই।</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:14px;">কোনো পেন্ডিং রিকোয়েস্ট নেই।</td></tr>`;
     return;
   }
 
@@ -469,8 +346,8 @@ async function loadPendingTransactions() {
       <td>${t.method} <br><small style="color:#38bdf8;">${t.trx_id ? 'TrxID: ' + t.trx_id : ''}</small></td>
       <td>${new Date(t.created_at).toLocaleString('bn-BD')}</td>
       <td>
-        <button class="btn btn-accent" style="padding:4px 8px; font-size:11px;" onclick="approveTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Approve</button>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="rejectTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Reject</button>
+        <button class="btn btn-accent" style="padding:3px 6px; font-size:10px;" onclick="approveTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Approve</button>
+        <button class="btn btn-danger" style="padding:3px 6px; font-size:10px; margin-left:4px;" onclick="rejectTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Reject</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -478,7 +355,7 @@ async function loadPendingTransactions() {
 }
 
 async function approveTransaction(txId, userId, type, amount) {
-  adminConfirmAction(`আপনি কি নিশ্চিতভাবে এই $${amount} ${type === 'deposit' ? 'ডিপোজিট' : 'উইথড্রাল'} অনুমোদন করতে চান?`, async () => {
+  adminConfirmAction(`$${amount} ${type === 'deposit' ? 'ডিপোজিট' : 'উইথড্রাল'} অনুমোদন করতে চান?`, async () => {
     const dbClient = getDB();
     if (type === 'deposit') {
       const { data: user } = await dbClient.from('users').select('main_balance').eq('user_id', userId).single();
@@ -488,7 +365,7 @@ async function approveTransaction(txId, userId, type, amount) {
       }
     }
     await dbClient.from('transactions').update({ status: 'approved' }).eq('id', txId);
-    alert("অনুমোদন সফল হয়েছে! ব্যালেন্স অ্যাকাউন্টে যুক্ত হয়েছে।");
+    alert("অনুমোদন সফল হয়েছে!");
     await loadPendingTransactions();
     await loadPlatformOverview();
     await loadUserAuditList();
@@ -496,7 +373,7 @@ async function approveTransaction(txId, userId, type, amount) {
 }
 
 async function rejectTransaction(txId, userId, type, amount) {
-  adminConfirmAction(`আপনি কি নিশ্চিতভাবে এই ট্রানজেকশন বাতিল করতে চান?`, async () => {
+  adminConfirmAction(`ট্রানজেকশন বাতিল করতে চান?`, async () => {
     const dbClient = getDB();
     if (type === 'withdraw') {
       const { data: user } = await dbClient.from('users').select('main_balance').eq('user_id', userId).single();
@@ -513,7 +390,7 @@ async function rejectTransaction(txId, userId, type, amount) {
   });
 }
 
-// ================= ওয়ান-ক্লিক লাইভ চ্যাট হেল্পডেস্ক (রিপ্লাই, রিড/আনরিড, এডিট, ডিলিট) =================
+// লাইভ চ্যাট হ্যান্ডলার
 async function loadAdminSentMessages() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -548,7 +425,7 @@ function renderAdminMessagesTable() {
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">কোনো মেসেজ পাওয়া যায়নি।</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:14px;">কোনো মেসেজ নেই।</td></tr>`;
     return;
   }
 
@@ -559,15 +436,13 @@ function renderAdminMessagesTable() {
     tr.innerHTML = `
       <td><strong style="color:#38bdf8;" onclick="selectReplyTarget('${m.user_id}')">${m.user_id} 💬</strong></td>
       <td><span style="color:${isFromAdmin ? 'var(--accent)' : '#fff'}; font-weight:700;">${m.sender}</span></td>
-      <td style="max-width:280px; overflow:hidden; text-overflow:ellipsis;" onclick="selectReplyTarget('${m.user_id}')">${m.message}</td>
-      <td>
-        ${isFromAdmin ? '<small style="color:var(--text-muted);">Sent</small>' : (m.is_read ? '<span style="color:var(--accent);">Seen</span>' : '<span style="color:var(--gold); font-weight:700;">Unread</span>')}
-      </td>
+      <td onclick="selectReplyTarget('${m.user_id}')">${m.message}</td>
+      <td>${isFromAdmin ? '<small style="color:var(--text-muted);">Sent</small>' : (m.is_read ? '<span style="color:var(--accent);">Seen</span>' : '<span style="color:var(--gold); font-weight:700;">Unread</span>')}</td>
       <td><small style="color:var(--text-dim);">${new Date(m.created_at).toLocaleString('bn-BD')}</small></td>
       <td>
-        ${!isFromAdmin && !m.is_read ? `<button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="markMessageAsRead(${m.id})">Mark Seen</button>` : ''}
-        ${isFromAdmin ? `<button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="editAdminMessage(${m.id}, '${m.user_id}', \`${m.message.replace(/`/g, "\\`")}\`)">Edit</button>` : ''}
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="deleteAdminMessage(${m.id})">Delete</button>
+        ${!isFromAdmin && !m.is_read ? `<button class="btn btn-outline" style="padding:3px 6px; font-size:10px;" onclick="markMessageAsRead(${m.id})">Seen</button>` : ''}
+        ${isFromAdmin ? `<button class="btn btn-outline" style="padding:3px 6px; font-size:10px;" onclick="editAdminMessage(${m.id}, '${m.user_id}', \`${m.message.replace(/`/g, "\\`")}\`)">Edit</button>` : ''}
+        <button class="btn btn-danger" style="padding:3px 6px; font-size:10px; margin-left:3px;" onclick="deleteAdminMessage(${m.id})">Delete</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -584,7 +459,7 @@ function clearReplyTarget() {
   document.getElementById("adminMsgTargetUserId").value = "";
   document.getElementById("adminMsgContent").value = "";
   document.getElementById("editingMsgId").value = "";
-  document.getElementById("replyTargetLabel").innerText = "প্রাপক নির্বাচন করুন (নিচের তালিকায় ক্লিক করুন)";
+  document.getElementById("replyTargetLabel").innerText = "প্রাপক নির্বাচন করুন (মেসেজে ক্লিক করুন)";
   document.getElementById("sendReplyBtn").innerText = "রিপ্লাই পাঠান";
   document.getElementById("cancelEditBtn").style.display = "none";
 }
@@ -599,7 +474,7 @@ function editAdminMessage(msgId, userId, currentText) {
   document.getElementById("editingMsgId").value = msgId;
   document.getElementById("adminMsgTargetUserId").value = userId;
   document.getElementById("adminMsgContent").value = currentText;
-  document.getElementById("replyTargetLabel").innerText = `মেসেজ এডিট করা হচ্ছে (ID: ${userId})`;
+  document.getElementById("replyTargetLabel").innerText = `এডিট মোড (ID: ${userId})`;
   document.getElementById("sendReplyBtn").innerText = "আপডেট করুন";
   document.getElementById("cancelEditBtn").style.display = "inline-block";
   document.getElementById("adminMsgContent").focus();
@@ -610,11 +485,10 @@ function cancelMessageEdit() {
 }
 
 async function deleteAdminMessage(msgId) {
-  adminConfirmAction("আপনি কি নিশ্চিতভাবে এই মেসেজটি মুছে ফেলতে চান?", async () => {
+  adminConfirmAction("মেসেজটি মুছে ফেলতে চান?", async () => {
     const dbClient = getDB();
     await dbClient.from('user_messages').delete().eq('id', msgId);
     await loadAdminSentMessages();
-    alert("মেসেজ সফলভাবে ডিলিট করা হয়েছে!");
   });
 }
 
@@ -631,7 +505,6 @@ async function sendAdminDirectMessage() {
   const dbClient = getDB();
 
   if (editId) {
-    // এডিট মোড
     adminConfirmAction("মেসেজটি আপডেট করতে চান?", async () => {
       const { error } = await dbClient.from('user_messages').update({ message: content, updated_at: new Date() }).eq('id', editId);
       if (!error) {
@@ -641,8 +514,7 @@ async function sendAdminDirectMessage() {
       }
     });
   } else {
-    // নতুন মেসেজ / রিপ্লাই
-    adminConfirmAction(`User ID: ${targetId}-কে মেসেজ পাঠাতে চান?`, async () => {
+    adminConfirmAction(`মেসেজ পাঠাতে চান?`, async () => {
       const { error } = await dbClient.from('user_messages').insert([{
         user_id: targetId,
         sender: 'Admin Support',
@@ -653,13 +525,13 @@ async function sendAdminDirectMessage() {
       if (!error) {
         document.getElementById("adminMsgContent").value = "";
         await loadAdminSentMessages();
-        alert("মেসেজ সফলভাবে পৌঁছেছে!");
+        alert("মেসেজ পৌঁছেছে!");
       }
     });
   }
 }
 
-// ডিপোজিট মেথডস
+// ডিপোজিট ও উইথড্রাল মেথডস
 function renderActiveDepositMethods() {
   const tbody = document.getElementById("activeDepMethodsTbody");
   if (!tbody) return;
@@ -670,10 +542,8 @@ function renderActiveDepositMethods() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${m.name}</strong></td>
-      <td><span style="color:#38bdf8; word-break:break-all;">${m.address}</span></td>
-      <td>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteDepositMethod(${idx})">Delete</button>
-      </td>
+      <td><span style="color:#38bdf8;">${m.address}</span></td>
+      <td><button class="btn btn-danger" style="padding:3px 6px; font-size:10px;" onclick="deleteDepositMethod(${idx})">Delete</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -684,12 +554,9 @@ async function saveNewDepositMethod() {
   const addr = document.getElementById("newDepAddress").value.trim();
   const note = document.getElementById("newDepNote").value.trim();
 
-  if (!name || !addr) {
-    alert("মেথডের নাম এবং নম্বর/অ্যাড্রেস দিন!");
-    return;
-  }
+  if (!name || !addr) return;
 
-  adminConfirmAction(`নতুন ডিপোজিট মেথড "${name}" সেভ করতে চান?`, async () => {
+  adminConfirmAction(`ডিপোজিট মেথড "${name}" সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.deposit_methods) adminSettings.deposit_methods = [];
     adminSettings.deposit_methods.push({ name, address: addr, note });
@@ -703,12 +570,12 @@ async function saveNewDepositMethod() {
     document.getElementById("newDepName").value = "";
     document.getElementById("newDepAddress").value = "";
     document.getElementById("newDepNote").value = "";
-    alert("ডিপোজিট মেথড সক্রিয় হয়েছে!");
+    alert("মেথড যোগ হয়েছে!");
   });
 }
 
 async function deleteDepositMethod(idx) {
-  adminConfirmAction("এই ডিপোজিট মেথডটি ডিলিট করতে চান?", async () => {
+  adminConfirmAction("মেথডটি ডিলিট করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.deposit_methods.splice(idx, 1);
     await dbClient.from('platform_settings').upsert({
@@ -716,11 +583,9 @@ async function deleteDepositMethod(idx) {
       value: adminSettings.deposit_methods
     });
     renderActiveDepositMethods();
-    alert("মেথডটি ডিলিট করা হয়েছে!");
   });
 }
 
-// উত্তোলন মেথডস ও ফি
 function renderActiveWithdrawMethods() {
   const tbody = document.getElementById("activeWtdMethodsTbody");
   if (!tbody) return;
@@ -731,9 +596,7 @@ function renderActiveWithdrawMethods() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${m.name}</strong></td>
-      <td>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteWithdrawMethod(${idx})">Delete</button>
-      </td>
+      <td><button class="btn btn-danger" style="padding:3px 6px; font-size:10px;" onclick="deleteWithdrawMethod(${idx})">Delete</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -741,12 +604,9 @@ function renderActiveWithdrawMethods() {
 
 async function saveNewWithdrawMethod() {
   const name = document.getElementById("newWtdName").value.trim();
-  if (!name) {
-    alert("উত্তোলন মেথডের নাম দিন!");
-    return;
-  }
+  if (!name) return;
 
-  adminConfirmAction(`নতুন উত্তোলন মেথড "${name}" সেভ করতে চান?`, async () => {
+  adminConfirmAction(`উত্তোলন মেথড "${name}" সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.withdraw_methods) adminSettings.withdraw_methods = [];
     adminSettings.withdraw_methods.push({ name });
@@ -758,12 +618,12 @@ async function saveNewWithdrawMethod() {
 
     renderActiveWithdrawMethods();
     document.getElementById("newWtdName").value = "";
-    alert("উত্তোলন মেথড সেভ হয়েছে!");
+    alert("মেথড যোগ হয়েছে!");
   });
 }
 
 async function deleteWithdrawMethod(idx) {
-  adminConfirmAction("এই উত্তোলন মেথডটি ডিলিট করতে চান?", async () => {
+  adminConfirmAction("মেথডটি ডিলিট করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.withdraw_methods.splice(idx, 1);
     await dbClient.from('platform_settings').upsert({
@@ -771,29 +631,22 @@ async function deleteWithdrawMethod(idx) {
       value: adminSettings.withdraw_methods
     });
     renderActiveWithdrawMethods();
-    alert("মেথডটি ডিলিট করা হয়েছে!");
   });
 }
 
 async function saveWithdrawFee() {
   const fee = parseFloat(document.getElementById("settingWtdFeeInput").value);
-  if (isNaN(fee) || fee < 0) {
-    alert("সঠিক ফি পার্সেন্টেজ লিখুন!");
-    return;
-  }
-
-  adminConfirmAction(`উত্তোলন ফি ${fee}% নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`উত্তোলন ফি ${fee}% সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.withdraw_fee_percent = fee;
     await dbClient.from('platform_settings').upsert({
       key: 'withdraw_fee_percent',
       value: fee
     });
-    alert("উত্তোলন ফি সফলভাবে সেভ হয়েছে!");
+    alert("ফি আপডেট হয়েছে!");
   });
 }
 
-// ১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট
 function renderStocksProfitTable() {
   const tbody = document.getElementById("stockProfitTbody");
   if (!tbody) return;
@@ -801,40 +654,22 @@ function renderStocksProfitTable() {
 
   const settings = adminSettings.stock_profit_settings || { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {}, timed_boosts: {} };
   const overrides = settings.manual_overrides || {};
-  const boosts = settings.timed_boosts || {};
-
-  document.getElementById("autoMinPercent").value = settings.min_percent !== undefined ? settings.min_percent : -5.0;
-  document.getElementById("autoMaxPercent").value = settings.max_percent !== undefined ? settings.max_percent : 5.0;
 
   ADMIN_STOCKS.forEach(stk => {
     const isManual = overrides[stk.id] !== undefined;
-    const boost = boosts[stk.id];
-    const isBoostActive = boost && new Date(boost.expires_at) > new Date();
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>
-        <div style="width:28px; height:28px; border-radius:50%; background:#0b0f19; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-          <img src="${stk.logo}" alt="${stk.ticker}" style="width:100%; height:100%; object-fit:contain;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(stk.ticker)}&background=2563eb&color=fff';">
-        </div>
-      </td>
       <td><strong>${stk.name}</strong></td>
-      <td><span style="color:#38bdf8; font-weight:700;">${stk.ticker}</span></td>
+      <td><span style="color:#38bdf8;">${stk.ticker}</span></td>
+      <td><input type="number" id="manual_rate_${stk.id}" value="${isManual ? overrides[stk.id] : ''}" placeholder="${isManual ? overrides[stk.id] : 'Auto'}" step="0.1" style="width:65px; padding:3px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:#fff; text-align:center;"> %</td>
       <td>
-        <input type="number" id="manual_rate_${stk.id}" value="${isManual ? overrides[stk.id] : ''}" placeholder="${isManual ? overrides[stk.id] : 'Auto'}" step="0.1" style="width:75px; padding:4px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:#fff; text-align:center;"> %
-      </td>
-      <td>
-        <div style="display:flex; gap:4px; align-items:center;">
-          <input type="number" id="boost_rate_${stk.id}" placeholder="Rate%" style="width:60px; padding:4px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--accent); text-align:center;">
-          <input type="number" id="boost_hrs_${stk.id}" placeholder="Hours" style="width:55px; padding:4px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--gold); text-align:center;">
-          <button class="btn btn-accent" style="padding:4px 8px; font-size:11px;" onclick="applyTimedStockBoost(${stk.id}, '${stk.name}')">Set Boost</button>
+        <div style="display:flex; gap:3px;">
+          <input type="number" id="boost_rate_${stk.id}" placeholder="Rate%" style="width:50px; padding:3px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--accent); text-align:center;">
+          <input type="number" id="boost_hrs_${stk.id}" placeholder="Hrs" style="width:45px; padding:3px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--gold); text-align:center;">
+          <button class="btn btn-accent" style="padding:3px 6px; font-size:10px;" onclick="applyTimedStockBoost(${stk.id}, '${stk.name}')">Boost</button>
         </div>
-        ${isBoostActive ? `<small style="color:var(--gold); display:block; margin-top:2px;">🔥 Active: +${boost.rate}\% (${new Date(boost.expires_at).toLocaleTimeString()})</small>` : ''}
       </td>
-      <td>
-        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="saveSingleStockManualRate(${stk.id}, '${stk.name}')">Save</button>
-        ${isManual ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="resetStockToAuto(${stk.id})">Reset</button>` : ''}
-      </td>
+      <td><button class="btn btn-outline" style="padding:3px 6px; font-size:10px;" onclick="saveSingleStockManualRate(${stk.id}, '${stk.name}')">Save</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -844,7 +679,7 @@ async function saveGlobalStockRange() {
   const minP = parseFloat(document.getElementById("autoMinPercent").value);
   const maxP = parseFloat(document.getElementById("autoMaxPercent").value);
 
-  adminConfirmAction(`গ্লোবাল রেঞ্জ ${minP}% থেকে ${maxP}% সেভ করতে চান?`, async () => {
+  adminConfirmAction(`গ্লোবাল রেঞ্জ সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings) adminSettings.stock_profit_settings = {};
     adminSettings.stock_profit_settings.min_percent = minP;
@@ -854,17 +689,15 @@ async function saveGlobalStockRange() {
       key: 'stock_profit_settings',
       value: adminSettings.stock_profit_settings
     });
-
-    renderStocksProfitTable();
-    alert("গ্লোবাল অটো রেঞ্জ সেভ হয়েছে!");
+    alert("রেঞ্জ সেভ হয়েছে!");
   });
 }
 
 async function saveSingleStockManualRate(stockId, stockName) {
   const val = document.getElementById(`manual_rate_${stockId}`).value.trim();
   if (val === "") return;
-
   const rate = parseFloat(val);
+
   adminConfirmAction(`${stockName}-এর রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings.manual_overrides) {
@@ -876,22 +709,7 @@ async function saveSingleStockManualRate(stockId, stockName) {
       key: 'stock_profit_settings',
       value: adminSettings.stock_profit_settings
     });
-
-    renderStocksProfitTable();
-    alert(`${stockName}-এর রেট সেভ হয়েছে!`);
-  });
-}
-
-async function resetStockToAuto(stockId) {
-  adminConfirmAction("কোম্পানিটিকে পুনরায় অটো রেঞ্জে নিতে চান?", async () => {
-    const dbClient = getDB();
-    delete adminSettings.stock_profit_settings.manual_overrides[stockId];
-    await dbClient.from('platform_settings').upsert({
-      key: 'stock_profit_settings',
-      value: adminSettings.stock_profit_settings
-    });
-    renderStocksProfitTable();
-    alert("কোম্পানিটি অটো রেঞ্জে সক্রিয় হয়েছে!");
+    alert("সেভ হয়েছে!");
   });
 }
 
@@ -899,44 +717,35 @@ async function applyTimedStockBoost(stockId, stockName) {
   const rateVal = parseFloat(document.getElementById(`boost_rate_${stockId}`).value);
   const hrsVal = parseFloat(document.getElementById(`boost_hrs_${stockId}`).value);
 
-  if (isNaN(rateVal) || isNaN(hrsVal) || hrsVal <= 0) {
-    alert("সঠিক রেট ও ঘণ্টা লিখুন!");
-    return;
-  }
+  if (isNaN(rateVal) || isNaN(hrsVal) || hrsVal <= 0) return;
 
-  adminConfirmAction(`${stockName}-এ ${hrsVal} ঘণ্টার জন্য +${rateVal}% বুস্ট দিতে চান?`, async () => {
+  adminConfirmAction(`${stockName}-এ ${hrsVal} ঘণ্টার জন্য বুস্ট দিতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings.timed_boosts) {
       adminSettings.stock_profit_settings.timed_boosts = {};
     }
 
     const expiresAt = new Date(Date.now() + hrsVal * 60 * 60 * 1000).toISOString();
-    adminSettings.stock_profit_settings.timed_boosts[stockId] = {
-      rate: rateVal,
-      expires_at: expiresAt
-    };
+    adminSettings.stock_profit_settings.timed_boosts[stockId] = { rate: rateVal, expires_at: expiresAt };
 
     await dbClient.from('platform_settings').upsert({
       key: 'stock_profit_settings',
       value: adminSettings.stock_profit_settings
     });
-
-    renderStocksProfitTable();
-    alert(`টাইমার বুস্ট সেট হয়েছে!`);
+    alert("বুস্ট অ্যাক্টিভ হয়েছে!");
   });
 }
 
-// এজেন্ট আবেদন ও ফি
 async function saveAgentSecurityFee() {
   const fee = parseFloat(document.getElementById("settingAgentFeeInput").value);
-  adminConfirmAction(`এজেন্ট হওয়ার সিকিউরিটি ফি $${fee} নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`এজেন্ট ফি $${fee} সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.agent_security_fee = fee;
     await dbClient.from('platform_settings').upsert({
       key: 'agent_security_fee',
       value: fee
     });
-    alert("এজেন্ট সিকিউরিটি ফি সেভ হয়েছে!");
+    alert("ফি সেভ হয়েছে!");
   });
 }
 
@@ -950,7 +759,7 @@ async function loadAgentAuditList() {
 
   const { data: agents, error } = await dbClient.from('agent_applications').select('*').order('created_at', { ascending: false });
   if (error || !agents || agents.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">কোনো এজেন্ট আবেদন নেই।</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:14px;">কোনো আবেদন নেই।</td></tr>`;
     return;
   }
 
@@ -959,19 +768,14 @@ async function loadAgentAuditList() {
     tr.innerHTML = `
       <td><strong style="color:#38bdf8;">${ag.user_id}</strong></td>
       <td><strong>${ag.full_name || 'N/A'}</strong><br><small style="color:var(--text-muted);">${ag.shop_name}</small></td>
-      <td><span style="color:var(--gold); font-weight:700;">${ag.nid_number || 'N/A'}</span></td>
-      <td>
-        📞 ${ag.phone}<br>
-        <small style="color:var(--text-dim);">Alt: ${ag.alt_phone_1 || '-'}, ${ag.alt_phone_2 || '-'}</small>
-      </td>
-      <td><small style="color:var(--text-muted);">${ag.location || ag.full_address || 'N/A'}</small></td>
+      <td>${ag.nid_number || 'N/A'}</td>
+      <td>📞 ${ag.phone}</td>
+      <td><small style="color:var(--text-muted);">${ag.location || '-'}</small></td>
       <td>
         ${ag.status === 'pending' ? `
-          <button class="btn btn-accent" style="padding:4px 8px; font-size:11px;" onclick="approveAgentApplication(${ag.id}, '${ag.user_id}')">Approve</button>
-          <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="rejectAgentApplication(${ag.id})">Reject</button>
-        ` : `
-          <span style="color:${ag.status === 'approved' ? 'var(--accent)' : 'var(--danger)'}; font-weight:800;">${ag.status.toUpperCase()}</span>
-        `}
+          <button class="btn btn-accent" style="padding:3px 6px; font-size:10px;" onclick="approveAgentApplication(${ag.id}, '${ag.user_id}')">Approve</button>
+          <button class="btn btn-danger" style="padding:3px 6px; font-size:10px; margin-left:3px;" onclick="rejectAgentApplication(${ag.id})">Reject</button>
+        ` : `<span style="color:${ag.status === 'approved' ? 'var(--accent)' : 'var(--danger)'};">${ag.status.toUpperCase()}</span>`}
       </td>
     `;
     tbody.appendChild(tr);
@@ -979,25 +783,24 @@ async function loadAgentAuditList() {
 }
 
 async function approveAgentApplication(appId, userId) {
-  adminConfirmAction("এই আবেদন অনুমোদন করতে চান?", async () => {
+  adminConfirmAction("আবেদনটি অনুমোদন করতে চান?", async () => {
     const dbClient = getDB();
     await dbClient.from('agent_applications').update({ status: 'approved' }).eq('id', appId);
     await dbClient.from('users').update({ is_agent: true }).eq('user_id', userId);
-    alert("এজেন্ট অনুমোদন সম্পন্ন হয়েছে!");
+    alert("অনুমোদিত হয়েছে!");
     await loadAgentAuditList();
   });
 }
 
 async function rejectAgentApplication(appId) {
-  adminConfirmAction("এই আবেদন বাতিল করতে চান?", async () => {
+  adminConfirmAction("আবেদনটি বাতিল করতে চান?", async () => {
     const dbClient = getDB();
     await dbClient.from('agent_applications').update({ status: 'rejected' }).eq('id', appId);
-    alert("আবেদন বাতিল করা হয়েছে!");
+    alert("বাতিল করা হয়েছে!");
     await loadAgentAuditList();
   });
 }
 
-// বাটন ও সেটিংস
 function renderCustomButtonsTable() {
   const tbody = document.getElementById("customButtonsTbody");
   if (!tbody) return;
@@ -1008,11 +811,9 @@ function renderCustomButtonsTable() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${b.title}</strong></td>
-      <td><small style="color:#38bdf8; word-break:break-all;">${b.url}</small></td>
-      <td>${b.isEmbed ? 'In-App Player' : 'External Link'}</td>
-      <td>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteCustomButton(${idx})">Delete</button>
-      </td>
+      <td><small style="color:#38bdf8;">${b.url}</small></td>
+      <td>${b.isEmbed ? 'In-App' : 'External'}</td>
+      <td><button class="btn btn-danger" style="padding:3px 6px; font-size:10px;" onclick="deleteCustomButton(${idx})">Delete</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -1025,7 +826,7 @@ async function saveCustomButton() {
 
   if (!title || !url) return;
 
-  adminConfirmAction(`"${title}" বাটনটি সেভ করতে চান?`, async () => {
+  adminConfirmAction(`বাটন যোগ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.custom_buttons) adminSettings.custom_buttons = [];
     adminSettings.custom_buttons.push({ title, url, isEmbed });
@@ -1038,12 +839,12 @@ async function saveCustomButton() {
     renderCustomButtonsTable();
     document.getElementById("customButtonTitleInput").value = "";
     document.getElementById("customButtonUrlInput").value = "";
-    alert("বাটন যোগ করা হয়েছে!");
+    alert("বাটন যোগ হয়েছে!");
   });
 }
 
 async function deleteCustomButton(idx) {
-  adminConfirmAction("এই বাটনটি মুছে ফেলতে চান?", async () => {
+  adminConfirmAction("বাটনটি মুছে ফেলতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.custom_buttons.splice(idx, 1);
     await dbClient.from('platform_settings').upsert({
@@ -1051,7 +852,6 @@ async function deleteCustomButton(idx) {
       value: adminSettings.custom_buttons
     });
     renderCustomButtonsTable();
-    alert("বাটনটি ডিলিট করা হয়েছে!");
   });
 }
 
@@ -1060,12 +860,9 @@ async function saveLtmRate() {
   adminConfirmAction(`LTM রেট $${rate} নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.ltm_rate = rate;
-    await dbClient.from('platform_settings').upsert({
-      key: 'ltm_rate',
-      value: rate
-    });
+    await dbClient.from('platform_settings').upsert({ key: 'ltm_rate', value: rate });
     document.getElementById("statLtmRate").innerText = `$${rate.toFixed(2)}`;
-    alert("LTM রেট সেভ হয়েছে!");
+    alert("রেট সেভ হয়েছে!");
   });
 }
 
@@ -1074,24 +871,18 @@ async function saveP2pFee() {
   adminConfirmAction(`P2P ফি ${fee}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.p2p_fee_percent = fee;
-    await dbClient.from('platform_settings').upsert({
-      key: 'p2p_fee_percent',
-      value: fee
-    });
-    alert("P2P ট্রান্সফার ফি সেভ হয়েছে!");
+    await dbClient.from('platform_settings').upsert({ key: 'p2p_fee_percent', value: fee });
+    alert("ফি সেভ হয়েছে!");
   });
 }
 
 async function saveReferralCommission() {
   const rate = parseFloat(document.getElementById("settingRefRateInput").value);
-  adminConfirmAction(`রেফারেল বোনাস রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`রেফারেল রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.referral_commission_percent = rate;
-    await dbClient.from('platform_settings').upsert({
-      key: 'referral_commission_percent',
-      value: rate
-    });
-    alert("রেফারেল বোনাস রেট সেভ হয়েছে!");
+    await dbClient.from('platform_settings').upsert({ key: 'referral_commission_percent', value: rate });
+    alert("রেট সেভ হয়েছে!");
   });
 }
 
@@ -1100,63 +891,21 @@ async function saveMarqueeNotice() {
   adminConfirmAction("মারকুই নোটিস সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.marquee_notice = text;
-    await dbClient.from('platform_settings').upsert({
-      key: 'marquee_notice',
-      value: text
-    });
-    alert("মারকুই নোটিস সেভ হয়েছে!");
+    await dbClient.from('platform_settings').upsert({ key: 'marquee_notice', value: text });
+    alert("মারকুই সেভ হয়েছে!");
   });
 }
 
 async function saveWelcomeNotice() {
   const text = document.getElementById("settingWelcomeInput").value.trim();
-  adminConfirmAction("প্রথমবার ওপেনিং নোটিস সেভ করতে চান?", async () => {
+  adminConfirmAction("ওয়েলকাম নোটিস সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.welcome_notice = text;
-    await dbClient.from('platform_settings').upsert({
-      key: 'welcome_notice',
-      value: text
-    });
+    await dbClient.from('platform_settings').upsert({ key: 'welcome_notice', value: text });
     alert("ওয়েলকাম নোটিস সেভ হয়েছে!");
   });
 }
 
-async function saveTutorialVideo() {
-  const url = document.getElementById("settingVideoUrlInput").value.trim();
-  adminConfirmAction("ভিডিও লিংক সেভ করতে চান?", async () => {
-    const dbClient = getDB();
-    adminSettings.tutorial_video_url = url;
-    await dbClient.from('platform_settings').upsert({
-      key: 'tutorial_video_url',
-      value: url
-    });
-    alert("ভিডিও লিংক সেভ হয়েছে!");
-  });
-}
-
-async function saveCompanyPost() {
-  const title = document.getElementById("companyPostTitleInput").value.trim();
-  const content = document.getElementById("companyPostContentInput").value.trim();
-
-  if (!title || !content) return;
-
-  adminConfirmAction("রোডম্যাপে পোস্ট করতে চান?", async () => {
-    const dbClient = getDB();
-    if (!adminSettings.company_posts) adminSettings.company_posts = [];
-    adminSettings.company_posts.push({ title, content, date: new Date().toLocaleDateString('bn-BD') });
-
-    await dbClient.from('platform_settings').upsert({
-      key: 'company_posts',
-      value: adminSettings.company_posts
-    });
-
-    document.getElementById("companyPostTitleInput").value = "";
-    document.getElementById("companyPostContentInput").value = "";
-    alert("রোডম্যাপে পোস্ট সফল হয়েছে!");
-  });
-}
-
-// কনফার্মেশন মোডাল
 function adminConfirmAction(message, callback) {
   document.getElementById("adminConfirmMessage").innerText = message;
   pendingAdminAction = callback;

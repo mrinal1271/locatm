@@ -2,12 +2,12 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Locatm - Pocket ATM & Global Stock Market</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Locatm - Pocket ATM & Stock Hub</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   
-  <!-- Supabase CDN ও প্রোডাকশন ক্লাউড কনফিগ -->
+  <!-- Supabase CDN ও ক্লাউড কনফিগ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
 </head>
@@ -15,13 +15,13 @@
 
   <!-- ================= ১. সিকিউর লগইন / সাইনআপ / পাসওয়ার্ড রিকভারি ================= -->
   <div id="authScreen" class="modal-overlay active" style="z-index:9999;">
-    <div class="modal-box" style="max-width:400px;">
-      <div style="text-align:center; margin-bottom:18px;">
-        <h2 class="brand-logo" style="font-size:28px;">Locatm</h2>
+    <div class="modal-box" style="max-width:390px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <h2 class="brand-logo" style="font-size:26px;">Locatm</h2>
         <p style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-i18n="tagline">Decentralized Pocket ATM & Stock Hub</p>
       </div>
 
-      <div style="display:flex; gap:10px; margin-bottom:16px;">
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
         <button id="authTabLogin" class="btn btn-primary" style="flex:1;" onclick="switchAuthTab('login')" data-i18n="login_tab">লগইন</button>
         <button id="authTabSignup" class="btn btn-outline" style="flex:1;" onclick="switchAuthTab('signup')" data-i18n="signup_tab">রেজিস্ট্রেশন</button>
       </div>
@@ -73,28 +73,29 @@
     </div>
   </div>
 
-  <!-- ================= ৩. ৩D নিয়ন গ্লাস হেডার ================= -->
+  <!-- ================= ৩. পরিচ্ছন্ন ও আধুনিক মোবাইল-রেসপনসিভ হেডার ================= -->
   <header>
     <div class="logo-wrap">
       <span class="brand-logo">Locatm</span>
       <span class="vip-badge" id="userVipBadge">👑 VIP 1</span>
     </div>
+
+    <!-- মাঝে স্পষ্ট ইউজার আইডি ব্যাজ -->
+    <div class="header-user-id" id="headerUserIdBadge">ID: ----</div>
     
+    <!-- ডানে আইকন বাটনসমূহ -->
     <div class="header-actions">
       <!-- PWA অ্যাপ ইনস্টল বাটন -->
-      <button id="pwaInstallBtn" class="icon-btn" title="ইনস্টল অ্যাপ" onclick="triggerPWAInstall()" style="color:var(--accent); border-color:rgba(16,185,129,0.4);">
+      <button id="pwaInstallBtn" class="icon-btn" title="ইনস্টল অ্যাপ" onclick="triggerPWAInstall()" style="color:var(--accent);">
         📲
       </button>
 
       <!-- ভাষা পরিবর্তন বাটন (বাংলা ⇄ English) -->
       <button class="icon-btn" id="langSwitchBtn" title="Language" onclick="toggleLanguage()">
-        🌐 <span id="currentLangLabel" style="font-size:11px; font-weight:800; margin-left:2px;">BN</span>
+        🌐 <span id="currentLangLabel" style="font-size:10px; font-weight:800;">BN</span>
       </button>
 
-      <!-- ইউজার আইডি ব্যাজ -->
-      <span id="headerUserIdBadge" style="font-size:11px; color:#38bdf8; font-weight:800; background:rgba(56,189,248,0.1); padding:6px 10px; border-radius:10px; border:1px solid rgba(56,189,248,0.3);">ID: ----</span>
-      
-      <!-- থ্রি-ডট কন্ট্রোল ড্রয়ার বাটন -->
+      <!-- থ্রি-ডট ড্রয়ার মেনু বাটন -->
       <button class="icon-btn" onclick="toggleDrawer(true)">☰</button>
     </div>
   </header>
@@ -103,18 +104,16 @@
   <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
   <div class="drawer-content" id="drawerMenu">
     <div class="drawer-header">
-      <h3 style="color:#38bdf8; font-size:18px;" data-i18n="menu_title">কন্ট্রোল মেনু</h3>
-      <button class="icon-btn" style="width:32px; height:32px;" onclick="toggleDrawer(false)">✕</button>
+      <h3 style="color:#38bdf8; font-size:16px;" data-i18n="menu_title">কন্ট্রোল মেনু</h3>
+      <button class="icon-btn" style="width:30px; height:30px;" onclick="toggleDrawer(false)">✕</button>
     </div>
 
-    <!-- ইউজার কার্ড -->
     <div class="drawer-user-card">
       <strong id="drawerUserName">User</strong>
       <small id="drawerUserEmail">user@example.com</small>
       <small id="drawerUserId" style="color:#38bdf8; font-weight:800; margin-top:2px;">User ID: ----</small>
     </div>
 
-    <!-- ৩D কালারফুল বাটন তালিকা -->
     <ul class="drawer-links">
       <li>
         <button class="drawer-btn" onclick="openModalAndCloseDrawer('depositModal')">
@@ -135,15 +134,15 @@
         </button>
       </li>
       <li>
-        <button class="drawer-btn" onclick="openModalAndCloseDrawer('tradeModal')">
-          <div class="btn-icon-wrap bg-trd">🪙</div>
-          <span data-i18n="menu_trd">Trade LTM মার্কেট</span>
+        <button class="drawer-btn" onclick="openModalAndCloseDrawer('historyModal')">
+          <div class="btn-icon-wrap bg-his">📜</div>
+          <span data-i18n="menu_history">লেনদেন হিস্টোরি (History)</span>
         </button>
       </li>
       <li>
-        <button class="drawer-btn" onclick="openModalAndCloseDrawer('historyModal')">
-          <div class="btn-icon-wrap" style="background:rgba(56,189,248,0.2); color:#38bdf8;">📜</div>
-          <span data-i18n="menu_history">লেনদেন হিস্টোরি (History)</span>
+        <button class="drawer-btn" onclick="openModalAndCloseDrawer('tradeModal')">
+          <div class="btn-icon-wrap" style="background:rgba(139,92,246,0.2); color:#c084fc;">🪙</div>
+          <span data-i18n="menu_trd">Trade LTM মার্কেট</span>
         </button>
       </li>
       <li>
@@ -200,22 +199,22 @@
   <!-- ================= ৬. মূল ড্যাশবোর্ড কন্টেন্ট ================= -->
   <div class="container">
     
-    <!-- ৩D ওয়ালেট কার্ড (ক্লিকেবল লকড ব্যালেন্স) -->
+    <!-- ৩D ওয়ালেট ব্যালেন্স কার্ড (লকড অ্যামাউন্ট নিশ্চিত ক্লিকেবল) -->
     <div class="wallet-card">
       <div class="wallet-item">
         <h4 data-i18n="w_main">Main Balance</h4>
         <p id="mainBalance">$0.00</p>
       </div>
 
-      <!-- লকড ব্যালেন্স - ক্লিক করলে সক্রিয় শেয়ার লিস্ট পপআপ ওপেন হবে -->
-      <div class="wallet-item" style="cursor:pointer; border:1px dashed var(--glass-border-bright);" onclick="openModal('activeInvestDetailsModal')" title="ক্লিক করে সক্রিয় শেয়ারের তালিকা দেখুন">
-        <h4 data-i18n="w_locked">Locked / Invested 🔍</h4>
+      <!-- লকড ব্যালেন্স - ক্লিক করলে পপআপ নিশ্চিতভাবে খুলবে -->
+      <div class="wallet-item clickable" onclick="openModal('activeInvestDetailsModal')" title="ক্লিক করে সক্রিয় শেয়ারের তালিকা দেখুন">
+        <h4><span data-i18n="w_locked">Locked</span> <span style="font-size:12px; color:#38bdf8;">🔍 দেখুন</span></h4>
         <p id="lockedBalance" style="color:#38bdf8;">$0.00</p>
       </div>
 
       <div class="wallet-item">
         <h4 data-i18n="w_ltm">LTM Token</h4>
-        <p><span id="coinBalance">0.00</span> <small style="font-size:11px; color:var(--accent);" id="coinUsdVal">($0.00)</small></p>
+        <p><span id="coinBalance">0.00</span> <small style="font-size:10px; color:var(--accent);" id="coinUsdVal">($0.00)</small></p>
       </div>
       <div class="wallet-item">
         <h4 data-i18n="w_profit">Total Profit</h4>
@@ -223,7 +222,7 @@
       </div>
     </div>
 
-    <!-- দ্রুত অ্যাকশন গ্রিড বাটন -->
+    <!-- ৪টি প্রধান কুইক অ্যাকশন বাটন (ডিপোজিট, উত্তোলন, P2P, হিস্টোরি) -->
     <div class="quick-action-grid">
       <div class="action-card-btn" onclick="openModal('depositModal')">
         <div class="action-icon bg-dep">💳</div>
@@ -238,14 +237,14 @@
         <span data-i18n="action_p2p">P2P পাঠান</span>
       </div>
       <div class="action-card-btn" onclick="openModal('historyModal')">
-        <div class="action-icon" style="background:rgba(56,189,248,0.25); border:1px solid rgba(56,189,248,0.4); color:#38bdf8;">📜</div>
+        <div class="action-icon bg-his">📜</div>
         <span data-i18n="action_history">হিস্টোরি</span>
       </div>
     </div>
 
     <!-- গ্লোবাল ১০০+ স্টক মার্কেট -->
     <div class="section-title">
-      <span>🌐 <span data-i18n="stock_title">Global Stock Market (100+ Companies)</span></span>
+      <span>🌐 <span data-i18n="stock_title">Global Stock Market</span></span>
       <small data-i18n="stock_cycle">২৪ ঘণ্টা সাইকেল</small>
     </div>
     <div class="stock-grid" id="stockGridContainer"></div>
@@ -254,18 +253,18 @@
     <div class="section-title">
       <span>⏳ <span data-i18n="active_inv_title">আপনার সক্রিয় শেয়ার ও ইনভেস্টমেন্ট</span></span>
     </div>
-    <div id="activeInvestList" style="margin-bottom:28px;">
-      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; color:var(--text-muted); font-size:13px; text-align:center;" data-i18n="no_active_inv">
+    <div id="activeInvestList" style="margin-bottom:24px;">
+      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; color:var(--text-muted); font-size:12px; text-align:center;" data-i18n="no_active_inv">
         বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
       </div>
     </div>
 
     <!-- ডায়নামিক বাটন সেকশন -->
-    <div id="dynamicActionBarWrapper" style="display:none; margin-bottom:28px;">
+    <div id="dynamicActionBarWrapper" style="display:none; margin-bottom:24px;">
       <div class="section-title">
         <span>⚡ <span data-i18n="live_extra_title">লাইভ আপডেট ও বিনোদন</span></span>
       </div>
-      <div class="dynamic-action-bar" id="customActionBar" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+      <div class="dynamic-action-bar" id="customActionBar" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
     </div>
 
   </div>
@@ -274,35 +273,33 @@
 
   <!-- লকড ইনভেস্টমেন্ট ডিটেইলস মোডাল (লকড ব্যালেন্সে ক্লিকে ওপেন হবে) -->
   <div class="modal-overlay" id="activeInvestDetailsModal">
-    <div class="modal-box" style="max-width:500px;">
+    <div class="modal-box" style="max-width:440px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="color:#38bdf8;">📊 সক্রিয় শেয়ার পোর্টফোলিও</h3>
-        <button class="icon-btn" style="width:30px; height:30px;" onclick="closeModal('activeInvestDetailsModal')">✕</button>
+        <button class="icon-btn" style="width:28px; height:28px;" onclick="closeModal('activeInvestDetailsModal')">✕</button>
       </div>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">আপনার কোন কোন কোম্পানিতে কত ডলার লক/ইনভেস্ট রয়েছে তার বিস্তারিত তালিকা:</p>
-      <div id="modalActiveInvestList" style="display:flex; flex-direction:column; gap:10px; max-height:350px; overflow-y:auto;">
-        <!-- ডাইনামিক লোড হবে -->
-      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">আপনার কোন কোন কোম্পানিতে কত ডলার লক/ইনভেস্ট রয়েছে তার বিস্তারিত:</p>
+      <div id="modalActiveInvestList" style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto;"></div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('activeInvestDetailsModal')">বন্ধ করুন</button>
       </div>
     </div>
   </div>
 
-  <!-- লেনদেন হিস্টোরি মোডাল -->
+  <!-- সম্পূর্ণ লেনদেন হিস্টোরি মোডাল -->
   <div class="modal-overlay" id="historyModal">
-    <div class="modal-box" style="max-width:540px;">
+    <div class="modal-box" style="max-width:480px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="color:#38bdf8;">📜 সম্পূর্ণ লেনদেন হিস্টোরি</h3>
-        <button class="icon-btn" style="width:30px; height:30px;" onclick="closeModal('historyModal')">✕</button>
+        <button class="icon-btn" style="width:28px; height:28px;" onclick="closeModal('historyModal')">✕</button>
       </div>
-      <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;">
-        <button class="btn btn-primary" id="histFilterAll" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('all')">সব লেনদেন</button>
-        <button class="btn btn-outline" id="histFilterDep" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('deposit')">ডিপোজিট</button>
-        <button class="btn btn-outline" id="histFilterWtd" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('withdraw')">উত্তোলন</button>
-        <button class="btn btn-outline" id="histFilterP2P" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('p2p')">P2P</button>
+      <div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;">
+        <button class="btn btn-primary" id="histFilterAll" style="padding:5px 10px; font-size:11px;" onclick="filterUserHistory('all')">সব</button>
+        <button class="btn btn-outline" id="histFilterDep" style="padding:5px 10px; font-size:11px;" onclick="filterUserHistory('deposit')">ডিপোজিট</button>
+        <button class="btn btn-outline" id="histFilterWtd" style="padding:5px 10px; font-size:11px;" onclick="filterUserHistory('withdraw')">উত্তোলন</button>
+        <button class="btn btn-outline" id="histFilterP2P" style="padding:5px 10px; font-size:11px;" onclick="filterUserHistory('p2p')">P2P</button>
       </div>
-      <div id="userTransactionHistoryList" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
+      <div id="userTransactionHistoryList" style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto;">
         <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">লোড হচ্ছে...</div>
       </div>
       <div class="modal-btns">
@@ -315,7 +312,7 @@
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;" data-i18n="confirm_title">⚠️ নিশ্চিতকরণ</h3>
-      <p id="confirmMessage" style="font-size:14px; margin:14px 0; color:var(--text-muted);"></p>
+      <p id="confirmMessage" style="font-size:13px; margin:12px 0; color:var(--text-muted); line-height:1.5;"></p>
       <div class="modal-btns">
         <button class="btn btn-danger" onclick="closeModal('confirmModal')" data-i18n="no_btn">না (No)</button>
         <button class="btn btn-accent" id="confirmOkBtn" data-i18n="yes_btn">হ্যাঁ (Yes)</button>
@@ -419,24 +416,23 @@
 
   <!-- এজেন্ট ডিরেক্টরি মোডাল -->
   <div class="modal-overlay" id="agentModal">
-    <div class="modal-box" style="max-width:540px;">
+    <div class="modal-box" style="max-width:500px;">
       <h3 style="color:#f87171;" data-i18n="agents_list_title">📍 ভেরিফাইড ক্যাশআউট এজেন্ট নেটওয়ার্ক</h3>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" data-i18n="agents_list_desc">আপনার লোকাল এজেন্টের সাথে যোগাযোগ করে ক্যাশআউট করুন।</p>
-      <div id="agentDirectoryList" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;"></div>
+      <div id="agentDirectoryList" style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto;"></div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('agentModal')" data-i18n="close_btn">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- এজেন্ট পূর্ণাঙ্গ ভেরিফিকেশন আবেদন ফর্ম (ফি পরিষ্কার ডিসপ্লে) -->
+  <!-- এজেন্ট আবেদন ফর্ম (ফি ডিসপ্লে) -->
   <div class="modal-overlay" id="agentApplyModal">
-    <div class="modal-box" style="max-width:480px;">
+    <div class="modal-box" style="max-width:440px;">
       <h3 style="color:#f87171;" data-i18n="agent_apply_title">📝 এজেন্ট হওয়ার আবেদন ফর্ম</h3>
       
-      <!-- এজেন্ট সিকিউরিটি ফি স্পষ্ট নোটিস -->
-      <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); padding:10px 14px; border-radius:12px; margin-bottom:14px; font-size:13px; color:#f87171;">
-        ⚠️ <strong>সিকিউরিটি ফি সতর্কতা:</strong> এজেন্ট ভেরিফিকেশনের জন্য আপনার মেইন ব্যালেন্স থেকে <strong id="agentFeeNoticeAmount" style="color:#fff; font-size:15px;">$১০.০০</strong> সিকিউরিটি ফি কাটা হবে।
+      <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:12px; color:#f87171;">
+        ⚠️ <strong>সিকিউরিটি ফি সতর্কতা:</strong> আবেদন সম্পন্ন করার জন্য মেইন ব্যালেন্স থেকে <strong id="agentFeeNoticeAmount" style="color:#fff;">$১০.০০</strong> কাটা হবে।
       </div>
 
       <label style="font-size:12px; color:var(--text-muted);">আপনার পূর্ণ নাম (NID অনুযায়ী):</label>
@@ -470,7 +466,7 @@
     </div>
   </div>
 
-  <!-- স্টক ইনভেস্টমেন্ট মোডাল (সংশোধিত শেয়ার কিনুন বার্তা) -->
+  <!-- স্টক ইনভেস্টমেন্ট মোডাল -->
   <div class="modal-overlay" id="investModal">
     <div class="modal-box">
       <h3 id="investModalStockTitle" style="color:#38bdf8;">শেয়ার কেনা</h3>
@@ -493,7 +489,7 @@
 
   <!-- রেফারেল অ্যান্ড আর্ন ড্যাশবোর্ড মোডাল -->
   <div class="modal-overlay" id="referralModal">
-    <div class="modal-box" style="max-width:500px;">
+    <div class="modal-box" style="max-width:460px;">
       <h3 style="color:#60a5fa;" data-i18n="refer_dash_title">👥 রেফারেল ড্যাশবোর্ড ও আর্নিং</h3>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
         রেফারেল বোনাস রেট: <strong style="color:var(--accent);" id="referralCommissionRateText">১০%</strong>
@@ -501,25 +497,25 @@
 
       <div style="background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:12px;">
         <label style="font-size:11px; color:var(--text-muted);">আপনার রেফারেল লিংক:</label>
-        <div style="display:flex; gap:8px; margin-top:4px;">
+        <div style="display:flex; gap:6px; margin-top:4px;">
           <input type="text" id="myReferralLinkInput" class="input-field" style="margin-bottom:0;" readonly>
-          <button class="btn btn-primary" style="padding:8px 14px; font-size:12px;" onclick="copyReferralLink()">Copy</button>
+          <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="copyReferralLink()">Copy</button>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:12px; border-radius:12px; text-align:center;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:10px; border-radius:12px; text-align:center;">
           <small style="color:var(--text-muted); font-size:11px;">মোট রেফারেল</small>
-          <p id="refTotalCount" style="font-size:20px; font-weight:900; color:#38bdf8;">0 জন</p>
+          <p id="refTotalCount" style="font-size:18px; font-weight:900; color:#38bdf8;">0 জন</p>
         </div>
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:12px; border-radius:12px; text-align:center;">
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:10px; border-radius:12px; text-align:center;">
           <small style="color:var(--text-muted); font-size:11px;">রেফার থেকে মোট আয়</small>
-          <p id="refTotalEarning" style="font-size:20px; font-weight:900; color:var(--accent);">$0.00</p>
+          <p id="refTotalEarning" style="font-size:18px; font-weight:900; color:var(--accent);">$0.00</p>
         </div>
       </div>
 
-      <h5 style="margin-bottom:8px; font-size:13px;">আপনার রেফারেল মেম্বার তালিকা:</h5>
-      <div id="referredUsersList" style="max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+      <h5 style="margin-bottom:6px; font-size:12px;">আপনার রেফারেল মেম্বার তালিকা:</h5>
+      <div id="referredUsersList" style="max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
         <div style="color:var(--text-muted); font-size:12px; text-align:center; padding:10px;">কোনো রেফারেল পাওয়া যায়নি।</div>
       </div>
 
@@ -559,7 +555,7 @@
     <div class="modal-box" style="max-width:650px; width:95%;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h4 style="color:#38bdf8;" data-i18n="video_title">📺 কাজের নিয়ম ও ভিডিও গাইড</h4>
-        <button class="icon-btn" style="width:30px; height:30px;" onclick="closeModal('tutorialModal')">✕</button>
+        <button class="icon-btn" style="width:28px; height:28px;" onclick="closeModal('tutorialModal')">✕</button>
       </div>
       <div style="position:relative; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden;">
         <iframe id="tutorialVideoIframe" style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;" src="" allowfullscreen></iframe>
@@ -569,10 +565,10 @@
 
   <!-- ইন-অ্যাপ ফুলস্ক্রিন অ্যাকশন প্লেয়ার -->
   <div class="modal-overlay" id="inAppPlayerModal">
-    <div class="modal-box" style="max-width:750px; width:95%;">
+    <div class="modal-box" style="max-width:700px; width:95%;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h4 id="videoPlayerTitle">ভিডিও স্ট্রিমিং</h4>
-        <button class="icon-btn" style="width:30px; height:30px;" onclick="closeVideoPlayer()">✕</button>
+        <button class="icon-btn" style="width:28px; height:28px;" onclick="closeVideoPlayer()">✕</button>
       </div>
       <div style="position:relative; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden;">
         <iframe id="inAppIframe" style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
@@ -580,45 +576,44 @@
     </div>
   </div>
 
-  <!-- ================= ৮. কোম্পানির ভবিষ্যৎ রোডম্যাপ (ফুল পেজ ডেডিকেটেড ভিউ) ================= -->
+  <!-- ================= ৮. কোম্পানির ভবিষ্যৎ রোডম্যাপ ================= -->
   <div class="fullscreen-page-view" id="fullscreenRoadmapView">
-    <div style="max-width:900px; margin:0 auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <div style="max-width:850px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <div>
-          <h2 style="font-size:26px; font-weight:900; color:#38bdf8;">🏢 কোম্পানির ভবিষ্যৎ রোডম্যাপ ও মিশন</h2>
-          <p style="font-size:13px; color:var(--text-muted);">Decentralized Finance & Global Digital Pocket ATM Platform</p>
+          <h2 style="font-size:22px; font-weight:900; color:#38bdf8;">🏢 কোম্পানির ভবিষ্যৎ রোডম্যাপ ও মিশন</h2>
+          <p style="font-size:12px; color:var(--text-muted);">Decentralized Finance & Global Digital Pocket ATM Platform</p>
         </div>
         <button class="btn btn-outline" onclick="toggleFullscreenRoadmap(false)">✕ বন্ধ করুন</button>
       </div>
-
-      <div id="roadmapPostsContainer" style="display:flex; flex-direction:column; gap:16px;"></div>
+      <div id="roadmapPostsContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
     </div>
   </div>
 
-  <!-- ================= ৯. লাইভ চ্যাট উইন্ডো ও ভাসমান বাটন ================= -->
+  <!-- ================= ৯. লাইভ চ্যাট উইন্ডো ও বাবল ================= -->
   <div class="chat-floating-btn" onclick="toggleLiveChatWindow()" title="লাইভ চ্যাট সাপোর্ট">
     💬
   </div>
 
   <div class="modal-overlay" id="liveChatModal">
-    <div class="modal-box" style="max-width:420px; height:500px; display:flex; flex-direction:column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:10px;">
+    <div class="modal-box" style="max-width:400px; height:480px; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent);"></div>
-          <strong style="font-size:14px; color:#fff;">Locatm লাইভ হেল্পডেস্ক</strong>
+          <div style="width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent);"></div>
+          <strong style="font-size:13px; color:#fff;">Locatm লাইভ হেল্পডেস্ক</strong>
         </div>
-        <button class="icon-btn" style="width:28px; height:28px;" onclick="closeModal('liveChatModal')">✕</button>
+        <button class="icon-btn" style="width:26px; height:26px;" onclick="closeModal('liveChatModal')">✕</button>
       </div>
 
-      <div id="liveChatMessagesBox" style="flex:1; overflow-y:auto; padding:12px 0; display:flex; flex-direction:column; gap:10px;">
-        <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:10px; border-radius:12px; font-size:12px; color:#fff;">
-          স্বাগতম! আপনার যেকোনো সমস্যা, ডিপোজিট বা উইথড্রাল নিয়ে প্রশ্ন থাকলে এখানে লিখুন। সাপোর্ট টিম সরাসরি উত্তর দেবে।
+      <div id="liveChatMessagesBox" style="flex:1; overflow-y:auto; padding:10px 0; display:flex; flex-direction:column; gap:8px;">
+        <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:8px 10px; border-radius:10px; font-size:11px; color:#fff;">
+          স্বাগতম! আপনার যেকোনো সমস্যা বা প্রশ্নের জন্য এখানে মেসেজ দিন। সাপোর্ট টিম দ্রুত উত্তর দেবে।
         </div>
       </div>
 
-      <div style="display:flex; gap:8px; border-top:1px solid var(--glass-border); padding-top:10px;">
+      <div style="display:flex; gap:6px; border-top:1px solid var(--glass-border); padding-top:8px;">
         <input type="text" id="liveChatInput" class="input-field" style="margin-bottom:0;" placeholder="আপনার মেসেজ লিখুন..." onkeypress="handleChatKeyPress(event)">
-        <button class="btn btn-primary" style="padding:10px 14px;" onclick="sendLiveChatMessage()">পাঠান</button>
+        <button class="btn btn-primary" style="padding:8px 12px;" onclick="sendLiveChatMessage()">পাঠান</button>
       </div>
     </div>
   </div>

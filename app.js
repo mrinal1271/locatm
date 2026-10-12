@@ -1,9 +1,7 @@
 /**
  * ====================================================================
- * Locatm - Ultra Client Engine (app.js) [Real-time Cloud Sync]
+ * Locatm - Ultra Client Engine (app.js) [Real-time Direct Sync]
  * ====================================================================
- * লাইভ রিয়েল-টাইম ডাটা সিঙ্ক (রিফ্রেশ ছাড়া আপডেট), লেনদেন হিস্টোরি,
- * ক্লিকেবল লকড শেয়ার পোর্টফোলিও এবং নিরাপদ ক্লাউড লেনদেন।
  */
 
 let currentUser = null;
@@ -15,7 +13,7 @@ let activeSpecialStockTimerInterval = null;
 let userTransactionsCache = [];
 let realtimeSubscriptions = [];
 
-// প্ল্যাটফর্ম সেটিংস
+// প্ল্যাটফর্ম সেন্ট্রাল সেটিংস
 let platformConfig = {
   ltm_rate: 0.10,
   stock_profit_settings: { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {}, timed_boosts: {} },
@@ -59,14 +57,14 @@ const TRANSLATIONS = {
     menu_logout: "লগআউট করুন",
     notice_badge: "নোটিস",
     w_main: "Main Balance",
-    w_locked: "Locked / Invested 🔍",
+    w_locked: "Locked",
     w_ltm: "LTM Token",
     w_profit: "Total Profit",
     action_dep: "ডিপোজিট",
     action_wtd: "উত্তোলন",
     action_p2p: "P2P পাঠান",
     action_history: "হিস্টোরি",
-    stock_title: "Global Stock Market (100+ Companies)",
+    stock_title: "Global Stock Market",
     stock_cycle: "২৪ ঘণ্টা সাইকেল",
     active_inv_title: "আপনার সক্রিয় শেয়ার ও ইনভেস্টমেন্ট",
     no_active_inv: "বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।",
@@ -132,14 +130,14 @@ const TRANSLATIONS = {
     menu_logout: "Sign Out",
     notice_badge: "NOTICE",
     w_main: "Main Balance",
-    w_locked: "Locked / Invested 🔍",
+    w_locked: "Locked",
     w_ltm: "LTM Token",
     w_profit: "Total Profit",
     action_dep: "Deposit",
     action_wtd: "Withdraw",
     action_p2p: "P2P Transfer",
     action_history: "History",
-    stock_title: "Global Stock Market (100+ Companies)",
+    stock_title: "Global Stock Market",
     stock_cycle: "24 Hours Cycle",
     active_inv_title: "Your Active Shares & Investments",
     no_active_inv: "No active investments at this moment.",
@@ -224,71 +222,7 @@ const GLOBAL_STOCKS = [
   { id: 37, name: "Nike Athletics", ticker: "NKE", logo: "https://logo.clearbit.com/nike.com", min: 0.10 },
   { id: 38, name: "McDonald's Corp.", ticker: "MCD", logo: "https://logo.clearbit.com/mcdonalds.com", min: 0.10 },
   { id: 39, name: "Starbucks Coffee", ticker: "SBUX", logo: "https://logo.clearbit.com/starbucks.com", min: 0.10 },
-  { id: 40, name: "Pfizer Health", ticker: "PFE", logo: "https://logo.clearbit.com/pfizer.com", min: 0.10 },
-  { id: 41, name: "AstraZeneca", ticker: "AZN", logo: "https://logo.clearbit.com/astrazeneca.com", min: 0.10 },
-  { id: 42, name: "Novartis Pharma", ticker: "NVS", logo: "https://logo.clearbit.com/novartis.com", min: 0.10 },
-  { id: 43, name: "SAP Software", ticker: "SAP", logo: "https://logo.clearbit.com/sap.com", min: 0.10 },
-  { id: 44, name: "Siemens Energy", ticker: "SIE", logo: "https://logo.clearbit.com/siemens.com", min: 0.10 },
-  { id: 45, name: "IBM Computing", ticker: "IBM", logo: "https://logo.clearbit.com/ibm.com", min: 0.10 },
-  { id: 46, name: "Airbus Aerospace", ticker: "AIR", logo: "https://logo.clearbit.com/airbus.com", min: 0.10 },
-  { id: 47, name: "Boeing Aviation", ticker: "BA", logo: "https://logo.clearbit.com/boeing.com", min: 0.10 },
-  { id: 48, name: "SpaceX Starlink", ticker: "SPCX", logo: "https://logo.clearbit.com/spacex.com", min: 0.10 },
-  { id: 49, name: "Uber Technologies", ticker: "UBER", logo: "https://logo.clearbit.com/uber.com", min: 0.10 },
-  { id: 50, name: "Spotify Music", ticker: "SPOT", logo: "https://logo.clearbit.com/spotify.com", min: 0.10 },
-  { id: 51, name: "Airbnb Travel", ticker: "ABNB", logo: "https://logo.clearbit.com/airbnb.com", min: 0.10 },
-  { id: 52, name: "Shopify E-Commerce", ticker: "SHOP", logo: "https://logo.clearbit.com/shopify.com", min: 0.10 },
-  { id: 53, name: "PayPal Payments", ticker: "PYPL", logo: "https://logo.clearbit.com/paypal.com", min: 0.10 },
-  { id: 54, name: "Square Block", ticker: "SQ", logo: "https://logo.clearbit.com/squareup.com", min: 0.10 },
-  { id: 55, name: "Robinhood Finance", ticker: "HOOD", logo: "https://logo.clearbit.com/robinhood.com", min: 0.10 },
-  { id: 56, name: "Binance Ecosystem", ticker: "BNB", logo: "https://logo.clearbit.com/binance.com", min: 0.10 },
-  { id: 57, name: "Coinbase Global", ticker: "COIN", logo: "https://logo.clearbit.com/coinbase.com", min: 0.10 },
-  { id: 58, name: "Sony Music", ticker: "SME", logo: "https://logo.clearbit.com/sonymusic.com", min: 0.10 },
-  { id: 59, name: "Nintendo Corp.", ticker: "NTDOY", logo: "https://logo.clearbit.com/nintendo.com", min: 0.10 },
-  { id: 60, name: "EA Electronic Arts", ticker: "EA", logo: "https://logo.clearbit.com/ea.com", min: 0.10 },
-  { id: 61, name: "Target Retail", ticker: "TGT", logo: "https://logo.clearbit.com/target.com", min: 0.10 },
-  { id: 62, name: "LVMH Luxury", ticker: "MC", logo: "https://logo.clearbit.com/lvmh.com", min: 0.10 },
-  { id: 63, name: "Hermes Fashion", ticker: "RMS", logo: "https://logo.clearbit.com/hermes.com", min: 0.10 },
-  { id: 64, name: "Ferrari Motors", ticker: "RACE", logo: "https://logo.clearbit.com/ferrari.com", min: 0.10 },
-  { id: 65, name: "Porsche Auto", ticker: "P911", logo: "https://logo.clearbit.com/porsche.com", min: 0.10 },
-  { id: 66, name: "BMW Group", ticker: "BMW", logo: "https://logo.clearbit.com/bmw.com", min: 0.10 },
-  { id: 67, name: "Mercedes-Benz", ticker: "MBG", logo: "https://logo.clearbit.com/mercedes-benz.com", min: 0.10 },
-  { id: 68, name: "Audi Motors", ticker: "AUDI", logo: "https://logo.clearbit.com/audi.com", min: 0.10 },
-  { id: 69, name: "Honda Motor", ticker: "HMC", logo: "https://logo.clearbit.com/honda.com", min: 0.10 },
-  { id: 70, name: "Hyundai Auto", ticker: "HYMTF", logo: "https://logo.clearbit.com/hyundai.com", min: 0.10 },
-  { id: 71, name: "FedEx Express", ticker: "FDX", logo: "https://logo.clearbit.com/fedex.com", min: 0.10 },
-  { id: 72, name: "UPS Logistics", ticker: "UPS", logo: "https://logo.clearbit.com/ups.com", min: 0.10 },
-  { id: 73, name: "DHL Global", ticker: "DPW", logo: "https://logo.clearbit.com/dhl.com", min: 0.10 },
-  { id: 74, name: "Baidu Search", ticker: "BIDU", logo: "https://logo.clearbit.com/baidu.com", min: 0.10 },
-  { id: 75, name: "JD.com Retail", ticker: "JD", logo: "https://logo.clearbit.com/jd.com", min: 0.10 },
-  { id: 76, name: "Xiaomi Tech", ticker: "XIACF", logo: "https://logo.clearbit.com/mi.com", min: 0.10 },
-  { id: 77, name: "BYD Electric Auto", ticker: "BYDDY", logo: "https://logo.clearbit.com/byd.com", min: 0.10 },
-  { id: 78, name: "Foxconn Industry", ticker: "HNHPF", logo: "https://logo.clearbit.com/foxconn.com", min: 0.10 },
-  { id: 79, name: "Dell Technologies", ticker: "DELL", logo: "https://logo.clearbit.com/dell.com", min: 0.10 },
-  { id: 80, name: "HP Computers", ticker: "HPQ", logo: "https://logo.clearbit.com/hp.com", min: 0.10 },
-  { id: 81, name: "Lenovo Group", ticker: "LNVGY", logo: "https://logo.clearbit.com/lenovo.com", min: 0.10 },
-  { id: 82, name: "Canon Optics", ticker: "CAJ", logo: "https://logo.clearbit.com/canon.com", min: 0.10 },
-  { id: 83, name: "Nikon Imaging", ticker: "NINOY", logo: "https://logo.clearbit.com/nikon.com", min: 0.10 },
-  { id: 84, name: "Panasonic Corp.", ticker: "PCRFY", logo: "https://logo.clearbit.com/panasonic.com", min: 0.10 },
-  { id: 85, name: "LG Electronics", ticker: "LG", logo: "https://logo.clearbit.com/lg.com", min: 0.10 },
-  { id: 86, name: "Tata Motors Global", ticker: "TTM", logo: "https://logo.clearbit.com/tatamotors.com", min: 0.10 },
-  { id: 87, name: "Infosys Tech", ticker: "INFY", logo: "https://logo.clearbit.com/infosys.com", min: 0.10 },
-  { id: 88, name: "Reliance Industries", ticker: "RIGD", logo: "https://logo.clearbit.com/ril.com", min: 0.10 },
-  { id: 89, name: "Unilever Consumer", ticker: "UL", logo: "https://logo.clearbit.com/unilever.com", min: 0.10 },
-  { id: 90, name: "Nestle Nutrition", ticker: "NSRGY", logo: "https://logo.clearbit.com/nestle.com", min: 0.10 },
-  { id: 91, name: "Mondelez Snacks", ticker: "MDLZ", logo: "https://logo.clearbit.com/mondelezinternational.com", min: 0.10 },
-  { id: 92, name: "Danone Dairy", ticker: "DANOY", logo: "https://logo.clearbit.com/danone.com", min: 0.10 },
-  { id: 93, name: "Rolex Holdings", ticker: "ROLX", logo: "https://logo.clearbit.com/rolex.com", min: 0.10 },
-  { id: 94, name: "Zara Inditex", ticker: "IDEXY", logo: "https://logo.clearbit.com/zara.com", min: 0.10 },
-  { id: 95, name: "H&M Fashion", ticker: "HNNMY", logo: "https://logo.clearbit.com/hm.com", min: 0.10 },
-  { id: 96, name: "Puma Sportswear", ticker: "PUMSY", logo: "https://logo.clearbit.com/puma.com", min: 0.10 },
-  { id: 97, name: "Lego Group", ticker: "LEGO", logo: "https://logo.clearbit.com/lego.com", min: 0.10 },
-  { id: 98, name: "Colgate-Palmolive", ticker: "CL", logo: "https://logo.clearbit.com/colgatepalmolive.com", min: 0.10 },
-  { id: 99, name: "Red Bull Energy", ticker: "RDBL", logo: "https://logo.clearbit.com/redbull.com", min: 0.10 },
-  { id: 100, name: "Monster Beverage", ticker: "MNST", logo: "https://logo.clearbit.com/monsterenergy.com", min: 0.10 },
-  { id: 101, name: "Zoom Communications", ticker: "ZM", logo: "https://logo.clearbit.com/zoom.us", min: 0.10 },
-  { id: 102, name: "Slack Technologies", ticker: "WORK", logo: "https://logo.clearbit.com/slack.com", min: 0.10 },
-  { id: 103, name: "Dropbox Cloud", ticker: "DBX", logo: "https://logo.clearbit.com/dropbox.com", min: 0.10 },
-  { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com", min: 0.10 }
+  { id: 40, name: "Pfizer Health", ticker: "PFE", logo: "https://logo.clearbit.com/pfizer.com", min: 0.10 }
 ];
 
 function getDB() {
@@ -298,7 +232,7 @@ function getDB() {
   return window.db || null;
 }
 
-// পেজ লোড ও ইনিট
+// পেজ ইনিশিয়ালাইজেশন
 document.addEventListener("DOMContentLoaded", async () => {
   registerServiceWorker();
   setupPwaInstallPrompt();
@@ -308,15 +242,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   await checkSavedAuth();
 });
 
-// সার্ভিস ওয়ার্কার
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .catch((err) => console.warn('Service Worker registration skipped:', err));
+      .catch((err) => console.warn('SW registration skipped:', err));
   }
 }
 
-// PWA ইনস্টল প্রম্পট
 function setupPwaInstallPrompt() {
   const pwaBtn = document.getElementById("pwaInstallBtn");
   if (pwaBtn) pwaBtn.style.display = "flex";
@@ -343,11 +275,11 @@ function triggerPWAInstall() {
       deferredPwaPrompt = null;
     });
   } else {
-    alert("আপনার ব্রাউজারের থ্রি-ডট মেনু (⋮) থেকে 'Install app' বা 'Add to Home screen' চাপুন। অ্যাপটি সরাসরি ফোনে বা পিসিতে ইনস্টল হয়ে যাবে।");
+    alert("আপনার ব্রাউজারের থ্রি-ডট মেনু (⋮) থেকে 'Install app' বা 'Add to Home screen' চাপ দিন।");
   }
 }
 
-// প্ল্যাটফর্ম সেটিংস লোড
+// কনফিগ লোড
 async function loadPlatformConfig() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -396,14 +328,9 @@ async function loadPlatformConfig() {
     document.getElementById("agentFeeNoticeAmount").innerText = `$${agentFee.toFixed(2)}`;
   }
 
-  // এজেন্ট ফিচার বন্ধ থাকলে আবেদন অপশন লুকানো
   const agentApplyLi = document.getElementById("agentApplyDrawerItem");
   if (agentApplyLi) {
-    if (platformConfig.feature_toggles && platformConfig.feature_toggles.agent_system === false) {
-      agentApplyLi.style.display = "none";
-    } else {
-      agentApplyLi.style.display = "block";
-    }
+    agentApplyLi.style.display = (platformConfig.feature_toggles && platformConfig.feature_toggles.agent_system === false) ? "none" : "block";
   }
 
   checkAndShowWelcomeNotice();
@@ -427,7 +354,7 @@ function closeWelcomeModal() {
   closeModal("welcomeAnnouncementModal");
 }
 
-// সেশন চেক ও রিয়েল-টাইম লিসেনার সক্রিয়করণ
+// সেশন যাচাই
 async function checkSavedAuth() {
   const savedUserId = localStorage.getItem("locatm_session_uid");
   const dbClient = getDB();
@@ -439,7 +366,6 @@ async function checkSavedAuth() {
         updateUserUI();
         document.getElementById("authScreen").classList.remove("active");
         
-        // রিয়েলটাইম লাইভ সিঙ্ক শুরু
         initUserRealtimeSync();
 
         await checkInvestmentsExpiry();
@@ -459,11 +385,9 @@ function initUserRealtimeSync() {
   const dbClient = getDB();
   if (!dbClient || !currentUser) return;
 
-  // পুরানো লিসেনার সরানো
   realtimeSubscriptions.forEach(sub => dbClient.removeChannel(sub));
   realtimeSubscriptions = [];
 
-  // ১. ইউজার ব্যালেন্স পরিবর্তন শুনবে (অ্যাডমিন অ্যাপ্রুভ করলে সাথে সাথে লাইভ আপডেট)
   const userChannel = dbClient.channel(`user-sync-${currentUser.user_id}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `user_id=eq.${currentUser.user_id}` }, payload => {
       currentUser = payload.new;
@@ -472,7 +396,6 @@ function initUserRealtimeSync() {
     .subscribe();
   realtimeSubscriptions.push(userChannel);
 
-  // ২. প্ল্যাটফর্ম সেটিংস লাইভ আপডেট শুনবে
   const settingsChannel = dbClient.channel('platform-settings-sync')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings' }, async () => {
       await loadPlatformConfig();
@@ -480,7 +403,6 @@ function initUserRealtimeSync() {
     .subscribe();
   realtimeSubscriptions.push(settingsChannel);
 
-  // ৩. ট্রানজেকশন পরিবর্তন শুনবে (হিস্টোরি রিয়েলটাইম রিফ্রেশ)
   const txChannel = dbClient.channel(`tx-sync-${currentUser.user_id}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${currentUser.user_id}` }, async () => {
       await loadUserTransactionHistory();
@@ -488,7 +410,6 @@ function initUserRealtimeSync() {
     .subscribe();
   realtimeSubscriptions.push(txChannel);
 
-  // ৪. লাইভ চ্যাট মেসেজ শুনবে
   const msgChannel = dbClient.channel(`msg-sync-${currentUser.user_id}`)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_messages', filter: `user_id=eq.${currentUser.user_id}` }, async () => {
       await loadUserMessages();
@@ -523,7 +444,7 @@ async function handleLogin() {
 
   const dbClient = getDB();
   if (!dbClient) {
-    alert("ডাটাবেজ কানেক্ট হচ্ছে, অনুগ্রহ করে ৫ সেকেন্ড অপেক্ষা করুন...");
+    alert("ডাটাবেজ কানেক্ট হচ্ছে, ৫ সেকেন্ড অপেক্ষা করুন...");
     return;
   }
 
@@ -707,7 +628,6 @@ async function submitProfileUpdate() {
   });
 }
 
-// রেফারেল ডেটা
 async function loadReferralData() {
   if (!currentUser) return;
   const dbClient = getDB();
@@ -1014,7 +934,7 @@ function renderHistoryList(txList) {
   container.innerHTML = "";
 
   if (!txList || txList.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">কোনো লেনদেনের তথ্য পাওয়া যায়নি।</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">কোনো লেনদেনের তথ্য পাওয়া যায়নি।</div>`;
     return;
   }
 
@@ -1044,15 +964,15 @@ function renderHistoryList(txList) {
     if (t.status === 'rejected') badgeColor = 'var(--danger)';
 
     const item = document.createElement("div");
-    item.style.cssText = "background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:10px 14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
+    item.style.cssText = "background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:10px 12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
     item.innerHTML = `
       <div>
-        <strong style="color:#fff; font-size:13px;">${title}</strong><br>
-        <small style="color:var(--text-muted); font-size:11px;">${new Date(t.created_at).toLocaleString('bn-BD')}</small>
+        <strong style="color:#fff; font-size:12px;">${title}</strong><br>
+        <small style="color:var(--text-muted); font-size:10px;">${new Date(t.created_at).toLocaleString('bn-BD')}</small>
         ${t.trx_id ? `<br><small style="color:#38bdf8; font-size:10px;">Trx: ${t.trx_id}</small>` : ''}
       </div>
       <div style="text-align:right;">
-        <span style="font-size:14px; font-weight:800; color:${sign === '+' ? 'var(--accent)' : '#fff'};">${sign}$${parseFloat(t.amount).toFixed(2)}</span><br>
+        <span style="font-size:13px; font-weight:800; color:${sign === '+' ? 'var(--accent)' : '#fff'};">${sign}$${parseFloat(t.amount).toFixed(2)}</span><br>
         <small style="color:${badgeColor}; font-weight:700; text-transform:uppercase; font-size:10px;">${t.status}</small>
       </div>
     `;
@@ -1130,7 +1050,7 @@ async function renderAgentDirectory() {
   list.innerHTML = "";
 
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.agent_system === false) {
-    list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px;">এজেন্ট ক্যাশ-আউট নেটওয়ার্ক বর্তমানে বন্ধ আছে।</div>`;
+    list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:12px;">এজেন্ট ক্যাশ-আউট নেটওয়ার্ক বর্তমানে বন্ধ আছে।</div>`;
     return;
   }
 
@@ -1138,22 +1058,22 @@ async function renderAgentDirectory() {
   const { data: agents } = await dbClient.from('agent_applications').select('*').eq('status', 'approved');
 
   if (!agents || agents.length === 0) {
-    list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px;">বর্তমানে কোনো অনুমোদিত এজেন্ট নেই।</div>`;
+    list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:12px;">বর্তমানে কোনো অনুমোদিত এজেন্ট নেই।</div>`;
     return;
   }
 
   agents.forEach(ag => {
     const item = document.createElement("div");
-    item.style.cssText = "background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;";
+    item.style.cssText = "background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:10px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;";
     item.innerHTML = `
       <div>
-        <strong style="color:#fff;">${ag.shop_name}</strong> (${ag.full_name || 'Agent'})<br>
-        <small style="color:var(--text-muted);">${ag.location}</small><br>
-        <small style="color:#38bdf8;">📞 ${ag.phone}</small>
+        <strong style="color:#fff; font-size:13px;">${ag.shop_name}</strong> (${ag.full_name || 'Agent'})<br>
+        <small style="color:var(--text-muted); font-size:11px;">${ag.location}</small><br>
+        <small style="color:#38bdf8; font-size:11px;">📞 ${ag.phone}</small>
       </div>
       <div style="display:flex; gap:6px;">
-        <a href="tel:${ag.phone}" class="btn btn-outline" style="padding:6px 10px; font-size:12px; text-decoration:none;">📞 Call</a>
-        <a href="https://wa.me/88${ag.phone}" target="_blank" class="btn btn-accent" style="padding:6px 10px; font-size:12px; text-decoration:none;">💬 WhatsApp</a>
+        <a href="tel:${ag.phone}" class="btn btn-outline" style="padding:5px 8px; font-size:11px; text-decoration:none;">📞 Call</a>
+        <a href="https://wa.me/88${ag.phone}" target="_blank" class="btn btn-accent" style="padding:5px 8px; font-size:11px; text-decoration:none;">💬 WhatsApp</a>
       </div>
     `;
     list.appendChild(item);
@@ -1222,7 +1142,7 @@ function checkStockSpecialTimedBoost(stockId) {
   }
 }
 
-// শেয়ার ইনভেস্টমেন্ট বার্তা সংশোধন (প্রত্যাশিত রেট ছাড়া সরাসরি প্রশ্ন)
+// শেয়ার কেনার সরল ও প্রফেশনাল বার্তা
 async function confirmStockInvest() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.investments === false) {
     alert("ইনভেস্টমেন্ট সিস্টেম বন্ধ আছে।");
@@ -1256,7 +1176,6 @@ async function confirmStockInvest() {
     finalRate = parseFloat((Math.random() * (maxP - minP) + minP).toFixed(2));
   }
 
-  // পরিষ্কার ও প্রফেশনাল বার্তা
   requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name} কোম্পানির $${amt} ডলারের শেয়ার কিনতে চান?`, async () => {
     const dbClient = getDB();
     const newMain = parseFloat(currentUser.main_balance) - amt;
@@ -1296,29 +1215,28 @@ async function checkInvestmentsExpiry() {
   if (!list || list.length === 0) {
     if (container) {
       container.innerHTML = `
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; color:var(--text-muted); font-size:13px; text-align:center;">
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; color:var(--text-muted); font-size:12px; text-align:center;">
           বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
         </div>
       `;
     }
     if (modalContainer) {
-      modalContainer.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">আপনার কোনো সক্রিয় শেয়ার নেই।</div>`;
+      modalContainer.innerHTML = `<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:16px;">আপনার কোনো সক্রিয় শেয়ার নেই।</div>`;
     }
     return;
   }
 
-  // হোম স্ক্রিনের লিস্ট এবং লকড ব্যালেন্স পপআপ উভয়ের জন্য রেন্ডার
   let htmlCards = "";
   list.forEach(i => {
     htmlCards += `
-      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <strong style="color:#38bdf8; font-size:14px;">${i.stock_name}</strong><br>
-          <small style="color:var(--text-muted);">কেনা শেয়ার: $${parseFloat(i.amount).toFixed(2)}</small>
+          <strong style="color:#38bdf8; font-size:13px;">${i.stock_name}</strong><br>
+          <small style="color:var(--text-muted); font-size:11px;">কেনা শেয়ার: $${parseFloat(i.amount).toFixed(2)}</small>
         </div>
         <div style="text-align:right;">
-          <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:800; font-size:14px;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
-          <small style="color:var(--gold); font-size:11px;">চলমান (২৪ ঘণ্টা)</small>
+          <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:800; font-size:13px;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
+          <small style="color:var(--gold); font-size:10px;">চলমান (২৪ ঘণ্টা)</small>
         </div>
       </div>
     `;
@@ -1327,7 +1245,6 @@ async function checkInvestmentsExpiry() {
   if (container) container.innerHTML = htmlCards;
   if (modalContainer) modalContainer.innerHTML = htmlCards;
 
-  // এক্সপায়ারি চেক (লাভ বণ্টন)
   const now = new Date();
   for (let inv of list) {
     if (new Date(inv.ends_at) <= now) {
@@ -1371,7 +1288,7 @@ function switchTradeMode(mode) {
 
 async function processTradeLTM() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.trade_ltm === false) {
-    alert("ট্রেড মার্কেট বর্তমানে বন্ধ আছে।");
+    alert("ট্রেড মার্কেট বন্ধ আছে।");
     return;
   }
 
@@ -1445,7 +1362,7 @@ async function loadUserMessages() {
     const box = document.getElementById("liveChatMessagesBox");
     if (!error && msgs && box) {
       box.innerHTML = `
-        <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:10px; border-radius:12px; font-size:12px; color:#fff;">
+        <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:8px 10px; border-radius:10px; font-size:11px; color:#fff;">
           স্বাগতম! আপনার যেকোনো সমস্যা বা প্রশ্নের জন্য এখানে মেসেজ দিন। সাপোর্ট টিম দ্রুত উত্তর দেবে।
         </div>
       `;
@@ -1503,19 +1420,19 @@ function renderCompanyRoadmapPosts() {
 
   const posts = platformConfig.company_posts || [];
   if (posts.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">বর্তমানে কোনো রোডম্যাপ পোস্ট প্রকাশিত হয়নি।</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:12px;">বর্তমানে কোনো রোডম্যাপ পোস্ট প্রকাশিত হয়নি।</div>`;
     return;
   }
 
   posts.forEach(p => {
     const card = document.createElement("div");
-    card.style.cssText = "background:var(--bg-card); border:1px solid var(--glass-border-bright); padding:20px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.3);";
+    card.style.cssText = "background:var(--bg-card); border:1px solid var(--glass-border-bright); padding:16px; border-radius:16px;";
     card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3 style="color:#38bdf8; font-size:18px;">${p.title}</h3>
-        <span style="font-size:12px; color:var(--text-muted);">${p.date || 'Active Mission'}</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h3 style="color:#38bdf8; font-size:16px;">${p.title}</h3>
+        <span style="font-size:11px; color:var(--text-muted);">${p.date || 'Active Mission'}</span>
       </div>
-      <p style="color:var(--text-main); font-size:14px; line-height:1.7;">${p.content}</p>
+      <p style="color:var(--text-main); font-size:13px; line-height:1.6;">${p.content}</p>
     `;
     container.appendChild(card);
   });
@@ -1565,7 +1482,7 @@ function renderDynamicButtons() {
   btns.forEach(b => {
     const btn = document.createElement("button");
     btn.className = "btn btn-outline";
-    btn.style.cssText = "flex:1; min-width:140px; padding:12px; font-size:13px;";
+    btn.style.cssText = "flex:1; min-width:130px; padding:10px; font-size:12px;";
     btn.innerText = b.title;
     btn.onclick = () => {
       if (b.isEmbed) {
@@ -1589,7 +1506,7 @@ function closeVideoPlayer() {
   closeModal("inAppPlayerModal");
 }
 
-// ড্রয়ার ও মোডাল হেল্পার
+// মোডাল ও নিশ্চিতকরণ
 function toggleDrawer(open) {
   const d = document.getElementById("drawerMenu");
   const o = document.getElementById("drawerOverlay");
