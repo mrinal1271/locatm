@@ -68,9 +68,7 @@
         <h3 style="color:var(--accent);" data-i18n="welcome_title">🎉 বিশেষ ঘোষণা</h3>
         <button class="icon-btn" style="width:30px; height:30px;" onclick="closeWelcomeModal()">✕</button>
       </div>
-      <div id="welcomeAnnouncementContent" style="font-size:13px; line-height:1.6; color:var(--text-main); margin:14px 0;">
-        <!-- অ্যাডমিন প্যানেল থেকে লেখা আসবে -->
-      </div>
+      <div id="welcomeAnnouncementContent" style="font-size:13px; line-height:1.6; color:var(--text-main); margin:14px 0;"></div>
       <button class="btn btn-accent" style="width:100%;" onclick="closeWelcomeModal()" data-i18n="close_btn">আমি পড়েছি ও বুঝেছি</button>
     </div>
   </div>
@@ -84,7 +82,7 @@
     
     <div class="header-actions">
       <!-- PWA অ্যাপ ইনস্টল বাটন -->
-      <button id="pwaInstallBtn" class="icon-btn" title="ইনস্টল অ্যাপ" onclick="triggerPWAInstall()" style="display:none; color:var(--accent); border-color:rgba(16,185,129,0.3);">
+      <button id="pwaInstallBtn" class="icon-btn" title="ইনস্টল অ্যাপ" onclick="triggerPWAInstall()" style="color:var(--accent); border-color:rgba(16,185,129,0.4);">
         📲
       </button>
 
@@ -143,6 +141,12 @@
         </button>
       </li>
       <li>
+        <button class="drawer-btn" onclick="openModalAndCloseDrawer('historyModal')">
+          <div class="btn-icon-wrap" style="background:rgba(56,189,248,0.2); color:#38bdf8;">📜</div>
+          <span data-i18n="menu_history">লেনদেন হিস্টোরি (History)</span>
+        </button>
+      </li>
+      <li>
         <button class="drawer-btn" onclick="openModalAndCloseDrawer('agentModal')">
           <div class="btn-icon-wrap" style="background:rgba(239,68,68,0.2); color:#f87171;">📍</div>
           <span data-i18n="menu_agents">ক্যাশআউট এজেন্ট তালিকা</span>
@@ -151,7 +155,7 @@
       <li id="agentApplyDrawerItem">
         <button class="drawer-btn" style="border-style:dashed;" onclick="openModalAndCloseDrawer('agentApplyModal')">
           <div class="btn-icon-wrap" style="background:rgba(239,68,68,0.2); color:#f87171;">📝</div>
-          <span data-i18n="menu_agent_apply">এজেন্ট হওয়ার পূর্ণ আবেদন</span>
+          <span data-i18n="menu_agent_apply">এজেন্ট হওয়ার আবেদন</span>
         </button>
       </li>
       <li>
@@ -196,16 +200,19 @@
   <!-- ================= ৬. মূল ড্যাশবোর্ড কন্টেন্ট ================= -->
   <div class="container">
     
-    <!-- ৩D ওয়ালেট কার্ড (জিরো ডেমো) -->
+    <!-- ৩D ওয়ালেট কার্ড (ক্লিকেবল লকড ব্যালেন্স) -->
     <div class="wallet-card">
       <div class="wallet-item">
         <h4 data-i18n="w_main">Main Balance</h4>
         <p id="mainBalance">$0.00</p>
       </div>
-      <div class="wallet-item">
-        <h4 data-i18n="w_locked">Locked / Invested</h4>
-        <p id="lockedBalance">$0.00</p>
+
+      <!-- লকড ব্যালেন্স - ক্লিক করলে সক্রিয় শেয়ার লিস্ট পপআপ ওপেন হবে -->
+      <div class="wallet-item" style="cursor:pointer; border:1px dashed var(--glass-border-bright);" onclick="openModal('activeInvestDetailsModal')" title="ক্লিক করে সক্রিয় শেয়ারের তালিকা দেখুন">
+        <h4 data-i18n="w_locked">Locked / Invested 🔍</h4>
+        <p id="lockedBalance" style="color:#38bdf8;">$0.00</p>
       </div>
+
       <div class="wallet-item">
         <h4 data-i18n="w_ltm">LTM Token</h4>
         <p><span id="coinBalance">0.00</span> <small style="font-size:11px; color:var(--accent);" id="coinUsdVal">($0.00)</small></p>
@@ -230,9 +237,9 @@
         <div class="action-icon bg-p2p">🔄</div>
         <span data-i18n="action_p2p">P2P পাঠান</span>
       </div>
-      <div class="action-card-btn" onclick="openModal('tradeModal')">
-        <div class="action-icon bg-trd">🪙</div>
-        <span data-i18n="action_trd">ট্রেড LTM</span>
+      <div class="action-card-btn" onclick="openModal('historyModal')">
+        <div class="action-icon" style="background:rgba(56,189,248,0.25); border:1px solid rgba(56,189,248,0.4); color:#38bdf8;">📜</div>
+        <span data-i18n="action_history">হিস্টোরি</span>
       </div>
     </div>
 
@@ -245,7 +252,7 @@
 
     <!-- সক্রিয় ইনভেস্টমেন্ট তালিকা -->
     <div class="section-title">
-      <span>⏳ <span data-i18n="active_inv_title">আপনার সক্রিয় ইনভেস্টমেন্ট</span></span>
+      <span>⏳ <span data-i18n="active_inv_title">আপনার সক্রিয় শেয়ার ও ইনভেস্টমেন্ট</span></span>
     </div>
     <div id="activeInvestList" style="margin-bottom:28px;">
       <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; color:var(--text-muted); font-size:13px; text-align:center;" data-i18n="no_active_inv">
@@ -253,7 +260,7 @@
       </div>
     </div>
 
-    <!-- অ্যাডমিন ডায়নামিক বাটন সেকশন (লাইভ ক্রিকেট, বিনোদন ইত্যাদি) -->
+    <!-- ডায়নামিক বাটন সেকশন -->
     <div id="dynamicActionBarWrapper" style="display:none; margin-bottom:28px;">
       <div class="section-title">
         <span>⚡ <span data-i18n="live_extra_title">লাইভ আপডেট ও বিনোদন</span></span>
@@ -264,6 +271,45 @@
   </div>
 
   <!-- ================= ৭. পূর্ণাঙ্গ মোডালসমূহ ================= -->
+
+  <!-- লকড ইনভেস্টমেন্ট ডিটেইলস মোডাল (লকড ব্যালেন্সে ক্লিকে ওপেন হবে) -->
+  <div class="modal-overlay" id="activeInvestDetailsModal">
+    <div class="modal-box" style="max-width:500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="color:#38bdf8;">📊 সক্রিয় শেয়ার পোর্টফোলিও</h3>
+        <button class="icon-btn" style="width:30px; height:30px;" onclick="closeModal('activeInvestDetailsModal')">✕</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">আপনার কোন কোন কোম্পানিতে কত ডলার লক/ইনভেস্ট রয়েছে তার বিস্তারিত তালিকা:</p>
+      <div id="modalActiveInvestList" style="display:flex; flex-direction:column; gap:10px; max-height:350px; overflow-y:auto;">
+        <!-- ডাইনামিক লোড হবে -->
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('activeInvestDetailsModal')">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- লেনদেন হিস্টোরি মোডাল -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-box" style="max-width:540px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="color:#38bdf8;">📜 সম্পূর্ণ লেনদেন হিস্টোরি</h3>
+        <button class="icon-btn" style="width:30px; height:30px;" onclick="closeModal('historyModal')">✕</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;">
+        <button class="btn btn-primary" id="histFilterAll" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('all')">সব লেনদেন</button>
+        <button class="btn btn-outline" id="histFilterDep" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('deposit')">ডিপোজিট</button>
+        <button class="btn btn-outline" id="histFilterWtd" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('withdraw')">উত্তোলন</button>
+        <button class="btn btn-outline" id="histFilterP2P" style="padding:6px 12px; font-size:11px;" onclick="filterUserHistory('p2p')">P2P</button>
+      </div>
+      <div id="userTransactionHistoryList" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
+        <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">লোড হচ্ছে...</div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('historyModal')">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- সর্বজনীন ডাবল কনফার্মেশন মোডাল -->
   <div class="modal-overlay" id="confirmModal">
@@ -277,7 +323,7 @@
     </div>
   </div>
 
-  <!-- ডিপোজিট মোডাল (অ্যাডমিন নিয়ন্ত্রিত আনলিমিটেড মেথড) -->
+  <!-- ডিপোজিট মোডাল -->
   <div class="modal-overlay" id="depositModal">
     <div class="modal-box">
       <h3 style="color:#34d399;" data-i18n="dep_modal_title">💳 ডিপোজিট ফান্ড</h3>
@@ -304,12 +350,11 @@
     </div>
   </div>
 
-  <!-- উত্তোলন মোডাল (অ্যাডমিন নিয়ন্ত্রিত মেথড ও ফি পার্সেন্টেজ) -->
+  <!-- উত্তোলন মোডাল -->
   <div class="modal-overlay" id="withdrawModal">
     <div class="modal-box">
       <h3 style="color:#fbbf24;" data-i18n="wtd_modal_title">💸 ব্যালেন্স উত্তোলন (Withdraw)</h3>
       
-      <!-- অ্যাডমিন সেট করা ফি পার্সেন্টেজ নোটিস -->
       <div id="withdrawFeeNotice" style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:8px 12px; border-radius:10px; margin-bottom:12px; font-size:12px; color:#fbbf24;">
         উত্তোলন প্রসেসিং ফি: <strong id="withdrawFeeRateText">০%</strong>
       </div>
@@ -330,7 +375,7 @@
     </div>
   </div>
 
-  <!-- P2P ট্রান্সফার মোডাল (অ্যাডমিন ফি পার্সেন্টেজ সহ) -->
+  <!-- P2P ট্রান্সফার মোডাল -->
   <div class="modal-overlay" id="p2pModal">
     <div class="modal-box">
       <h3 style="color:#22d3ee;" data-i18n="p2p_modal_title">🔄 P2P ইনস্ট্যান্ট ফান্ড ট্রান্সফার</h3>
@@ -384,12 +429,16 @@
     </div>
   </div>
 
-  <!-- এজেন্ট পূর্ণাঙ্গ ভেরিফিকেশন আবেদন ফর্ম (সম্পূর্ণ এনআইডি ও বিস্তারিত ফিল্ড) -->
+  <!-- এজেন্ট পূর্ণাঙ্গ ভেরিফিকেশন আবেদন ফর্ম (ফি পরিষ্কার ডিসপ্লে) -->
   <div class="modal-overlay" id="agentApplyModal">
     <div class="modal-box" style="max-width:480px;">
-      <h3 style="color:#f87171;" data-i18n="agent_apply_title">📝 এজেন্ট হওয়ার পূর্ণাঙ্গ ভেরিফিকেশন ফর্ম</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" data-i18n="agent_apply_desc">এনআইডি কার্ডের তথ্যের সাথে মিল রেখে সত্য তথ্য পূরণ করুন।</p>
+      <h3 style="color:#f87171;" data-i18n="agent_apply_title">📝 এজেন্ট হওয়ার আবেদন ফর্ম</h3>
       
+      <!-- এজেন্ট সিকিউরিটি ফি স্পষ্ট নোটিস -->
+      <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); padding:10px 14px; border-radius:12px; margin-bottom:14px; font-size:13px; color:#f87171;">
+        ⚠️ <strong>সিকিউরিটি ফি সতর্কতা:</strong> এজেন্ট ভেরিফিকেশনের জন্য আপনার মেইন ব্যালেন্স থেকে <strong id="agentFeeNoticeAmount" style="color:#fff; font-size:15px;">$১০.০০</strong> সিকিউরিটি ফি কাটা হবে।
+      </div>
+
       <label style="font-size:12px; color:var(--text-muted);">আপনার পূর্ণ নাম (NID অনুযায়ী):</label>
       <input type="text" id="agFullName" class="input-field" placeholder="যেমন: মো: রফিকুল ইসলাম">
 
@@ -416,39 +465,38 @@
 
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('agentApplyModal')" data-i18n="cancel">Cancel</button>
-        <button class="btn btn-accent" onclick="submitFullAgentApplication()" data-i18n="submit_apply">আবেদন জমা দিন</button>
+        <button class="btn btn-accent" onclick="submitFullAgentApplication()" data-i18n="submit_apply">ফি দিয়ে আবেদন জমা দিন</button>
       </div>
     </div>
   </div>
 
-  <!-- স্টক ইনভেস্টমেন্ট মোডাল -->
+  <!-- স্টক ইনভেস্টমেন্ট মোডাল (সংশোধিত শেয়ার কিনুন বার্তা) -->
   <div class="modal-overlay" id="investModal">
     <div class="modal-box">
-      <h3 id="investModalStockTitle" style="color:#38bdf8;">ইনভেস্টমেন্ট</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" data-i18n="invest_desc">২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও নির্ধারিত লাভ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।</p>
+      <h3 id="investModalStockTitle" style="color:#38bdf8;">শেয়ার কেনা</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" data-i18n="invest_desc">২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও লভ্যাংশ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।</p>
       
-      <!-- স্পেশাল টাইমার বুস্ট নোটিশ (যদি থাকে) -->
       <div id="stockSpecialOfferBox" style="display:none; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); padding:10px; border-radius:12px; margin-bottom:12px; font-size:12px; color:var(--gold);">
         🔥 <strong id="stockSpecialOfferText">বিশেষ অফার চলমান!</strong><br>
         <small id="stockSpecialOfferTimer">বাকি সময়: --:--:--</small>
       </div>
 
-      <label style="font-size:12px; color:var(--text-muted);" data-i18n="invest_amount_label">ইনভেস্টমেন্ট অ্যামাউন্ট ($):</label>
+      <label style="font-size:12px; color:var(--text-muted);" data-i18n="invest_amount_label">কত ডলারের শেয়ার কিনবেন ($):</label>
       <input type="number" id="investStockAmount" class="input-field" value="10" min="0.1" step="0.1">
 
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('investModal')" data-i18n="cancel">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmStockInvest()" data-i18n="confirm_invest">ইনভেস্ট সম্পন্ন করুন</button>
+        <button class="btn btn-primary" onclick="confirmStockInvest()" data-i18n="confirm_invest">শেয়ার কিনুন</button>
       </div>
     </div>
   </div>
 
-  <!-- রেফারেল অ্যান্ড আর্ন ড্যাশবোর্ড মোডাল (লাইভ আর্নিং ও মেম্বার লিস্ট) -->
+  <!-- রেফারেল অ্যান্ড আর্ন ড্যাশবোর্ড মোডাল -->
   <div class="modal-overlay" id="referralModal">
     <div class="modal-box" style="max-width:500px;">
       <h3 style="color:#60a5fa;" data-i18n="refer_dash_title">👥 রেফারেল ড্যাশবোর্ড ও আর্নিং</h3>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-        রেফারেল কমিশন রেট: <strong style="color:var(--accent);" id="referralCommissionRateText">১০%</strong> (অ্যাডমিন নিয়ন্ত্রিত)
+        রেফারেল বোনাস রেট: <strong style="color:var(--accent);" id="referralCommissionRateText">১০%</strong>
       </p>
 
       <div style="background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:12px;">
@@ -459,7 +507,6 @@
         </div>
       </div>
 
-      <!-- রেফার মেট্রিক্স -->
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
         <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:12px; border-radius:12px; text-align:center;">
           <small style="color:var(--text-muted); font-size:11px;">মোট রেফারেল</small>
@@ -544,9 +591,7 @@
         <button class="btn btn-outline" onclick="toggleFullscreenRoadmap(false)">✕ বন্ধ করুন</button>
       </div>
 
-      <div id="roadmapPostsContainer" style="display:flex; flex-direction:column; gap:16px;">
-        <!-- অ্যাডমিন প্যানেল থেকে পাবলিশ করা পোস্টসমূহ এখানে ফুল পেজে আসবে -->
-      </div>
+      <div id="roadmapPostsContainer" style="display:flex; flex-direction:column; gap:16px;"></div>
     </div>
   </div>
 
@@ -565,14 +610,12 @@
         <button class="icon-btn" style="width:28px; height:28px;" onclick="closeModal('liveChatModal')">✕</button>
       </div>
 
-      <!-- চ্যাট মেসেজ হিস্ট্রি -->
       <div id="liveChatMessagesBox" style="flex:1; overflow-y:auto; padding:12px 0; display:flex; flex-direction:column; gap:10px;">
         <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:10px; border-radius:12px; font-size:12px; color:#fff;">
-          স্বাগতম! আপনার যেকোনো সমস্যা, ডিপোজিট বা উইথড্রাল নিয়ে প্রশ্ন থাকলে এখানে লিখুন। আমাদের সাপোর্ট টিম দ্রুত উত্তর দেবে।
+          স্বাগতম! আপনার যেকোনো সমস্যা, ডিপোজিট বা উইথড্রাল নিয়ে প্রশ্ন থাকলে এখানে লিখুন। সাপোর্ট টিম সরাসরি উত্তর দেবে।
         </div>
       </div>
 
-      <!-- মেসেজ ইনপুট বার -->
       <div style="display:flex; gap:8px; border-top:1px solid var(--glass-border); padding-top:10px;">
         <input type="text" id="liveChatInput" class="input-field" style="margin-bottom:0;" placeholder="আপনার মেসেজ লিখুন..." onkeypress="handleChatKeyPress(event)">
         <button class="btn btn-primary" style="padding:10px 14px;" onclick="sendLiveChatMessage()">পাঠান</button>

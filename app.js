@@ -1,7 +1,9 @@
 /**
  * ====================================================================
- * Locatm - Ultra Client Engine (app.js) [PWA & Direct Cloud Sync]
+ * Locatm - Ultra Client Engine (app.js) [Real-time Cloud Sync]
  * ====================================================================
+ * লাইভ রিয়েল-টাইম ডাটা সিঙ্ক (রিফ্রেশ ছাড়া আপডেট), লেনদেন হিস্টোরি,
+ * ক্লিকেবল লকড শেয়ার পোর্টফোলিও এবং নিরাপদ ক্লাউড লেনদেন।
  */
 
 let currentUser = null;
@@ -10,8 +12,10 @@ let currentTradeMode = 'buy';
 let currentLanguage = localStorage.getItem('locatm_lang') || 'bn';
 let deferredPwaPrompt = null;
 let activeSpecialStockTimerInterval = null;
+let userTransactionsCache = [];
+let realtimeSubscriptions = [];
 
-// প্ল্যাটফর্ম সেন্ট্রাল সেটিংস
+// প্ল্যাটফর্ম সেটিংস
 let platformConfig = {
   ltm_rate: 0.10,
   stock_profit_settings: { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {}, timed_boosts: {} },
@@ -45,8 +49,9 @@ const TRANSLATIONS = {
     menu_wtd: "উত্তোলন (Withdraw)",
     menu_p2p: "P2P ফান্ড ট্রান্সফার",
     menu_trd: "Trade LTM মার্কেট",
+    menu_history: "লেনদেন হিস্টোরি (History)",
     menu_agents: "ক্যাশআউট এজেন্ট তালিকা",
-    menu_agent_apply: "এজেন্ট হওয়ার পূর্ণ আবেদন",
+    menu_agent_apply: "এজেন্ট হওয়ার আবেদন",
     menu_refer: "রেফার ড্যাশবোর্ড ও ইনকাম",
     menu_profile: "প্রোফাইল তথ্য পরিবর্তন",
     menu_roadmap: "কোম্পানি ভবিষ্যৎ রোডম্যাপ",
@@ -54,16 +59,16 @@ const TRANSLATIONS = {
     menu_logout: "লগআউট করুন",
     notice_badge: "নোটিস",
     w_main: "Main Balance",
-    w_locked: "Locked / Invested",
+    w_locked: "Locked / Invested 🔍",
     w_ltm: "LTM Token",
     w_profit: "Total Profit",
     action_dep: "ডিপোজিট",
     action_wtd: "উত্তোলন",
     action_p2p: "P2P পাঠান",
-    action_trd: "ট্রেড LTM",
+    action_history: "হিস্টোরি",
     stock_title: "Global Stock Market (100+ Companies)",
     stock_cycle: "২৪ ঘণ্টা সাইকেল",
-    active_inv_title: "আপনার সক্রিয় ইনভেস্টমেন্ট",
+    active_inv_title: "আপনার সক্রিয় শেয়ার ও ইনভেস্টমেন্ট",
     no_active_inv: "বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।",
     live_extra_title: "লাইভ আপডেট ও বিনোদন",
     confirm_title: "⚠️ নিশ্চিতকরণ",
@@ -92,12 +97,11 @@ const TRANSLATIONS = {
     confirm_order: "অর্ডার সম্পন্ন করুন",
     agents_list_title: "📍 ভেরিফাইড ক্যাশআউট এজেন্ট নেটওয়ার্ক",
     agents_list_desc: "আপনার লোকাল এজেন্টের সাথে যোগাযোগ করে ক্যাশআউট করুন।",
-    agent_apply_title: "📝 এজেন্ট হওয়ার পূর্ণাঙ্গ ভেরিফিকেশন ফর্ম",
-    agent_apply_desc: "এনআইডি কার্ডের তথ্যের সাথে মিল রেখে সত্য তথ্য পূরণ করুন।",
+    agent_apply_title: "📝 এজেন্ট হওয়ার আবেদন ফর্ম",
     submit_apply: "ফি দিয়ে আবেদন জমা দিন",
-    invest_desc: "২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও নির্ধারিত লাভ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।",
-    invest_amount_label: "ইনভেস্টমেন্ট অ্যামাউন্ট ($):",
-    confirm_invest: "ইনভেস্ট সম্পন্ন করুন",
+    invest_desc: "২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও লভ্যাংশ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।",
+    invest_amount_label: "কত ডলারের শেয়ার কিনবেন ($):",
+    confirm_invest: "শেয়ার কিনুন",
     refer_dash_title: "👥 রেফারেল ড্যাশবোর্ড ও আর্নিং",
     profile_edit_title: "👤 প্রোফাইল এডিটর",
     save_changes: "আপডেট করুন",
@@ -118,6 +122,7 @@ const TRANSLATIONS = {
     menu_wtd: "Withdraw Funds",
     menu_p2p: "P2P Fund Transfer",
     menu_trd: "Trade LTM Token",
+    menu_history: "Transaction History",
     menu_agents: "Cashout Agent List",
     menu_agent_apply: "Apply for Verified Agent",
     menu_refer: "Referral Dashboard",
@@ -127,16 +132,16 @@ const TRANSLATIONS = {
     menu_logout: "Sign Out",
     notice_badge: "NOTICE",
     w_main: "Main Balance",
-    w_locked: "Locked / Invested",
+    w_locked: "Locked / Invested 🔍",
     w_ltm: "LTM Token",
     w_profit: "Total Profit",
     action_dep: "Deposit",
     action_wtd: "Withdraw",
     action_p2p: "P2P Transfer",
-    action_trd: "Trade LTM",
+    action_history: "History",
     stock_title: "Global Stock Market (100+ Companies)",
     stock_cycle: "24 Hours Cycle",
-    active_inv_title: "Your Active Investments",
+    active_inv_title: "Your Active Shares & Investments",
     no_active_inv: "No active investments at this moment.",
     live_extra_title: "Live Updates & Action",
     confirm_title: "⚠️ Confirmation",
@@ -166,11 +171,10 @@ const TRANSLATIONS = {
     agents_list_title: "📍 Verified Cashout Agents",
     agents_list_desc: "Contact your local agent directly to cash out.",
     agent_apply_title: "📝 Verified Agent Application Form",
-    agent_apply_desc: "Fill in accurate information as per your NID card.",
     submit_apply: "Pay Fee & Submit Application",
-    invest_desc: "Capital and guaranteed profits will be credited to main balance after 24 hours.",
+    invest_desc: "Capital and earnings will be credited to main balance after 24 hours.",
     invest_amount_label: "Investment Amount ($):",
-    confirm_invest: "Confirm Investment",
+    confirm_invest: "Buy Share",
     refer_dash_title: "👥 Referral Dashboard & Earnings",
     profile_edit_title: "👤 Edit Profile",
     save_changes: "Save Changes",
@@ -294,7 +298,7 @@ function getDB() {
   return window.db || null;
 }
 
-// পেজ লোড ও সার্ভিস ওয়ার্কার ইনিট
+// পেজ লোড ও ইনিট
 document.addEventListener("DOMContentLoaded", async () => {
   registerServiceWorker();
   setupPwaInstallPrompt();
@@ -304,20 +308,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   await checkSavedAuth();
 });
 
-// সার্ভিস ওয়ার্কার রেজিস্ট্রেশন (PWA ইনস্টলেশনের মূল ভিত্তি)
+// সার্ভিস ওয়ার্কার
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .then((reg) => console.log('PWA Service Worker Registered:', reg.scope))
       .catch((err) => console.warn('Service Worker registration skipped:', err));
   }
 }
 
-// PWA ইনস্টল প্রম্পট হ্যান্ডলার
+// PWA ইনস্টল প্রম্পট
 function setupPwaInstallPrompt() {
   const pwaBtn = document.getElementById("pwaInstallBtn");
-  
-  // বাটনের ভিজিবিলিটি সর্বদা বজায় রাখা (ইউজার যাতে যেকোনো সময় চাপতে পারে)
   if (pwaBtn) pwaBtn.style.display = "flex";
 
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -342,12 +343,11 @@ function triggerPWAInstall() {
       deferredPwaPrompt = null;
     });
   } else {
-    // সরাসরি ব্রাউজারের নির্দেশনা
-    alert("আপনার ব্রাউজারের থ্রি-ডট মেনু (⋮) থেকে 'Install app' বা 'Add to Home screen' সিলেক্ট করুন। অ্যাপটি সরাসরি আপনার ফোনে বা পিসিতে ইনস্টল হয়ে যাবে।");
+    alert("আপনার ব্রাউজারের থ্রি-ডট মেনু (⋮) থেকে 'Install app' বা 'Add to Home screen' চাপুন। অ্যাপটি সরাসরি ফোনে বা পিসিতে ইনস্টল হয়ে যাবে।");
   }
 }
 
-// প্ল্যাটফর্ম সেটিংস সরাসরি ক্লাউড থেকে লোড
+// প্ল্যাটফর্ম সেটিংস লোড
 async function loadPlatformConfig() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -363,7 +363,6 @@ async function loadPlatformConfig() {
     console.error("Config fetch error:", e);
   }
 
-  // লাইভ রেট ও মারকুই
   if (document.getElementById("tradeCoinRate")) {
     document.getElementById("tradeCoinRate").innerText = `$${parseFloat(platformConfig.ltm_rate || 0.10).toFixed(2)}`;
   }
@@ -377,15 +376,35 @@ async function loadPlatformConfig() {
     document.getElementById("tutorialVideoIframe").src = platformConfig.tutorial_video_url;
   }
 
-  // ফি এবং রেফারেল রেট
   const wFee = parseFloat(platformConfig.withdraw_fee_percent || 0.0);
-  document.getElementById("withdrawFeeRateText").innerText = `${wFee}%`;
+  if (document.getElementById("withdrawFeeRateText")) {
+    document.getElementById("withdrawFeeRateText").innerText = `${wFee}%`;
+  }
 
   const p2pFee = parseFloat(platformConfig.p2p_fee_percent || 0.0);
-  document.getElementById("p2pFeeRateText").innerText = `${p2pFee}%`;
+  if (document.getElementById("p2pFeeRateText")) {
+    document.getElementById("p2pFeeRateText").innerText = `${p2pFee}%`;
+  }
 
   const refRate = parseFloat(platformConfig.referral_commission_percent || 10.0);
-  document.getElementById("referralCommissionRateText").innerText = `${refRate}%`;
+  if (document.getElementById("referralCommissionRateText")) {
+    document.getElementById("referralCommissionRateText").innerText = `${refRate}%`;
+  }
+
+  const agentFee = parseFloat(platformConfig.agent_security_fee || 10.0);
+  if (document.getElementById("agentFeeNoticeAmount")) {
+    document.getElementById("agentFeeNoticeAmount").innerText = `$${agentFee.toFixed(2)}`;
+  }
+
+  // এজেন্ট ফিচার বন্ধ থাকলে আবেদন অপশন লুকানো
+  const agentApplyLi = document.getElementById("agentApplyDrawerItem");
+  if (agentApplyLi) {
+    if (platformConfig.feature_toggles && platformConfig.feature_toggles.agent_system === false) {
+      agentApplyLi.style.display = "none";
+    } else {
+      agentApplyLi.style.display = "block";
+    }
+  }
 
   checkAndShowWelcomeNotice();
   renderDepositMethods();
@@ -408,7 +427,7 @@ function closeWelcomeModal() {
   closeModal("welcomeAnnouncementModal");
 }
 
-// সেশন যাচাই
+// সেশন চেক ও রিয়েল-টাইম লিসেনার সক্রিয়করণ
 async function checkSavedAuth() {
   const savedUserId = localStorage.getItem("locatm_session_uid");
   const dbClient = getDB();
@@ -419,8 +438,13 @@ async function checkSavedAuth() {
         currentUser = user;
         updateUserUI();
         document.getElementById("authScreen").classList.remove("active");
+        
+        // রিয়েলটাইম লাইভ সিঙ্ক শুরু
+        initUserRealtimeSync();
+
         await checkInvestmentsExpiry();
         await loadUserMessages();
+        await loadUserTransactionHistory();
         return;
       }
     } catch (e) {
@@ -428,6 +452,49 @@ async function checkSavedAuth() {
     }
   }
   document.getElementById("authScreen").classList.add("active");
+}
+
+// ================= রিয়েল-টাইম অটো সিঙ্ক (কোনো রিফ্রেশ লাগবে না) =================
+function initUserRealtimeSync() {
+  const dbClient = getDB();
+  if (!dbClient || !currentUser) return;
+
+  // পুরানো লিসেনার সরানো
+  realtimeSubscriptions.forEach(sub => dbClient.removeChannel(sub));
+  realtimeSubscriptions = [];
+
+  // ১. ইউজার ব্যালেন্স পরিবর্তন শুনবে (অ্যাডমিন অ্যাপ্রুভ করলে সাথে সাথে লাইভ আপডেট)
+  const userChannel = dbClient.channel(`user-sync-${currentUser.user_id}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `user_id=eq.${currentUser.user_id}` }, payload => {
+      currentUser = payload.new;
+      updateUserUI();
+    })
+    .subscribe();
+  realtimeSubscriptions.push(userChannel);
+
+  // ২. প্ল্যাটফর্ম সেটিংস লাইভ আপডেট শুনবে
+  const settingsChannel = dbClient.channel('platform-settings-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings' }, async () => {
+      await loadPlatformConfig();
+    })
+    .subscribe();
+  realtimeSubscriptions.push(settingsChannel);
+
+  // ৩. ট্রানজেকশন পরিবর্তন শুনবে (হিস্টোরি রিয়েলটাইম রিফ্রেশ)
+  const txChannel = dbClient.channel(`tx-sync-${currentUser.user_id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${currentUser.user_id}` }, async () => {
+      await loadUserTransactionHistory();
+    })
+    .subscribe();
+  realtimeSubscriptions.push(txChannel);
+
+  // ৪. লাইভ চ্যাট মেসেজ শুনবে
+  const msgChannel = dbClient.channel(`msg-sync-${currentUser.user_id}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_messages', filter: `user_id=eq.${currentUser.user_id}` }, async () => {
+      await loadUserMessages();
+    })
+    .subscribe();
+  realtimeSubscriptions.push(msgChannel);
 }
 
 function switchAuthTab(type) {
@@ -444,7 +511,7 @@ function switchAuthTab(type) {
   }
 }
 
-// লগইন লজিক
+// লগইন
 async function handleLogin() {
   const ident = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value.trim();
@@ -480,16 +547,20 @@ async function handleLogin() {
     localStorage.setItem("locatm_session_uid", matchedUser.user_id);
     updateUserUI();
     document.getElementById("authScreen").classList.remove("active");
+    
+    initUserRealtimeSync();
+
     await loadPlatformConfig();
     await checkInvestmentsExpiry();
     await loadUserMessages();
+    await loadUserTransactionHistory();
     alert(`স্বাগতম ${matchedUser.name}! সফলভাবে লগইন হয়েছে।`);
   } catch (err) {
     alert("লগইন সমস্যা: " + err.message);
   }
 }
 
-// সাইন-আপ লজিক
+// সাইন-আপ
 async function handleSignup() {
   const nm = document.getElementById("regName").value.trim();
   const em = document.getElementById("regEmail").value.trim();
@@ -549,7 +620,8 @@ async function handleSignup() {
     localStorage.setItem("locatm_session_uid", data.user_id);
     updateUserUI();
     document.getElementById("authScreen").classList.remove("active");
-    alert(`অভিনন্দন! আপনার অ্যাকাউন্ট ক্লাউডে সফলভাবে তৈরি হয়েছে। User ID: ${currentUser.user_id}`);
+    initUserRealtimeSync();
+    alert(`অভিনন্দন! আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। User ID: ${currentUser.user_id}`);
   } catch (err) {
     alert("সাইন-আপ সমস্যা: " + err.message);
   }
@@ -635,6 +707,7 @@ async function submitProfileUpdate() {
   });
 }
 
+// রেফারেল ডেটা
 async function loadReferralData() {
   if (!currentUser) return;
   const dbClient = getDB();
@@ -684,7 +757,7 @@ async function loadReferralData() {
   }
 }
 
-// ডিপোজিট রিকোয়েস্ট সাবমিশন (ফিক্সড)
+// ডিপোজিট
 function renderDepositMethods() {
   const sel = document.getElementById("depositMethodSelect");
   if (!sel) return;
@@ -753,16 +826,17 @@ async function submitDeposit() {
     }]);
 
     if (!error) {
-      alert("ডিপোজিট রিকোয়েস্ট সফলভাবে জমা হয়েছে! অ্যাডমিন পর্যালোচনার পর ব্যালেন্স যুক্ত হবে।");
+      alert("ডিপোজিট রিকোয়েস্ট সফলভাবে জমা হয়েছে! পর্যালোচনার পর ব্যালেন্স যুক্ত হবে।");
       document.getElementById("depositAmountInput").value = "";
       document.getElementById("depositTrxInput").value = "";
+      await loadUserTransactionHistory();
     } else {
       alert("রিকোয়েস্ট জমা দেওয়া সম্ভব হয়নি: " + error.message);
     }
   });
 }
 
-// উত্তোলন মেথড ও ফি
+// উত্তোলন
 function renderWithdrawMethods() {
   const sel = document.getElementById("withdrawMethodSelect");
   if (!sel) return;
@@ -784,7 +858,7 @@ function renderWithdrawMethods() {
 
 async function submitWithdrawal() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.withdrawals === false) {
-    alert("কোম্পানি সরাসরি উত্তোলন বর্তমানে বন্ধ আছে।");
+    alert("উত্তোলন সাময়িকভাবে বন্ধ আছে।");
     return;
   }
 
@@ -826,12 +900,13 @@ async function submitWithdrawal() {
       user_id: currentUser.user_id,
       type: 'withdraw',
       amount: amt,
-      method: `${method} (${target}) [Fee: $${feeAmount.toFixed(2)}]`,
+      method: `${method} (${target})`,
       status: 'pending'
     }]);
 
     currentUser.main_balance = newBal;
     updateUserUI();
+    await loadUserTransactionHistory();
     alert("উত্তোলন রিকোয়েস্ট সফলভাবে জমা হয়েছে!");
   });
 }
@@ -887,11 +962,105 @@ async function submitP2PTransfer() {
 
     currentUser.main_balance = senderBal;
     updateUserUI();
+    await loadUserTransactionHistory();
     alert(`$${amt} সফলভাবে ট্রান্সফার হয়েছে!`);
   });
 }
 
-// এজেন্ট পূর্ণাঙ্গ ভেরিফিকেশন ও সিকিউরিটি ফি ডিডাকশন
+// ================= সম্পূর্ণ লেনদেন হিস্টোরি (Transaction History) =================
+async function loadUserTransactionHistory() {
+  if (!currentUser) return;
+  const dbClient = getDB();
+  if (!dbClient) return;
+
+  try {
+    const { data: txs, error } = await dbClient.from('transactions')
+      .select('*')
+      .or(`user_id.eq.${currentUser.user_id},target_user_id.eq.${currentUser.user_id}`)
+      .order('created_at', { ascending: false });
+
+    if (!error && txs) {
+      userTransactionsCache = txs;
+      renderHistoryList(userTransactionsCache);
+    }
+  } catch (e) {
+    console.error("History fetch error:", e);
+  }
+}
+
+function filterUserHistory(filterType) {
+  document.querySelectorAll('#historyModal .btn').forEach(b => {
+    if (b.id && b.id.startsWith('histFilter')) b.className = 'btn btn-outline';
+  });
+
+  if (filterType === 'all') {
+    document.getElementById("histFilterAll").className = 'btn btn-primary';
+    renderHistoryList(userTransactionsCache);
+  } else if (filterType === 'deposit') {
+    document.getElementById("histFilterDep").className = 'btn btn-primary';
+    renderHistoryList(userTransactionsCache.filter(t => t.type === 'deposit'));
+  } else if (filterType === 'withdraw') {
+    document.getElementById("histFilterWtd").className = 'btn btn-primary';
+    renderHistoryList(userTransactionsCache.filter(t => t.type === 'withdraw'));
+  } else if (filterType === 'p2p') {
+    document.getElementById("histFilterP2P").className = 'btn btn-primary';
+    renderHistoryList(userTransactionsCache.filter(t => t.type.includes('p2p')));
+  }
+}
+
+function renderHistoryList(txList) {
+  const container = document.getElementById("userTransactionHistoryList");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (!txList || txList.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">কোনো লেনদেনের তথ্য পাওয়া যায়নি।</div>`;
+    return;
+  }
+
+  txList.forEach(t => {
+    let title = t.type;
+    let badgeColor = '#fbbf24';
+    let sign = '';
+
+    if (t.type === 'deposit') {
+      title = `💳 ডিপোজিট (${t.method || 'Cash'})`;
+      sign = '+';
+    } else if (t.type === 'withdraw') {
+      title = `💸 উত্তোলন (${t.method || 'Wallet'})`;
+      sign = '-';
+    } else if (t.type === 'p2p_send') {
+      title = `🔄 P2P পাঠানো (To: ${t.target_user_id})`;
+      sign = '-';
+    } else if (t.type === 'p2p_receive') {
+      title = `📥 P2P রিসিভ (From: ${t.target_user_id})`;
+      sign = '+';
+    } else if (t.type === 'agent_security_fee') {
+      title = `🛡️ এজেন্ট সিকিউরিটি ফি`;
+      sign = '-';
+    }
+
+    if (t.status === 'approved') badgeColor = 'var(--accent)';
+    if (t.status === 'rejected') badgeColor = 'var(--danger)';
+
+    const item = document.createElement("div");
+    item.style.cssText = "background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:10px 14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
+    item.innerHTML = `
+      <div>
+        <strong style="color:#fff; font-size:13px;">${title}</strong><br>
+        <small style="color:var(--text-muted); font-size:11px;">${new Date(t.created_at).toLocaleString('bn-BD')}</small>
+        ${t.trx_id ? `<br><small style="color:#38bdf8; font-size:10px;">Trx: ${t.trx_id}</small>` : ''}
+      </div>
+      <div style="text-align:right;">
+        <span style="font-size:14px; font-weight:800; color:${sign === '+' ? 'var(--accent)' : '#fff'};">${sign}$${parseFloat(t.amount).toFixed(2)}</span><br>
+        <small style="color:${badgeColor}; font-weight:700; text-transform:uppercase; font-size:10px;">${t.status}</small>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+// এজেন্ট পূর্ণাঙ্গ আবেদন
 async function submitFullAgentApplication() {
   const fullName = document.getElementById("agFullName").value.trim();
   const shop = document.getElementById("agShopName").value.trim();
@@ -945,6 +1114,7 @@ async function submitFullAgentApplication() {
 
     currentUser.main_balance = newBal;
     updateUserUI();
+    await loadUserTransactionHistory();
 
     if (!error) {
       alert("আবেদন ও সিকিউরিটি ফি সফলভাবে গৃহীত হয়েছে!");
@@ -1003,7 +1173,7 @@ function initStockMarket() {
     card.className = "stock-card";
     card.onclick = () => {
       activeInvestStock = stk;
-      document.getElementById("investModalStockTitle").innerText = `Invest in ${stk.name}`;
+      document.getElementById("investModalStockTitle").innerText = `${stk.name} শেয়ার`;
       checkStockSpecialTimedBoost(stk.id);
       openModal("investModal");
     };
@@ -1033,7 +1203,7 @@ function checkStockSpecialTimedBoost(stockId) {
 
   if (boost && new Date(boost.expires_at) > new Date()) {
     box.style.display = "block";
-    txt.innerText = `বিশেষ অফার চলমান! নিশ্চিত লাভ: +${boost.rate}%`;
+    txt.innerText = `বিশেষ অফার চলমান! নিশ্চিত বোনাস বরাদ্দ।`;
     
     activeSpecialStockTimerInterval = setInterval(() => {
       const remainingMs = new Date(boost.expires_at) - new Date();
@@ -1052,6 +1222,7 @@ function checkStockSpecialTimedBoost(stockId) {
   }
 }
 
+// শেয়ার ইনভেস্টমেন্ট বার্তা সংশোধন (প্রত্যাশিত রেট ছাড়া সরাসরি প্রশ্ন)
 async function confirmStockInvest() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.investments === false) {
     alert("ইনভেস্টমেন্ট সিস্টেম বন্ধ আছে।");
@@ -1060,7 +1231,7 @@ async function confirmStockInvest() {
 
   const amt = parseFloat(document.getElementById("investStockAmount").value);
   if (isNaN(amt) || amt < 0.10) {
-    alert("ন্যূনতম ইনভেস্টমেন্ট $0.10!");
+    alert("ন্যূনতম $0.10 ডলারের শেয়ার কিনতে হবে!");
     return;
   }
   if (parseFloat(currentUser.main_balance) < amt) {
@@ -1085,7 +1256,8 @@ async function confirmStockInvest() {
     finalRate = parseFloat((Math.random() * (maxP - minP) + minP).toFixed(2));
   }
 
-  requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name}-এ $${amt} ইনভেস্ট করতে চান?\n(২৪ ঘণ্টা সাইকেল, প্রত্যাশিত রেট: ${finalRate > 0 ? '+' : ''}${finalRate}%)`, async () => {
+  // পরিষ্কার ও প্রফেশনাল বার্তা
+  requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name} কোম্পানির $${amt} ডলারের শেয়ার কিনতে চান?`, async () => {
     const dbClient = getDB();
     const newMain = parseFloat(currentUser.main_balance) - amt;
     const newLocked = parseFloat(currentUser.locked_balance) + amt;
@@ -1103,10 +1275,11 @@ async function confirmStockInvest() {
     currentUser.locked_balance = newLocked;
     updateUserUI();
     await checkInvestmentsExpiry();
-    alert(`$${amt} সফলভাবে ইনভেস্ট হয়েছে!`);
+    alert(`$${amt} ডলার দিয়ে শেয়ার কেনা সফল হয়েছে!`);
   });
 }
 
+// সক্রিয় ইনভেস্টমেন্ট এবং লকড ব্যালেন্স পপআপ রেন্ডার
 async function checkInvestmentsExpiry() {
   if (!currentUser) return;
   const dbClient = getDB();
@@ -1118,6 +1291,7 @@ async function checkInvestmentsExpiry() {
     .eq('status', 'active');
 
   const container = document.getElementById("activeInvestList");
+  const modalContainer = document.getElementById("modalActiveInvestList");
 
   if (!list || list.length === 0) {
     if (container) {
@@ -1127,28 +1301,33 @@ async function checkInvestmentsExpiry() {
         </div>
       `;
     }
+    if (modalContainer) {
+      modalContainer.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">আপনার কোনো সক্রিয় শেয়ার নেই।</div>`;
+    }
     return;
   }
 
-  if (container) {
-    container.innerHTML = "";
-    list.forEach(i => {
-      const d = document.createElement("div");
-      d.style.cssText = "background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;";
-      d.innerHTML = `
+  // হোম স্ক্রিনের লিস্ট এবং লকড ব্যালেন্স পপআপ উভয়ের জন্য রেন্ডার
+  let htmlCards = "";
+  list.forEach(i => {
+    htmlCards += `
+      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <strong style="color:#38bdf8;">${i.stock_name}</strong><br>
-          <small style="color:var(--text-muted);">ইনভেস্ট: $${parseFloat(i.amount).toFixed(2)}</small>
+          <strong style="color:#38bdf8; font-size:14px;">${i.stock_name}</strong><br>
+          <small style="color:var(--text-muted);">কেনা শেয়ার: $${parseFloat(i.amount).toFixed(2)}</small>
         </div>
         <div style="text-align:right;">
-          <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:700;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
-          <small style="color:var(--gold);">চলমান (Active)</small>
+          <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:800; font-size:14px;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
+          <small style="color:var(--gold); font-size:11px;">চলমান (২৪ ঘণ্টা)</small>
         </div>
-      `;
-      container.appendChild(d);
-    });
-  }
+      </div>
+    `;
+  });
 
+  if (container) container.innerHTML = htmlCards;
+  if (modalContainer) modalContainer.innerHTML = htmlCards;
+
+  // এক্সপায়ারি চেক (লাভ বণ্টন)
   const now = new Date();
   for (let inv of list) {
     if (new Date(inv.ends_at) <= now) {
@@ -1267,7 +1446,7 @@ async function loadUserMessages() {
     if (!error && msgs && box) {
       box.innerHTML = `
         <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:10px; border-radius:12px; font-size:12px; color:#fff;">
-          স্বাগতম! আপনার যেকোনো সমস্যা, ডিপোজিট বা উইথড্রাল নিয়ে প্রশ্ন থাকলে এখানে লিখুন। সাপোর্ট টিম সরাসরি উত্তর দেবে।
+          স্বাগতম! আপনার যেকোনো সমস্যা বা প্রশ্নের জন্য এখানে মেসেজ দিন। সাপোর্ট টিম দ্রুত উত্তর দেবে।
         </div>
       `;
       msgs.forEach(m => {
@@ -1306,7 +1485,7 @@ async function sendLiveChatMessage() {
   await loadUserMessages();
 }
 
-// ফুল পেজ রোডম্যাপ
+// রোডম্যাপ
 function toggleFullscreenRoadmap(open) {
   toggleDrawer(false);
   const view = document.getElementById("fullscreenRoadmapView");
@@ -1324,7 +1503,7 @@ function renderCompanyRoadmapPosts() {
 
   const posts = platformConfig.company_posts || [];
   if (posts.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">বর্তমানে কোনো রোডম্যাপ পোস্ট পাবলিশ করা হয়নি।</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">বর্তমানে কোনো রোডম্যাপ পোস্ট প্রকাশিত হয়নি।</div>`;
     return;
   }
 
@@ -1410,7 +1589,7 @@ function closeVideoPlayer() {
   closeModal("inAppPlayerModal");
 }
 
-// হেল্পার
+// ড্রয়ার ও মোডাল হেল্পার
 function toggleDrawer(open) {
   const d = document.getElementById("drawerMenu");
   const o = document.getElementById("drawerOverlay");

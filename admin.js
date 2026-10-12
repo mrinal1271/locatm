@@ -1,17 +1,19 @@
 /**
  * ====================================================================
- * Locatm - Ultra Master Admin Engine (admin.js) [Direct Cloud Production]
+ * Locatm - Ultra Master Admin Engine (admin.js) [Realtime Sync & Live Chat]
  * ====================================================================
- * ড্যাশবোর্ড ওভারভিউ, সাইডবার ড্রয়ার নেভিগেশন, ডাইনামিক ডিপোজিট ও উইথড্রাল,
- * উত্তোলন ও P2P ফি কন্ট্রোল, পূর্ণাঙ্গ এজেন্ট ভেরিফিকেশন, লাইভ মেসেজিং,
- * রেফার কমিশন ও ১০০+ স্টক টাইমার বুস্ট অটোমেশন।
+ * রিয়েল-টাইম অটো-সিঙ্ক (রিফ্রেশ ছাড়া লাইভ আপডেট), মোট সক্রিয় ইনভেস্টমেন্ট মেট্রিক,
+ * ওয়ান-ক্লিক লাইভ চ্যাট রিপ্লাই, আনরিড/রিড ফিল্টার, মেসেজ এডিট ও ডিলিট।
  */
 
 let pendingAdminAction = null;
 let activeEditingUser = null;
 let adminUsersList = [];
+let allMessagesList = [];
+let currentMessageFilter = 'unread';
+let adminRealtimeChannels = [];
 
-// সেন্ট্রাল অ্যাডমিন স্টেট
+// সেন্ট্রাল স্টেট
 let adminSettings = {
   admin_credentials: { email: "admin@locatm.com", pass: "admin12345" },
   ltm_rate: 0.10,
@@ -30,7 +32,7 @@ let adminSettings = {
   custom_buttons: []
 };
 
-// ১০০+ স্টক কোম্পানি তালিকা
+// ১০০+ স্টক কোম্পানি
 const ADMIN_STOCKS = [
   { id: 1, name: "Apple Inc.", ticker: "AAPL", logo: "https://logo.clearbit.com/apple.com" },
   { id: 2, name: "Microsoft Corp.", ticker: "MSFT", logo: "https://logo.clearbit.com/microsoft.com" },
@@ -150,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkAdminSession();
 });
 
-// ১. ক্লাউড সেটিংস লোড
+// প্ল্যাটফর্ম সেটিংস লোড
 async function fetchPlatformSettings() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -167,13 +169,14 @@ async function fetchPlatformSettings() {
   }
 }
 
-// ২. অথেন্টিকেশন ও সেশন যাচাই
+// সেশন চেক
 function checkAdminSession() {
   const isAuth = sessionStorage.getItem("locatm_admin_auth");
   if (isAuth === "true") {
     document.getElementById("adminAuthScreen").classList.remove("active");
     document.getElementById("adminDashboardWrapper").style.display = "block";
     loadAllAdminData();
+    initAdminRealtimeListener();
   } else {
     document.getElementById("adminAuthScreen").classList.add("active");
     document.getElementById("adminDashboardWrapper").style.display = "none";
@@ -190,6 +193,7 @@ function verifyAdminLogin() {
     document.getElementById("adminAuthScreen").classList.remove("active");
     document.getElementById("adminDashboardWrapper").style.display = "block";
     loadAllAdminData();
+    initAdminRealtimeListener();
   } else {
     alert("ভুল অ্যাডমিন ইমেইল অথবা মাস্টার পাসওয়ার্ড!");
   }
@@ -200,7 +204,41 @@ function adminLogout() {
   window.location.reload();
 }
 
-// ৩. সাইডবার ড্রয়ার ও সেকশন সুইচ
+// ================= অ্যাডমিন রিয়েল-টাইম লিসেনার (কোনো রিফ্রেশ লাগবে না) =================
+function initAdminRealtimeListener() {
+  const dbClient = getDB();
+  if (!dbClient) return;
+
+  adminRealtimeChannels.forEach(ch => dbClient.removeChannel(ch));
+  adminRealtimeChannels = [];
+
+  // ১. ট্রানজেকশন লাইভ সিঙ্ক (ইউজার ডিপোজিট/উইথড্র দিলে সাথে সাথে টেবিল আপডেট)
+  const txChan = dbClient.channel('admin-tx-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, async () => {
+      await loadPendingTransactions();
+      await loadPlatformOverview();
+    })
+    .subscribe();
+  adminRealtimeChannels.push(txChan);
+
+  // ২. লাইভ চ্যাট মেসেজ সিঙ্ক (মেসেজ এলে টেবিল আপডেট ও অ্যালার্ট)
+  const msgChan = dbClient.channel('admin-msg-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_messages' }, async () => {
+      await loadAdminSentMessages();
+    })
+    .subscribe();
+  adminRealtimeChannels.push(msgChan);
+
+  // ৩. ইনভেস্টমেন্ট সিঙ্ক
+  const invChan = dbClient.channel('admin-inv-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'investments' }, async () => {
+      await loadPlatformOverview();
+    })
+    .subscribe();
+  adminRealtimeChannels.push(invChan);
+}
+
+// সাইডবার ড্রয়ার
 function toggleAdminDrawer(open) {
   const d = document.getElementById("adminDrawerMenu");
   const o = document.getElementById("adminDrawerOverlay");
@@ -220,7 +258,7 @@ function switchAdminSection(secId) {
   if (target) target.classList.add('active');
 }
 
-// ৪. সকল অ্যাডমিন ডেটা লোড
+// ডেটা লোড
 async function loadAllAdminData() {
   await loadPlatformOverview();
   await loadUserAuditList();
@@ -234,7 +272,7 @@ async function loadAllAdminData() {
   syncMasterTogglesUI();
 }
 
-// ৫. ড্যাশবোর্ড ওভারভিউ মেট্রিক্স
+// প্ল্যাটফর্ম ওভারভিউ মেট্রিক্স (সক্রিয় ইনভেস্টমেন্ট হিসাবসহ)
 async function loadPlatformOverview() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -252,6 +290,17 @@ async function loadPlatformOverview() {
     }
     document.getElementById("statTotalCoinsHeld").innerText = `${totalLtm.toFixed(2)} LTM`;
 
+    // সক্রিয় ইনভেস্টমেন্ট হিসাব
+    const { data: activeInvs } = await dbClient.from('investments').select('amount').eq('status', 'active');
+    let totalActiveInvAmount = 0;
+    if (activeInvs) {
+      activeInvs.forEach(i => {
+        totalActiveInvAmount += parseFloat(i.amount || 0);
+      });
+    }
+    document.getElementById("statActiveInvestments").innerText = `$${totalActiveInvAmount.toFixed(2)}`;
+
+    // ট্রানজেকশন হিসেব
     const { data: txs } = await dbClient.from('transactions').select('type, amount, status');
     let depTotal = 0, withTotal = 0, pendingWithdraws = 0;
     if (txs) {
@@ -270,7 +319,6 @@ async function loadPlatformOverview() {
     document.getElementById("statPendingWithdrawals").innerText = `${pendingWithdraws} টি`;
     document.getElementById("statLtmRate").innerText = `$${parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2)}`;
 
-    // ইনপুট ফিল্ডগুলোতে মান সেট
     document.getElementById("settingLtmRateInput").value = parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2);
     document.getElementById("settingWtdFeeInput").value = parseFloat(adminSettings.withdraw_fee_percent || 0.0);
     document.getElementById("settingP2pFeeInput").value = parseFloat(adminSettings.p2p_fee_percent || 0.0);
@@ -303,11 +351,11 @@ async function toggleMasterFeature(featureKey, isEnabled) {
       key: 'feature_toggles',
       value: adminSettings.feature_toggles
     });
-    alert("ফিচার স্ট্যাটাস সরাসরি ক্লাউডে আপডেট হয়েছে!");
+    alert("ফিচার স্ট্যাটাস সফলভাবে আপডেট হয়েছে!");
   });
 }
 
-// ৬. ইউজার ম্যানেজমেন্ট ও ব্যালেন্স কন্ট্রোল
+// ইউজার ম্যানেজমেন্ট
 async function loadUserAuditList() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -377,7 +425,7 @@ async function submitUserBalanceChanges() {
   const newLocked = parseFloat(document.getElementById("editUserLockedBal").value);
   const newVip = parseInt(document.getElementById("editUserVipLevel").value);
 
-  adminConfirmAction(`ইউজার ${activeEditingUser.user_id}-এর ব্যালেন্স সরাসরি ক্লাউডে পরিবর্তন করতে চান?`, async () => {
+  adminConfirmAction(`ইউজার ${activeEditingUser.user_id}-এর ব্যালেন্স পরিবর্তন করতে চান?`, async () => {
     const dbClient = getDB();
     const { error } = await dbClient.from('users').update({
       main_balance: newMain,
@@ -397,7 +445,7 @@ async function submitUserBalanceChanges() {
   });
 }
 
-// ৭. পেন্ডিং ট্রানজেকশন অনুমোদন / বাতিল
+// পেন্ডিং ট্রানজেকশন
 async function loadPendingTransactions() {
   const tbody = document.getElementById("pendingRequestsTbody");
   if (!tbody) return;
@@ -465,62 +513,153 @@ async function rejectTransaction(txId, userId, type, amount) {
   });
 }
 
-// ৮. নির্দিষ্ট ইউজারকে লাইভ সাপোর্ট মেসেজ পাঠানো
+// ================= ওয়ান-ক্লিক লাইভ চ্যাট হেল্পডেস্ক (রিপ্লাই, রিড/আনরিড, এডিট, ডিলিট) =================
+async function loadAdminSentMessages() {
+  const dbClient = getDB();
+  if (!dbClient) return;
+
+  const { data: msgs, error } = await dbClient.from('user_messages').select('*').order('created_at', { ascending: false });
+  if (!error && msgs) {
+    allMessagesList = msgs;
+    renderAdminMessagesTable();
+  }
+}
+
+function filterAdminMessages(filterType) {
+  currentMessageFilter = filterType;
+  if (filterType === 'unread') {
+    document.getElementById("chatFilterUnread").className = "btn btn-primary";
+    document.getElementById("chatFilterAll").className = "btn btn-outline";
+  } else {
+    document.getElementById("chatFilterUnread").className = "btn btn-outline";
+    document.getElementById("chatFilterAll").className = "btn btn-primary";
+  }
+  renderAdminMessagesTable();
+}
+
+function renderAdminMessagesTable() {
+  const tbody = document.getElementById("adminSentMessagesTbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  let list = allMessagesList;
+  if (currentMessageFilter === 'unread') {
+    list = allMessagesList.filter(m => m.sender !== 'Admin Support' && !m.is_read);
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">কোনো মেসেজ পাওয়া যায়নি।</td></tr>`;
+    return;
+  }
+
+  list.forEach(m => {
+    const isFromAdmin = m.sender === 'Admin Support';
+    const tr = document.createElement("tr");
+    tr.style.cursor = "pointer";
+    tr.innerHTML = `
+      <td><strong style="color:#38bdf8;" onclick="selectReplyTarget('${m.user_id}')">${m.user_id} 💬</strong></td>
+      <td><span style="color:${isFromAdmin ? 'var(--accent)' : '#fff'}; font-weight:700;">${m.sender}</span></td>
+      <td style="max-width:280px; overflow:hidden; text-overflow:ellipsis;" onclick="selectReplyTarget('${m.user_id}')">${m.message}</td>
+      <td>
+        ${isFromAdmin ? '<small style="color:var(--text-muted);">Sent</small>' : (m.is_read ? '<span style="color:var(--accent);">Seen</span>' : '<span style="color:var(--gold); font-weight:700;">Unread</span>')}
+      </td>
+      <td><small style="color:var(--text-dim);">${new Date(m.created_at).toLocaleString('bn-BD')}</small></td>
+      <td>
+        ${!isFromAdmin && !m.is_read ? `<button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="markMessageAsRead(${m.id})">Mark Seen</button>` : ''}
+        ${isFromAdmin ? `<button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="editAdminMessage(${m.id}, '${m.user_id}', \`${m.message.replace(/`/g, "\\`")}\`)">Edit</button>` : ''}
+        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="deleteAdminMessage(${m.id})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function selectReplyTarget(userId) {
+  document.getElementById("adminMsgTargetUserId").value = userId;
+  document.getElementById("replyTargetLabel").innerText = `প্রাপক: ${userId}-কে রিপ্লাই দেওয়া হচ্ছে`;
+  document.getElementById("adminMsgContent").focus();
+}
+
+function clearReplyTarget() {
+  document.getElementById("adminMsgTargetUserId").value = "";
+  document.getElementById("adminMsgContent").value = "";
+  document.getElementById("editingMsgId").value = "";
+  document.getElementById("replyTargetLabel").innerText = "প্রাপক নির্বাচন করুন (নিচের তালিকায় ক্লিক করুন)";
+  document.getElementById("sendReplyBtn").innerText = "রিপ্লাই পাঠান";
+  document.getElementById("cancelEditBtn").style.display = "none";
+}
+
+async function markMessageAsRead(msgId) {
+  const dbClient = getDB();
+  await dbClient.from('user_messages').update({ is_read: true }).eq('id', msgId);
+  await loadAdminSentMessages();
+}
+
+function editAdminMessage(msgId, userId, currentText) {
+  document.getElementById("editingMsgId").value = msgId;
+  document.getElementById("adminMsgTargetUserId").value = userId;
+  document.getElementById("adminMsgContent").value = currentText;
+  document.getElementById("replyTargetLabel").innerText = `মেসেজ এডিট করা হচ্ছে (ID: ${userId})`;
+  document.getElementById("sendReplyBtn").innerText = "আপডেট করুন";
+  document.getElementById("cancelEditBtn").style.display = "inline-block";
+  document.getElementById("adminMsgContent").focus();
+}
+
+function cancelMessageEdit() {
+  clearReplyTarget();
+}
+
+async function deleteAdminMessage(msgId) {
+  adminConfirmAction("আপনি কি নিশ্চিতভাবে এই মেসেজটি মুছে ফেলতে চান?", async () => {
+    const dbClient = getDB();
+    await dbClient.from('user_messages').delete().eq('id', msgId);
+    await loadAdminSentMessages();
+    alert("মেসেজ সফলভাবে ডিলিট করা হয়েছে!");
+  });
+}
+
 async function sendAdminDirectMessage() {
   const targetId = document.getElementById("adminMsgTargetUserId").value.trim();
   const content = document.getElementById("adminMsgContent").value.trim();
+  const editId = document.getElementById("editingMsgId").value.trim();
 
   if (!targetId || !content) {
     alert("User ID এবং মেসেজ লিখুন!");
     return;
   }
 
-  adminConfirmAction(`User ID: ${targetId}-কে এই মেসেজটি পাঠাতে চান?`, async () => {
-    const dbClient = getDB();
-    const { error } = await dbClient.from('user_messages').insert([{
-      user_id: targetId,
-      sender: 'Admin Support',
-      message: content
-    }]);
-
-    if (!error) {
-      document.getElementById("adminMsgTargetUserId").value = "";
-      document.getElementById("adminMsgContent").value = "";
-      alert("মেসেজ সফলভাবে ইউজারের কাছে পৌঁছেছে!");
-      await loadAdminSentMessages();
-    } else {
-      alert("মেসেজ পাঠানো সম্ভব হয়নি: " + error.message);
-    }
-  });
-}
-
-async function loadAdminSentMessages() {
-  const tbody = document.getElementById("adminSentMessagesTbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
   const dbClient = getDB();
-  if (!dbClient) return;
 
-  const { data: msgs, error } = await dbClient.from('user_messages').select('*').order('created_at', { ascending: false }).limit(20);
-  if (error || !msgs || msgs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:14px;">কোনো মেসেজ পাঠানো হয়নি।</td></tr>`;
-    return;
+  if (editId) {
+    // এডিট মোড
+    adminConfirmAction("মেসেজটি আপডেট করতে চান?", async () => {
+      const { error } = await dbClient.from('user_messages').update({ message: content, updated_at: new Date() }).eq('id', editId);
+      if (!error) {
+        clearReplyTarget();
+        await loadAdminSentMessages();
+        alert("মেসেজ আপডেট হয়েছে!");
+      }
+    });
+  } else {
+    // নতুন মেসেজ / রিপ্লাই
+    adminConfirmAction(`User ID: ${targetId}-কে মেসেজ পাঠাতে চান?`, async () => {
+      const { error } = await dbClient.from('user_messages').insert([{
+        user_id: targetId,
+        sender: 'Admin Support',
+        message: content,
+        is_read: false
+      }]);
+
+      if (!error) {
+        document.getElementById("adminMsgContent").value = "";
+        await loadAdminSentMessages();
+        alert("মেসেজ সফলভাবে পৌঁছেছে!");
+      }
+    });
   }
-
-  msgs.forEach(m => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong style="color:#38bdf8;">${m.user_id}</strong></td>
-      <td><span style="color:${m.sender === 'Admin Support' ? 'var(--accent)' : '#fff'}">${m.sender}</span></td>
-      <td>${m.message}</td>
-      <td>${new Date(m.created_at).toLocaleString('bn-BD')}</td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
-// ৯. ডিপোজিট মেথডস কনফিগারেশন
+// ডিপোজিট মেথডস
 function renderActiveDepositMethods() {
   const tbody = document.getElementById("activeDepMethodsTbody");
   if (!tbody) return;
@@ -550,7 +689,7 @@ async function saveNewDepositMethod() {
     return;
   }
 
-  adminConfirmAction(`নতুন ডিপোজিট মেথড "${name}" ক্লাউডে সেভ করতে চান?`, async () => {
+  adminConfirmAction(`নতুন ডিপোজিট মেথড "${name}" সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.deposit_methods) adminSettings.deposit_methods = [];
     adminSettings.deposit_methods.push({ name, address: addr, note });
@@ -564,7 +703,7 @@ async function saveNewDepositMethod() {
     document.getElementById("newDepName").value = "";
     document.getElementById("newDepAddress").value = "";
     document.getElementById("newDepNote").value = "";
-    alert("ডিপোজিট মেথড ক্লাউডে সক্রিয় হয়েছে!");
+    alert("ডিপোজিট মেথড সক্রিয় হয়েছে!");
   });
 }
 
@@ -581,7 +720,7 @@ async function deleteDepositMethod(idx) {
   });
 }
 
-// ১০. উত্তোলন মেথডস ও ফি কনফিগারেশন
+// উত্তোলন মেথডস ও ফি
 function renderActiveWithdrawMethods() {
   const tbody = document.getElementById("activeWtdMethodsTbody");
   if (!tbody) return;
@@ -607,7 +746,7 @@ async function saveNewWithdrawMethod() {
     return;
   }
 
-  adminConfirmAction(`নতুন উত্তোলন মেথড "${name}" ক্লাউডে সেভ করতে চান?`, async () => {
+  adminConfirmAction(`নতুন উত্তোলন মেথড "${name}" সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.withdraw_methods) adminSettings.withdraw_methods = [];
     adminSettings.withdraw_methods.push({ name });
@@ -619,7 +758,7 @@ async function saveNewWithdrawMethod() {
 
     renderActiveWithdrawMethods();
     document.getElementById("newWtdName").value = "";
-    alert("উত্তোলন মেথড ক্লাউডে সেভ হয়েছে!");
+    alert("উত্তোলন মেথড সেভ হয়েছে!");
   });
 }
 
@@ -643,18 +782,18 @@ async function saveWithdrawFee() {
     return;
   }
 
-  adminConfirmAction(`উত্তোলন প্রসেসিং ফি ${fee}% ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`উত্তোলন ফি ${fee}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.withdraw_fee_percent = fee;
     await dbClient.from('platform_settings').upsert({
       key: 'withdraw_fee_percent',
       value: fee
     });
-    alert("উত্তোলন ফি সফলভাবে ক্লাউডে সেভ হয়েছে!");
+    alert("উত্তোলন ফি সফলভাবে সেভ হয়েছে!");
   });
 }
 
-// ১১. ১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট অফার কন্ট্রোল
+// ১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট
 function renderStocksProfitTable() {
   const tbody = document.getElementById("stockProfitTbody");
   if (!tbody) return;
@@ -705,12 +844,7 @@ async function saveGlobalStockRange() {
   const minP = parseFloat(document.getElementById("autoMinPercent").value);
   const maxP = parseFloat(document.getElementById("autoMaxPercent").value);
 
-  if (isNaN(minP) || isNaN(maxP)) {
-    alert("সঠিক মিনিমাম ও ম্যাক্সিমাম পারসেন্টেজ দিন!");
-    return;
-  }
-
-  adminConfirmAction(`গ্লোবাল কমিশন রেঞ্জ ${minP}% থেকে ${maxP}% ক্লাউডে সেভ করতে চান?`, async () => {
+  adminConfirmAction(`গ্লোবাল রেঞ্জ ${minP}% থেকে ${maxP}% সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings) adminSettings.stock_profit_settings = {};
     adminSettings.stock_profit_settings.min_percent = minP;
@@ -722,19 +856,16 @@ async function saveGlobalStockRange() {
     });
 
     renderStocksProfitTable();
-    alert("গ্লোবাল অটো কমিশন রেঞ্জ সফলভাবে সেভ হয়েছে!");
+    alert("গ্লোবাল অটো রেঞ্জ সেভ হয়েছে!");
   });
 }
 
 async function saveSingleStockManualRate(stockId, stockName) {
   const val = document.getElementById(`manual_rate_${stockId}`).value.trim();
-  if (val === "") {
-    alert("পারসেন্টেজ লিখুন!");
-    return;
-  }
+  if (val === "") return;
 
   const rate = parseFloat(val);
-  adminConfirmAction(`${stockName}-এর জন্য ম্যানুয়াল রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`${stockName}-এর রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings.manual_overrides) {
       adminSettings.stock_profit_settings.manual_overrides = {};
@@ -747,12 +878,12 @@ async function saveSingleStockManualRate(stockId, stockName) {
     });
 
     renderStocksProfitTable();
-    alert(`${stockName}-এর রেট সফলভাবে ক্লাউডে সেভ হয়েছে!`);
+    alert(`${stockName}-এর রেট সেভ হয়েছে!`);
   });
 }
 
 async function resetStockToAuto(stockId) {
-  adminConfirmAction("কোম্পানিটিকে পুনরায় গ্লোবাল অটো রেঞ্জে ফিরিয়ে নিতে চান?", async () => {
+  adminConfirmAction("কোম্পানিটিকে পুনরায় অটো রেঞ্জে নিতে চান?", async () => {
     const dbClient = getDB();
     delete adminSettings.stock_profit_settings.manual_overrides[stockId];
     await dbClient.from('platform_settings').upsert({
@@ -760,21 +891,20 @@ async function resetStockToAuto(stockId) {
       value: adminSettings.stock_profit_settings
     });
     renderStocksProfitTable();
-    alert("কোম্পানিটি পুনরায় গ্লোবাল রেঞ্জে সক্রিয় হয়েছে!");
+    alert("কোম্পানিটি অটো রেঞ্জে সক্রিয় হয়েছে!");
   });
 }
 
-// টাইমার বুস্ট অফার
 async function applyTimedStockBoost(stockId, stockName) {
   const rateVal = parseFloat(document.getElementById(`boost_rate_${stockId}`).value);
   const hrsVal = parseFloat(document.getElementById(`boost_hrs_${stockId}`).value);
 
   if (isNaN(rateVal) || isNaN(hrsVal) || hrsVal <= 0) {
-    alert("সঠিক অফার রেট (%) এবং কত ঘণ্টা চলবে লিখুন!");
+    alert("সঠিক রেট ও ঘণ্টা লিখুন!");
     return;
   }
 
-  adminConfirmAction(`${stockName}-এ আগামী ${hrsVal} ঘণ্টার জন্য নিশ্চিত +${rateVal}% স্পেশাল অফার বুস্ট সেট করতে চান?`, async () => {
+  adminConfirmAction(`${stockName}-এ ${hrsVal} ঘণ্টার জন্য +${rateVal}% বুস্ট দিতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings.timed_boosts) {
       adminSettings.stock_profit_settings.timed_boosts = {};
@@ -792,26 +922,21 @@ async function applyTimedStockBoost(stockId, stockName) {
     });
 
     renderStocksProfitTable();
-    alert(`অফার বুস্ট সেট হয়েছে! আগামী ${hrsVal} ঘণ্টা ইউজাররা Apple/নির্দিষ্ট স্টকে ইনভেস্টে +${rateVal}% পাবে।`);
+    alert(`টাইমার বুস্ট সেট হয়েছে!`);
   });
 }
 
-// ১২. পূর্ণাঙ্গ এজেন্ট আবেদন অডিট ও সিকিউরিটি ফি
+// এজেন্ট আবেদন ও ফি
 async function saveAgentSecurityFee() {
   const fee = parseFloat(document.getElementById("settingAgentFeeInput").value);
-  if (isNaN(fee) || fee < 0) {
-    alert("সঠিক সিকিউরিটি ফি লিখুন!");
-    return;
-  }
-
-  adminConfirmAction(`এজেন্ট হওয়ার সিকিউরিটি ফি $${fee} ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`এজেন্ট হওয়ার সিকিউরিটি ফি $${fee} নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.agent_security_fee = fee;
     await dbClient.from('platform_settings').upsert({
       key: 'agent_security_fee',
       value: fee
     });
-    alert("এজেন্ট সিকিউরিটি ফি সফলভাবে ক্লাউডে সেভ হয়েছে!");
+    alert("এজেন্ট সিকিউরিটি ফি সেভ হয়েছে!");
   });
 }
 
@@ -837,7 +962,7 @@ async function loadAgentAuditList() {
       <td><span style="color:var(--gold); font-weight:700;">${ag.nid_number || 'N/A'}</span></td>
       <td>
         📞 ${ag.phone}<br>
-        <small style="color:var(--text-dim);">Alt 1: ${ag.alt_phone_1 || '-'}, Alt 2: ${ag.alt_phone_2 || '-'}</small>
+        <small style="color:var(--text-dim);">Alt: ${ag.alt_phone_1 || '-'}, ${ag.alt_phone_2 || '-'}</small>
       </td>
       <td><small style="color:var(--text-muted);">${ag.location || ag.full_address || 'N/A'}</small></td>
       <td>
@@ -854,17 +979,17 @@ async function loadAgentAuditList() {
 }
 
 async function approveAgentApplication(appId, userId) {
-  adminConfirmAction("এই এজেন্ট আবেদনটি অনুমোদন করতে চান?", async () => {
+  adminConfirmAction("এই আবেদন অনুমোদন করতে চান?", async () => {
     const dbClient = getDB();
     await dbClient.from('agent_applications').update({ status: 'approved' }).eq('id', appId);
     await dbClient.from('users').update({ is_agent: true }).eq('user_id', userId);
-    alert("এজেন্ট অনুমোদন সম্পন্ন হয়েছে! ইউজার প্যানেলের লাইভ ডিরেক্টরিতে সাথে সাথে দৃশ্যমান হবে।");
+    alert("এজেন্ট অনুমোদন সম্পন্ন হয়েছে!");
     await loadAgentAuditList();
   });
 }
 
 async function rejectAgentApplication(appId) {
-  adminConfirmAction("এই আবেদনটি বাতিল করতে চান?", async () => {
+  adminConfirmAction("এই আবেদন বাতিল করতে চান?", async () => {
     const dbClient = getDB();
     await dbClient.from('agent_applications').update({ status: 'rejected' }).eq('id', appId);
     alert("আবেদন বাতিল করা হয়েছে!");
@@ -872,7 +997,7 @@ async function rejectAgentApplication(appId) {
   });
 }
 
-// ১৩. ডায়নামিক বাটন
+// বাটন ও সেটিংস
 function renderCustomButtonsTable() {
   const tbody = document.getElementById("customButtonsTbody");
   if (!tbody) return;
@@ -898,12 +1023,9 @@ async function saveCustomButton() {
   const url = document.getElementById("customButtonUrlInput").value.trim();
   const isEmbed = document.getElementById("customButtonEmbedCheck").checked;
 
-  if (!title || !url) {
-    alert("বাটনের শিরোনাম ও লিংক দিন!");
-    return;
-  }
+  if (!title || !url) return;
 
-  adminConfirmAction(`হোমপেজে "${title}" বাটনটি সেভ করতে চান?`, async () => {
+  adminConfirmAction(`"${title}" বাটনটি সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.custom_buttons) adminSettings.custom_buttons = [];
     adminSettings.custom_buttons.push({ title, url, isEmbed });
@@ -916,7 +1038,7 @@ async function saveCustomButton() {
     renderCustomButtonsTable();
     document.getElementById("customButtonTitleInput").value = "";
     document.getElementById("customButtonUrlInput").value = "";
-    alert("বাটন ক্লাউডে যোগ করা হয়েছে! ইউজারদের হোমপেজে দৃশ্যমান হবে।");
+    alert("বাটন যোগ করা হয়েছে!");
   });
 }
 
@@ -933,12 +1055,9 @@ async function deleteCustomButton(idx) {
   });
 }
 
-// ১৪. সেন্ট্রাল সেটিংস (LTM রেট, P2P ফি, রেফার কমিশন, নোটিস, রোডম্যাপ)
 async function saveLtmRate() {
   const rate = parseFloat(document.getElementById("settingLtmRateInput").value);
-  if (isNaN(rate) || rate <= 0) return;
-
-  adminConfirmAction(`LTM টোকেনের লাইভ রেট $${rate} ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`LTM রেট $${rate} নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.ltm_rate = rate;
     await dbClient.from('platform_settings').upsert({
@@ -946,15 +1065,13 @@ async function saveLtmRate() {
       value: rate
     });
     document.getElementById("statLtmRate").innerText = `$${rate.toFixed(2)}`;
-    alert("LTM রেট সরাসরি ক্লাউডে সেভ হয়েছে!");
+    alert("LTM রেট সেভ হয়েছে!");
   });
 }
 
 async function saveP2pFee() {
   const fee = parseFloat(document.getElementById("settingP2pFeeInput").value);
-  if (isNaN(fee) || fee < 0) return;
-
-  adminConfirmAction(`P2P ট্রান্সফার ফি ${fee}% ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`P2P ফি ${fee}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.p2p_fee_percent = fee;
     await dbClient.from('platform_settings').upsert({
@@ -967,22 +1084,20 @@ async function saveP2pFee() {
 
 async function saveReferralCommission() {
   const rate = parseFloat(document.getElementById("settingRefRateInput").value);
-  if (isNaN(rate) || rate < 0) return;
-
-  adminConfirmAction(`রেফারেল কমিশন রেট ${rate}% ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+  adminConfirmAction(`রেফারেল বোনাস রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     adminSettings.referral_commission_percent = rate;
     await dbClient.from('platform_settings').upsert({
       key: 'referral_commission_percent',
       value: rate
     });
-    alert("রেফারেল কমিশন রেট ক্লাউডে সেভ হয়েছে!");
+    alert("রেফারেল বোনাস রেট সেভ হয়েছে!");
   });
 }
 
 async function saveMarqueeNotice() {
   const text = document.getElementById("settingMarqueeInput").value.trim();
-  adminConfirmAction("মারকুই নোটিস ক্লাউডে সেভ করতে চান?", async () => {
+  adminConfirmAction("মারকুই নোটিস সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.marquee_notice = text;
     await dbClient.from('platform_settings').upsert({
@@ -995,20 +1110,20 @@ async function saveMarqueeNotice() {
 
 async function saveWelcomeNotice() {
   const text = document.getElementById("settingWelcomeInput").value.trim();
-  adminConfirmAction("প্রথমবার সাইট ওপেনিং নোটিস ক্লাউডে সেভ করতে চান?", async () => {
+  adminConfirmAction("প্রথমবার ওপেনিং নোটিস সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.welcome_notice = text;
     await dbClient.from('platform_settings').upsert({
       key: 'welcome_notice',
       value: text
     });
-    alert("ওয়েলকাম নোটিস ক্লাউডে সেভ হয়েছে!");
+    alert("ওয়েলকাম নোটিস সেভ হয়েছে!");
   });
 }
 
 async function saveTutorialVideo() {
   const url = document.getElementById("settingVideoUrlInput").value.trim();
-  adminConfirmAction("টিউটোরিয়াল ভিডিও লিংক ক্লাউডে সেভ করতে চান?", async () => {
+  adminConfirmAction("ভিডিও লিংক সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.tutorial_video_url = url;
     await dbClient.from('platform_settings').upsert({
@@ -1023,12 +1138,9 @@ async function saveCompanyPost() {
   const title = document.getElementById("companyPostTitleInput").value.trim();
   const content = document.getElementById("companyPostContentInput").value.trim();
 
-  if (!title || !content) {
-    alert("রোডম্যাপের শিরোনাম ও বিবরণ লিখুন!");
-    return;
-  }
+  if (!title || !content) return;
 
-  adminConfirmAction("কোম্পানি রোডম্যাপে এই পোস্টটি পাবলিশ করতে চান?", async () => {
+  adminConfirmAction("রোডম্যাপে পোস্ট করতে চান?", async () => {
     const dbClient = getDB();
     if (!adminSettings.company_posts) adminSettings.company_posts = [];
     adminSettings.company_posts.push({ title, content, date: new Date().toLocaleDateString('bn-BD') });
@@ -1040,11 +1152,11 @@ async function saveCompanyPost() {
 
     document.getElementById("companyPostTitleInput").value = "";
     document.getElementById("companyPostContentInput").value = "";
-    alert("পোস্ট ক্লাউডে পাবলিশ হয়েছে! ইউজারদের ফুল পেজ রোডম্যাপে দেখা যাবে।");
+    alert("রোডম্যাপে পোস্ট সফল হয়েছে!");
   });
 }
 
-// ১৫. কনফার্মেশন মোডাল
+// কনফার্মেশন মোডাল
 function adminConfirmAction(message, callback) {
   document.getElementById("adminConfirmMessage").innerText = message;
   pendingAdminAction = callback;
