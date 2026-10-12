@@ -1,6 +1,6 @@
 /**
  * ====================================================================
- * Locatm - Ultra Client Engine (app.js) [Real-time Direct Sync]
+ * Locatm - Ultra Client Engine (app.js) [Real-time Direct Sync & Live Portfolio]
  * ====================================================================
  */
 
@@ -380,7 +380,7 @@ async function checkSavedAuth() {
   document.getElementById("authScreen").classList.add("active");
 }
 
-// ================= রিয়েল-টাইম অটো সিঙ্ক (কোনো রিফ্রেশ লাগবে না) =================
+// ================= রিয়েল-টাইম অটো সিঙ্ক =================
 function initUserRealtimeSync() {
   const dbClient = getDB();
   if (!dbClient || !currentUser) return;
@@ -409,6 +409,13 @@ function initUserRealtimeSync() {
     })
     .subscribe();
   realtimeSubscriptions.push(txChannel);
+
+  const invChannel = dbClient.channel(`inv-sync-${currentUser.user_id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'investments', filter: `user_id=eq.${currentUser.user_id}` }, async () => {
+      await checkInvestmentsExpiry();
+    })
+    .subscribe();
+  realtimeSubscriptions.push(invChannel);
 
   const msgChannel = dbClient.channel(`msg-sync-${currentUser.user_id}`)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_messages', filter: `user_id=eq.${currentUser.user_id}` }, async () => {
@@ -628,6 +635,7 @@ async function submitProfileUpdate() {
   });
 }
 
+// রেফারেল ডেটা
 async function loadReferralData() {
   if (!currentUser) return;
   const dbClient = getDB();
@@ -1142,6 +1150,16 @@ function checkStockSpecialTimedBoost(stockId) {
   }
 }
 
+// ================= লকড ব্যালেন্সে ক্লিকে লাইভ পোর্টফোলিও ওপেন লজিক =================
+async function openLockedInvestDetails() {
+  openModal('activeInvestDetailsModal');
+  const modalContainer = document.getElementById("modalActiveInvestList");
+  if (modalContainer) {
+    modalContainer.innerHTML = `<div style="color:#38bdf8; font-size:12px; text-align:center; padding:16px;">শেয়ার পোর্টফোলিও লোড হচ্ছে...</div>`;
+  }
+  await checkInvestmentsExpiry();
+}
+
 // শেয়ার কেনার সরল ও প্রফেশনাল বার্তা
 async function confirmStockInvest() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.investments === false) {
@@ -1179,96 +1197,123 @@ async function confirmStockInvest() {
   requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name} কোম্পানির $${amt} ডলারের শেয়ার কিনতে চান?`, async () => {
     const dbClient = getDB();
     const newMain = parseFloat(currentUser.main_balance) - amt;
-    const newLocked = parseFloat(currentUser.locked_balance) + amt;
+    const newLocked = parseFloat(currentUser.locked_balance || 0) + amt;
 
-    await dbClient.from('users').update({ main_balance: newMain, locked_balance: newLocked }).eq('user_id', currentUser.user_id);
-    await dbClient.from('investments').insert([{
+    await dbClient.from('users').update({ 
+      main_balance: newMain, 
+      locked_balance: newLocked 
+    }).eq('user_id', currentUser.user_id);
+
+    const endsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    const { error: invErr } = await dbClient.from('investments').insert([{
       user_id: currentUser.user_id,
       stock_name: activeInvestStock.name,
       amount: amt,
       profit_percent: finalRate,
-      status: 'active'
+      status: 'active',
+      ends_at: endsAt
     }]);
+
+    if (invErr) {
+      alert("শেয়ার কেনা ব্যর্থ: " + invErr.message);
+      return;
+    }
 
     currentUser.main_balance = newMain;
     currentUser.locked_balance = newLocked;
     updateUserUI();
+
     await checkInvestmentsExpiry();
-    alert(`$${amt} ডলার দিয়ে শেয়ার কেনা সফল হয়েছে!`);
+    alert(`$${amt} ডলার দিয়ে ${activeInvestStock.name}-এর শেয়ার কেনা সফল হয়েছে!`);
   });
 }
 
-// সক্রিয় ইনভেস্টমেন্ট এবং লকড ব্যালেন্স পপআপ রেন্ডার
+// সক্রিয় ইনভেস্টমেন্ট এবং লকড ব্যালেন্স পপআপ রেন্ডার (তাৎক্ষণিক লাইভ ফেচ)
 async function checkInvestmentsExpiry() {
   if (!currentUser) return;
   const dbClient = getDB();
   if (!dbClient) return;
 
-  const { data: list } = await dbClient.from('investments')
-    .select('*')
-    .eq('user_id', currentUser.user_id)
-    .eq('status', 'active');
+  try {
+    const { data: list, error } = await dbClient.from('investments')
+      .select('*')
+      .eq('user_id', currentUser.user_id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
 
-  const container = document.getElementById("activeInvestList");
-  const modalContainer = document.getElementById("modalActiveInvestList");
+    const container = document.getElementById("activeInvestList");
+    const modalContainer = document.getElementById("modalActiveInvestList");
 
-  if (!list || list.length === 0) {
-    if (container) {
-      container.innerHTML = `
-        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; color:var(--text-muted); font-size:12px; text-align:center;">
-          বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
+    if (error || !list || list.length === 0) {
+      if (container) {
+        container.innerHTML = `
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; color:var(--text-muted); font-size:12px; text-align:center;">
+            বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
+          </div>
+        `;
+      }
+      if (modalContainer) {
+        modalContainer.innerHTML = `<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:16px;">আপনার কোনো সক্রিয় শেয়ার কেনা নেই।</div>`;
+      }
+      return;
+    }
+
+    let htmlCards = "";
+    list.forEach(i => {
+      const remainingMs = new Date(i.ends_at) - new Date();
+      let remainingText = "২৪ ঘণ্টার সাইকেল";
+      if (remainingMs > 0) {
+        const hrs = Math.floor(remainingMs / (1000 * 60 * 60));
+        const mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+        remainingText = `বাকি: ${hrs}h ${mins}m`;
+      }
+
+      htmlCards += `
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:12px 14px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong style="color:#38bdf8; font-size:13px;">${i.stock_name}</strong><br>
+            <span style="color:#fff; font-size:12px; font-weight:700;">ইনভেস্ট: $${parseFloat(i.amount).toFixed(2)}</span><br>
+            <small style="color:var(--text-muted); font-size:10px;">${remainingText}</small>
+          </div>
+          <div style="text-align:right;">
+            <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:800; font-size:14px;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
+            <small style="color:var(--gold); font-size:10px; font-weight:700;">চলমান (Active)</small>
+          </div>
         </div>
       `;
+    });
+
+    if (container) container.innerHTML = htmlCards;
+    if (modalContainer) modalContainer.innerHTML = htmlCards;
+
+    const now = new Date();
+    for (let inv of list) {
+      if (inv.ends_at && new Date(inv.ends_at) <= now) {
+        const capital = parseFloat(inv.amount);
+        const profit = capital * (parseFloat(inv.profit_percent) / 100);
+        const totalReturn = capital + profit;
+
+        const updatedMain = parseFloat(currentUser.main_balance) + totalReturn;
+        const updatedLocked = Math.max(0, parseFloat(currentUser.locked_balance) - capital);
+        const updatedTotalProfit = parseFloat(currentUser.total_profit || 0) + profit;
+
+        await dbClient.from('users').update({
+          main_balance: updatedMain,
+          locked_balance: updatedLocked,
+          total_profit: updatedTotalProfit
+        }).eq('user_id', currentUser.user_id);
+
+        await dbClient.from('investments').update({ status: 'completed' }).eq('id', inv.id);
+
+        currentUser.main_balance = updatedMain;
+        currentUser.locked_balance = updatedLocked;
+        currentUser.total_profit = updatedTotalProfit;
+        updateUserUI();
+      }
     }
-    if (modalContainer) {
-      modalContainer.innerHTML = `<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:16px;">আপনার কোনো সক্রিয় শেয়ার নেই।</div>`;
-    }
-    return;
-  }
-
-  let htmlCards = "";
-  list.forEach(i => {
-    htmlCards += `
-      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <strong style="color:#38bdf8; font-size:13px;">${i.stock_name}</strong><br>
-          <small style="color:var(--text-muted); font-size:11px;">কেনা শেয়ার: $${parseFloat(i.amount).toFixed(2)}</small>
-        </div>
-        <div style="text-align:right;">
-          <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:800; font-size:13px;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
-          <small style="color:var(--gold); font-size:10px;">চলমান (২৪ ঘণ্টা)</small>
-        </div>
-      </div>
-    `;
-  });
-
-  if (container) container.innerHTML = htmlCards;
-  if (modalContainer) modalContainer.innerHTML = htmlCards;
-
-  const now = new Date();
-  for (let inv of list) {
-    if (new Date(inv.ends_at) <= now) {
-      const capital = parseFloat(inv.amount);
-      const profit = capital * (parseFloat(inv.profit_percent) / 100);
-      const totalReturn = capital + profit;
-
-      const updatedMain = parseFloat(currentUser.main_balance) + totalReturn;
-      const updatedLocked = parseFloat(currentUser.locked_balance) - capital;
-      const updatedTotalProfit = parseFloat(currentUser.total_profit) + profit;
-
-      await dbClient.from('users').update({
-        main_balance: updatedMain,
-        locked_balance: updatedLocked,
-        total_profit: updatedTotalProfit
-      }).eq('user_id', currentUser.user_id);
-
-      await dbClient.from('investments').update({ status: 'completed' }).eq('id', inv.id);
-
-      currentUser.main_balance = updatedMain;
-      currentUser.locked_balance = updatedLocked;
-      currentUser.total_profit = updatedTotalProfit;
-      updateUserUI();
-    }
+  } catch (err) {
+    console.error("Invest fetch error:", err);
   }
 }
 
