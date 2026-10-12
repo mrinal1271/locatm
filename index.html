@@ -6,7 +6,10 @@
   <title>Locatm - Pocket ATM & Global Stock Market</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
+  
+  <!-- সুপাবেস সিডিএন এবং কনফিগ সবার আগে লোড নিশ্চিতকরণ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
 </head>
 <body>
 
@@ -187,7 +190,7 @@
       </div>
     </div>
 
-    <!-- অ্যাডমিন ডায়নামিক বাটন সেকশন (যেমন: লাইভ ক্রিকেট বা ইউটিউব স্ট্রিমিং) -->
+    <!-- অ্যাডমিন ডায়নামিক বাটন সেকশন -->
     <div id="dynamicActionBarWrapper" style="display:none; margin-bottom:25px;">
       <div class="section-title">
         <span>⚡ লাইভ আপডেট ও বিনোদন</span>
@@ -427,8 +430,7 @@
     </div>
   </div>
 
-  <!-- স্ক্রিপ্ট লোডার -->
-  <script src="config.js"></script>
+  <!-- ক্লায়েন্ট ইঞ্জিন স্ক্রিপ্ট -->
   <script src="app.js"></script>
 </body>
 </html>

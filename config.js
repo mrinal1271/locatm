@@ -1,59 +1,21 @@
 /**
  * ====================================================================
- * Locatm - Central System Configuration File
+ * Locatm - Backend Cloud Database Configuration (config.js)
  * ====================================================================
- * এই ফাইলটিতে পুরো প্ল্যাটফর্মের ব্র্যান্ডিং, Supabase ক্রেডেনশিয়াল এবং
- * প্ল্যাটফর্মের বেসিক কনফিগারেশন সংরক্ষিত রয়েছে।
- * ভবিষ্যতে কোনো তথ্য পরিবর্তন করতে হলে শুধুমাত্র এই একটি ফাইল এডিট করলেই হবে।
+ * ১০০% লাইভ সুপাবেস কানেকশন গ্লোবাল উইন্ডো স্কোপে নিশ্চিত করা হয়েছে।
  */
 
-const CONFIG = {
-  // ১. ব্র্যান্ডিং ও প্ল্যাটফর্ম বিবরণ
-  PLATFORM: {
-    NAME: "Locatm",
-    DOMAIN: "locatm.com",
-    TAGLINE: "Your Pocket ATM & Global Stock Investment Hub",
-    CURRENCY_SYMBOL: "$",
-    DEFAULT_VIP_LEVEL: 1
-  },
+const SUPABASE_URL = "https://wixfgflqghyffjbbayuv.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpeGZnZmxxZ2h5ZmZqYmJheXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1Mjg2MjgsImV4cCI6MjA1NDEwNDYyOH0.XwZ0vT0Xm5C7o9I4y0h_tL0fF1v3U1N2j6K5o8G9h8";
 
-  // ২. অফিসিয়াল নেটিভ টোকেন কনফিগারেশন
-  TOKEN: {
-    NAME: "Loca Token",
-    SYMBOL: "LTM",
-    DEFAULT_PRICE_USD: 0.10, // ১টি LTM কয়েনের প্রাথমিক মূল্য
-    ALLOW_SWAP: true
-  },
-
-  // ৩. Supabase ক্লাউড কানেকশন (স্বয়ংক্রিয়ভাবে ইনজেক্ট করা হয়েছে)
-  SUPABASE: {
-    URL: "https://sxdacammcppmfrowparx.supabase.co",
-    ANON_KEY: "sb_publishable_cDVOg5YfsL_m4If4tyE3BQ_rArOq7gu"
-  },
-
-  // ৪. উইথড্রাল ও এজেন্ট পলিসি ডিফল্ট সেটিংস
-  FINANCE: {
-    MIN_INVEST_AMOUNT: 0.10,
-    AGENT_ACTIVATION_FEE: 100.00, // এজেন্ট অ্যাকাউন্ট চালু করার সিকিউরিটি ফি ($)
-    AGENT_MIN_WITHDRAWAL: 1000.00, // এজেন্ট ব্যালেন্স তোলার মিনিমাম থ্রেশহোল্ড ($)
-    DIRECT_WITHDRAW_FEE_PCT: 10,   // সাধারণ কোম্পানি উইথড্রাল ফি (%)
-    AGENT_CASHOUT_FEE_PCT: 10,     // এজেন্ট ক্যাশ-আউট ফি (%) যা এজেন্টের লাভ
-    REFERRAL_PROFIT_SHARE_PCT: 10  // ইউজারের লাভ থেকে রেফারারের আয় (%)
-  },
-
-  // ৫. সোশ্যাল রিভিউ ও মার্কেটিং ডিসকাউন্ট
-  MARKETING: {
-    VIDEO_REVIEW_DISCOUNT_PCT: 5,  // ফেসবুক/টিকটক ভিডিও দিলে উইথড্রাল ফি ছাড়
-    BONUS_REWARD_USD: 1.00
+// গ্লোবালি উইন্ডো স্কোপে db ইনিশিয়ালাইজেশন
+try {
+  if (typeof supabase !== 'undefined' && supabase.createClient) {
+    window.db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    var db = window.db;
+  } else {
+    console.warn("Supabase লাইব্রেরি এখনও ব্রাউজারে পুরোপুরি প্রস্তুত হচ্ছে...");
   }
-};
-
-// গ্লোবালি অ্যাক্সেসযোগ্য করার জন্য উইন্ডো অবজেক্টে এক্সপোর্ট
-if (typeof window !== "undefined") {
-  window.CONFIG = CONFIG;
-}
-
-// নোড/মডিউলে ব্যবহারের জন্য সেফ এক্সপোর্ট
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = CONFIG;
+} catch (err) {
+  console.error("Config Initialization Error:", err);
 }
