@@ -1,27 +1,36 @@
 /**
  * ====================================================================
- * Locatm - Ultra Master Admin Engine (admin.js) [100% Direct Cloud Sync]
+ * Locatm - Ultra Master Admin Engine (admin.js) [Direct Cloud Production]
  * ====================================================================
- * সরাসরি ক্লাউড ডাটাবেজ (Supabase)-এ সমস্ত পরিবর্তন লাইভ সেভ হবে।
+ * ড্যাশবোর্ড ওভারভিউ, সাইডবার ড্রয়ার নেভিগেশন, ডাইনামিক ডিপোজিট ও উইথড্রাল,
+ * উত্তোলন ও P2P ফি কন্ট্রোল, পূর্ণাঙ্গ এজেন্ট ভেরিফিকেশন, লাইভ মেসেজিং,
+ * রেফার কমিশন ও ১০০+ স্টক টাইমার বুস্ট অটোমেশন।
  */
 
 let pendingAdminAction = null;
 let activeEditingUser = null;
 let adminUsersList = [];
 
+// সেন্ট্রাল অ্যাডমিন স্টেট
 let adminSettings = {
   admin_credentials: { email: "admin@locatm.com", pass: "admin12345" },
   ltm_rate: 0.10,
-  stock_profit_settings: { mode: "auto", min_percent: -5.0, max_percent: 5.0, manual_overrides: {} },
+  stock_profit_settings: { mode: "auto", min_percent: -5.0, max_percent: 5.0, manual_overrides: {}, timed_boosts: {} },
   feature_toggles: { agent_system: false, withdrawals: true, investments: true, p2p: true, trade_ltm: true },
   deposit_methods: [],
-  custom_buttons: [],
-  company_posts: [],
+  withdraw_methods: [],
+  withdraw_fee_percent: 0.0,
+  p2p_fee_percent: 0.0,
+  agent_security_fee: 10.0,
+  referral_commission_percent: 10.0,
+  welcome_notice: "",
   marquee_notice: "",
-  tutorial_video_url: ""
+  tutorial_video_url: "",
+  company_posts: [],
+  custom_buttons: []
 };
 
-// ১০০+ স্টক কোম্পানি
+// ১০০+ স্টক কোম্পানি তালিকা
 const ADMIN_STOCKS = [
   { id: 1, name: "Apple Inc.", ticker: "AAPL", logo: "https://logo.clearbit.com/apple.com" },
   { id: 2, name: "Microsoft Corp.", ticker: "MSFT", logo: "https://logo.clearbit.com/microsoft.com" },
@@ -73,60 +82,60 @@ const ADMIN_STOCKS = [
   { id: 48, name: "SpaceX Starlink", ticker: "SPCX", logo: "https://logo.clearbit.com/spacex.com" },
   { id: 49, name: "Uber Technologies", ticker: "UBER", logo: "https://logo.clearbit.com/uber.com" },
   { id: 50, name: "Spotify Music", ticker: "SPOT", logo: "https://logo.clearbit.com/spotify.com" },
-  { id: 51, name: "Airbnb Travel", ticker: "ABNB", logo: "https://logo.clearbit.com/airbnb.com", min: 0.10 },
-  { id: 52, name: "Shopify E-Commerce", ticker: "SHOP", logo: "https://logo.clearbit.com/shopify.com", min: 0.10 },
-  { id: 53, name: "PayPal Payments", ticker: "PYPL", logo: "https://logo.clearbit.com/paypal.com", min: 0.10 },
-  { id: 54, name: "Square Block", ticker: "SQ", logo: "https://logo.clearbit.com/squareup.com", min: 0.10 },
-  { id: 55, name: "Robinhood Finance", ticker: "HOOD", logo: "https://logo.clearbit.com/robinhood.com", min: 0.10 },
-  { id: 56, name: "Binance Ecosystem", ticker: "BNB", logo: "https://logo.clearbit.com/binance.com", min: 0.10 },
-  { id: 57, name: "Coinbase Global", ticker: "COIN", logo: "https://logo.clearbit.com/coinbase.com", min: 0.10 },
-  { id: 58, name: "Sony Music", ticker: "SME", logo: "https://logo.clearbit.com/sonymusic.com", min: 0.10 },
-  { id: 59, name: "Nintendo Corp.", ticker: "NTDOY", logo: "https://logo.clearbit.com/nintendo.com", min: 0.10 },
-  { id: 60, name: "EA Electronic Arts", ticker: "EA", logo: "https://logo.clearbit.com/ea.com", min: 0.10 },
-  { id: 61, name: "Target Retail", ticker: "TGT", logo: "https://logo.clearbit.com/target.com", min: 0.10 },
-  { id: 62, name: "LVMH Luxury", ticker: "MC", logo: "https://logo.clearbit.com/lvmh.com", min: 0.10 },
-  { id: 63, name: "Hermes Fashion", ticker: "RMS", logo: "https://logo.clearbit.com/hermes.com", min: 0.10 },
-  { id: 64, name: "Ferrari Motors", ticker: "RACE", logo: "https://logo.clearbit.com/ferrari.com", min: 0.10 },
-  { id: 65, name: "Porsche Auto", ticker: "P911", logo: "https://logo.clearbit.com/porsche.com", min: 0.10 },
-  { id: 66, name: "BMW Group", ticker: "BMW", logo: "https://logo.clearbit.com/bmw.com", min: 0.10 },
-  { id: 67, name: "Mercedes-Benz", ticker: "MBG", logo: "https://logo.clearbit.com/mercedes-benz.com", min: 0.10 },
-  { id: 68, name: "Audi Motors", ticker: "AUDI", logo: "https://logo.clearbit.com/audi.com", min: 0.10 },
-  { id: 69, name: "Honda Motor", ticker: "HMC", logo: "https://logo.clearbit.com/honda.com", min: 0.10 },
-  { id: 70, name: "Hyundai Auto", ticker: "HYMTF", logo: "https://logo.clearbit.com/hyundai.com", min: 0.10 },
-  { id: 71, name: "FedEx Express", ticker: "FDX", logo: "https://logo.clearbit.com/fedex.com", min: 0.10 },
-  { id: 72, name: "UPS Logistics", ticker: "UPS", logo: "https://logo.clearbit.com/ups.com", min: 0.10 },
-  { id: 73, name: "DHL Global", ticker: "DPW", logo: "https://logo.clearbit.com/dhl.com", min: 0.10 },
-  { id: 74, name: "Baidu Search", ticker: "BIDU", logo: "https://logo.clearbit.com/baidu.com", min: 0.10 },
-  { id: 75, name: "JD.com Retail", ticker: "JD", logo: "https://logo.clearbit.com/jd.com", min: 0.10 },
-  { id: 76, name: "Xiaomi Tech", ticker: "XIACF", logo: "https://logo.clearbit.com/mi.com", min: 0.10 },
-  { id: 77, name: "BYD Electric Auto", ticker: "BYDDY", logo: "https://logo.clearbit.com/byd.com", min: 0.10 },
-  { id: 78, name: "Foxconn Industry", ticker: "HNHPF", logo: "https://logo.clearbit.com/foxconn.com", min: 0.10 },
-  { id: 79, name: "Dell Technologies", ticker: "DELL", logo: "https://logo.clearbit.com/dell.com", min: 0.10 },
-  { id: 80, name: "HP Computers", ticker: "HPQ", logo: "https://logo.clearbit.com/hp.com", min: 0.10 },
-  { id: 81, name: "Lenovo Group", ticker: "LNVGY", logo: "https://logo.clearbit.com/lenovo.com", min: 0.10 },
-  { id: 82, name: "Canon Optics", ticker: "CAJ", logo: "https://logo.clearbit.com/canon.com", min: 0.10 },
-  { id: 83, name: "Nikon Imaging", ticker: "NINOY", logo: "https://logo.clearbit.com/nikon.com", min: 0.10 },
-  { id: 84, name: "Panasonic Corp.", ticker: "PCRFY", logo: "https://logo.clearbit.com/panasonic.com", min: 0.10 },
-  { id: 85, name: "LG Electronics", ticker: "LG", logo: "https://logo.clearbit.com/lg.com", min: 0.10 },
-  { id: 86, name: "Tata Motors Global", ticker: "TTM", logo: "https://logo.clearbit.com/tatamotors.com", min: 0.10 },
-  { id: 87, name: "Infosys Tech", ticker: "INFY", logo: "https://logo.clearbit.com/infosys.com", min: 0.10 },
-  { id: 88, name: "Reliance Industries", ticker: "RIGD", logo: "https://logo.clearbit.com/ril.com", min: 0.10 },
-  { id: 89, name: "Unilever Consumer", ticker: "UL", logo: "https://logo.clearbit.com/unilever.com", min: 0.10 },
-  { id: 90, name: "Nestle Nutrition", ticker: "NSRGY", logo: "https://logo.clearbit.com/nestle.com", min: 0.10 },
-  { id: 91, name: "Mondelez Snacks", ticker: "MDLZ", logo: "https://logo.clearbit.com/mondelezinternational.com", min: 0.10 },
-  { id: 92, name: "Danone Dairy", ticker: "DANOY", logo: "https://logo.clearbit.com/danone.com", min: 0.10 },
-  { id: 93, name: "Rolex Holdings", ticker: "ROLX", logo: "https://logo.clearbit.com/rolex.com", min: 0.10 },
-  { id: 94, name: "Zara Inditex", ticker: "IDEXY", logo: "https://logo.clearbit.com/zara.com", min: 0.10 },
-  { id: 95, name: "H&M Fashion", ticker: "HNNMY", logo: "https://logo.clearbit.com/hm.com", min: 0.10 },
-  { id: 96, name: "Puma Sportswear", ticker: "PUMSY", logo: "https://logo.clearbit.com/puma.com", min: 0.10 },
-  { id: 97, name: "Lego Group", ticker: "LEGO", logo: "https://logo.clearbit.com/lego.com", min: 0.10 },
-  { id: 98, name: "Colgate-Palmolive", ticker: "CL", logo: "https://logo.clearbit.com/colgatepalmolive.com", min: 0.10 },
-  { id: 99, name: "Red Bull Energy", ticker: "RDBL", logo: "https://logo.clearbit.com/redbull.com", min: 0.10 },
-  { id: 100, name: "Monster Beverage", ticker: "MNST", logo: "https://logo.clearbit.com/monsterenergy.com", min: 0.10 },
-  { id: 101, name: "Zoom Communications", ticker: "ZM", logo: "https://logo.clearbit.com/zoom.us", min: 0.10 },
-  { id: 102, name: "Slack Technologies", ticker: "WORK", logo: "https://logo.clearbit.com/slack.com", min: 0.10 },
-  { id: 103, name: "Dropbox Cloud", ticker: "DBX", logo: "https://logo.clearbit.com/dropbox.com", min: 0.10 },
-  { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com", min: 0.10 }
+  { id: 51, name: "Airbnb Travel", ticker: "ABNB", logo: "https://logo.clearbit.com/airbnb.com" },
+  { id: 52, name: "Shopify E-Commerce", ticker: "SHOP", logo: "https://logo.clearbit.com/shopify.com" },
+  { id: 53, name: "PayPal Payments", ticker: "PYPL", logo: "https://logo.clearbit.com/paypal.com" },
+  { id: 54, name: "Square Block", ticker: "SQ", logo: "https://logo.clearbit.com/squareup.com" },
+  { id: 55, name: "Robinhood Finance", ticker: "HOOD", logo: "https://logo.clearbit.com/robinhood.com" },
+  { id: 56, name: "Binance Ecosystem", ticker: "BNB", logo: "https://logo.clearbit.com/binance.com" },
+  { id: 57, name: "Coinbase Global", ticker: "COIN", logo: "https://logo.clearbit.com/coinbase.com" },
+  { id: 58, name: "Sony Music", ticker: "SME", logo: "https://logo.clearbit.com/sonymusic.com" },
+  { id: 59, name: "Nintendo Corp.", ticker: "NTDOY", logo: "https://logo.clearbit.com/nintendo.com" },
+  { id: 60, name: "EA Electronic Arts", ticker: "EA", logo: "https://logo.clearbit.com/ea.com" },
+  { id: 61, name: "Target Retail", ticker: "TGT", logo: "https://logo.clearbit.com/target.com" },
+  { id: 62, name: "LVMH Luxury", ticker: "MC", logo: "https://logo.clearbit.com/lvmh.com" },
+  { id: 63, name: "Hermes Fashion", ticker: "RMS", logo: "https://logo.clearbit.com/hermes.com" },
+  { id: 64, name: "Ferrari Motors", ticker: "RACE", logo: "https://logo.clearbit.com/ferrari.com" },
+  { id: 65, name: "Porsche Auto", ticker: "P911", logo: "https://logo.clearbit.com/porsche.com" },
+  { id: 66, name: "BMW Group", ticker: "BMW", logo: "https://logo.clearbit.com/bmw.com" },
+  { id: 67, name: "Mercedes-Benz", ticker: "MBG", logo: "https://logo.clearbit.com/mercedes-benz.com" },
+  { id: 68, name: "Audi Motors", ticker: "AUDI", logo: "https://logo.clearbit.com/audi.com" },
+  { id: 69, name: "Honda Motor", ticker: "HMC", logo: "https://logo.clearbit.com/honda.com" },
+  { id: 70, name: "Hyundai Auto", ticker: "HYMTF", logo: "https://logo.clearbit.com/hyundai.com" },
+  { id: 71, name: "FedEx Express", ticker: "FDX", logo: "https://logo.clearbit.com/fedex.com" },
+  { id: 72, name: "UPS Logistics", ticker: "UPS", logo: "https://logo.clearbit.com/ups.com" },
+  { id: 73, name: "DHL Global", ticker: "DPW", logo: "https://logo.clearbit.com/dhl.com" },
+  { id: 74, name: "Baidu Search", ticker: "BIDU", logo: "https://logo.clearbit.com/baidu.com" },
+  { id: 75, name: "JD.com Retail", ticker: "JD", logo: "https://logo.clearbit.com/jd.com" },
+  { id: 76, name: "Xiaomi Tech", ticker: "XIACF", logo: "https://logo.clearbit.com/mi.com" },
+  { id: 77, name: "BYD Electric Auto", ticker: "BYDDY", logo: "https://logo.clearbit.com/byd.com" },
+  { id: 78, name: "Foxconn Industry", ticker: "HNHPF", logo: "https://logo.clearbit.com/foxconn.com" },
+  { id: 79, name: "Dell Technologies", ticker: "DELL", logo: "https://logo.clearbit.com/dell.com" },
+  { id: 80, name: "HP Computers", ticker: "HPQ", logo: "https://logo.clearbit.com/hp.com" },
+  { id: 81, name: "Lenovo Group", ticker: "LNVGY", logo: "https://logo.clearbit.com/lenovo.com" },
+  { id: 82, name: "Canon Optics", ticker: "CAJ", logo: "https://logo.clearbit.com/canon.com" },
+  { id: 83, name: "Nikon Imaging", ticker: "NINOY", logo: "https://logo.clearbit.com/nikon.com" },
+  { id: 84, name: "Panasonic Corp.", ticker: "PCRFY", logo: "https://logo.clearbit.com/panasonic.com" },
+  { id: 85, name: "LG Electronics", ticker: "LG", logo: "https://logo.clearbit.com/lg.com" },
+  { id: 86, name: "Tata Motors Global", ticker: "TTM", logo: "https://logo.clearbit.com/tatamotors.com" },
+  { id: 87, name: "Infosys Tech", ticker: "INFY", logo: "https://logo.clearbit.com/infosys.com" },
+  { id: 88, name: "Reliance Industries", ticker: "RIGD", logo: "https://logo.clearbit.com/ril.com" },
+  { id: 89, name: "Unilever Consumer", ticker: "UL", logo: "https://logo.clearbit.com/unilever.com" },
+  { id: 90, name: "Nestle Nutrition", ticker: "NSRGY", logo: "https://logo.clearbit.com/nestle.com" },
+  { id: 91, name: "Mondelez Snacks", ticker: "MDLZ", logo: "https://logo.clearbit.com/mondelezinternational.com" },
+  { id: 92, name: "Danone Dairy", ticker: "DANOY", logo: "https://logo.clearbit.com/danone.com" },
+  { id: 93, name: "Rolex Holdings", ticker: "ROLX", logo: "https://logo.clearbit.com/rolex.com" },
+  { id: 94, name: "Zara Inditex", ticker: "IDEXY", logo: "https://logo.clearbit.com/zara.com" },
+  { id: 95, name: "H&M Fashion", ticker: "HNNMY", logo: "https://logo.clearbit.com/hm.com" },
+  { id: 96, name: "Puma Sportswear", ticker: "PUMSY", logo: "https://logo.clearbit.com/puma.com" },
+  { id: 97, name: "Lego Group", ticker: "LEGO", logo: "https://logo.clearbit.com/lego.com" },
+  { id: 98, name: "Colgate-Palmolive", ticker: "CL", logo: "https://logo.clearbit.com/colgatepalmolive.com" },
+  { id: 99, name: "Red Bull Energy", ticker: "RDBL", logo: "https://logo.clearbit.com/redbull.com" },
+  { id: 100, name: "Monster Beverage", ticker: "MNST", logo: "https://logo.clearbit.com/monsterenergy.com" },
+  { id: 101, name: "Zoom Communications", ticker: "ZM", logo: "https://logo.clearbit.com/zoom.us" },
+  { id: 102, name: "Slack Technologies", ticker: "WORK", logo: "https://logo.clearbit.com/slack.com" },
+  { id: 103, name: "Dropbox Cloud", ticker: "DBX", logo: "https://logo.clearbit.com/dropbox.com" },
+  { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com" }
 ];
 
 function getDB() {
@@ -141,7 +150,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkAdminSession();
 });
 
-// ক্লাউড সেটিংস ফেচ
+// ১. ক্লাউড সেটিংস লোড
 async function fetchPlatformSettings() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -158,14 +167,15 @@ async function fetchPlatformSettings() {
   }
 }
 
+// ২. অথেন্টিকেশন ও সেশন যাচাই
 function checkAdminSession() {
   const isAuth = sessionStorage.getItem("locatm_admin_auth");
   if (isAuth === "true") {
-    document.getElementById("adminAuthScreen").style.display = "none";
+    document.getElementById("adminAuthScreen").classList.remove("active");
     document.getElementById("adminDashboardWrapper").style.display = "block";
     loadAllAdminData();
   } else {
-    document.getElementById("adminAuthScreen").style.display = "flex";
+    document.getElementById("adminAuthScreen").classList.add("active");
     document.getElementById("adminDashboardWrapper").style.display = "none";
   }
 }
@@ -177,7 +187,7 @@ function verifyAdminLogin() {
 
   if (em === creds.email && ps === creds.pass) {
     sessionStorage.setItem("locatm_admin_auth", "true");
-    document.getElementById("adminAuthScreen").style.display = "none";
+    document.getElementById("adminAuthScreen").classList.remove("active");
     document.getElementById("adminDashboardWrapper").style.display = "block";
     loadAllAdminData();
   } else {
@@ -190,48 +200,88 @@ function adminLogout() {
   window.location.reload();
 }
 
+// ৩. সাইডবার ড্রয়ার ও সেকশন সুইচ
+function toggleAdminDrawer(open) {
+  const d = document.getElementById("adminDrawerMenu");
+  const o = document.getElementById("adminDrawerOverlay");
+  if (open) {
+    d.classList.add("open");
+    o.classList.add("active");
+  } else {
+    d.classList.remove("open");
+    o.classList.remove("active");
+  }
+}
+
+function switchAdminSection(secId) {
+  toggleAdminDrawer(false);
+  document.querySelectorAll('.admin-panel-section').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(secId);
+  if (target) target.classList.add('active');
+}
+
+// ৪. সকল অ্যাডমিন ডেটা লোড
 async function loadAllAdminData() {
   await loadPlatformOverview();
   await loadUserAuditList();
   await loadPendingTransactions();
   await loadAgentAuditList();
+  await loadAdminSentMessages();
   renderActiveDepositMethods();
+  renderActiveWithdrawMethods();
   renderStocksProfitTable();
   renderCustomButtonsTable();
   syncMasterTogglesUI();
 }
 
+// ৫. ড্যাশবোর্ড ওভারভিউ মেট্রিক্স
 async function loadPlatformOverview() {
   const dbClient = getDB();
   if (!dbClient) return;
 
-  const { count: userCount } = await dbClient.from('users').select('*', { count: 'exact', head: true });
-  document.getElementById("statTotalUsers").innerText = `${userCount || 0} জন`;
+  try {
+    const { count: userCount } = await dbClient.from('users').select('*', { count: 'exact', head: true });
+    document.getElementById("statTotalUsers").innerText = `${userCount || 0} জন`;
 
-  const { data: txs } = await dbClient.from('transactions').select('type, amount, status');
-  let depTotal = 0, withTotal = 0;
-  if (txs) {
-    txs.forEach(t => {
-      if (t.status === 'approved') {
-        if (t.type === 'deposit') depTotal += parseFloat(t.amount);
-        if (t.type === 'withdraw') withTotal += parseFloat(t.amount);
-      }
-    });
+    const { data: users } = await dbClient.from('users').select('ltm_balance');
+    let totalLtm = 0;
+    if (users) {
+      users.forEach(u => {
+        totalLtm += parseFloat(u.ltm_balance || 0);
+      });
+    }
+    document.getElementById("statTotalCoinsHeld").innerText = `${totalLtm.toFixed(2)} LTM`;
+
+    const { data: txs } = await dbClient.from('transactions').select('type, amount, status');
+    let depTotal = 0, withTotal = 0, pendingWithdraws = 0;
+    if (txs) {
+      txs.forEach(t => {
+        if (t.status === 'approved') {
+          if (t.type === 'deposit') depTotal += parseFloat(t.amount);
+          if (t.type === 'withdraw') withTotal += parseFloat(t.amount);
+        }
+        if (t.status === 'pending' && t.type === 'withdraw') {
+          pendingWithdraws++;
+        }
+      });
+    }
+    document.getElementById("statTotalDeposit").innerText = `$${depTotal.toFixed(2)}`;
+    document.getElementById("statTotalWithdraw").innerText = `$${withTotal.toFixed(2)}`;
+    document.getElementById("statPendingWithdrawals").innerText = `${pendingWithdraws} টি`;
+    document.getElementById("statLtmRate").innerText = `$${parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2)}`;
+
+    // ইনপুট ফিল্ডগুলোতে মান সেট
+    document.getElementById("settingLtmRateInput").value = parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2);
+    document.getElementById("settingWtdFeeInput").value = parseFloat(adminSettings.withdraw_fee_percent || 0.0);
+    document.getElementById("settingP2pFeeInput").value = parseFloat(adminSettings.p2p_fee_percent || 0.0);
+    document.getElementById("settingAgentFeeInput").value = parseFloat(adminSettings.agent_security_fee || 10.0);
+    document.getElementById("settingRefRateInput").value = parseFloat(adminSettings.referral_commission_percent || 10.0);
+    document.getElementById("settingMarqueeInput").value = adminSettings.marquee_notice || "";
+    document.getElementById("settingWelcomeInput").value = adminSettings.welcome_notice || "";
+    document.getElementById("settingVideoUrlInput").value = adminSettings.tutorial_video_url || "";
+  } catch (e) {
+    console.error("Overview error:", e);
   }
-  document.getElementById("statTotalDeposit").innerText = `$${depTotal.toFixed(2)}`;
-  document.getElementById("statTotalWithdraw").innerText = `$${withTotal.toFixed(2)}`;
-  document.getElementById("statLtmRate").innerText = `$${parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2)}`;
-
-  document.getElementById("settingLtmRateInput").value = parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2);
-  document.getElementById("settingMarqueeInput").value = adminSettings.marquee_notice || "";
-  document.getElementById("settingVideoUrlInput").value = adminSettings.tutorial_video_url || "";
-}
-
-function switchAdminTab(tabId, btn) {
-  document.querySelectorAll('.admin-pane').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(tabId).style.display = 'block';
-  btn.classList.add('active');
 }
 
 function syncMasterTogglesUI() {
@@ -257,7 +307,7 @@ async function toggleMasterFeature(featureKey, isEnabled) {
   });
 }
 
-// ক্লাউড ইউজার তালিকা ও ব্যালেন্স এডিটর
+// ৬. ইউজার ম্যানেজমেন্ট ও ব্যালেন্স কন্ট্রোল
 async function loadUserAuditList() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -283,9 +333,9 @@ function renderUserAuditTable(users) {
       <td style="color:#38bdf8; font-weight:800;">$${parseFloat(u.main_balance || 0).toFixed(2)}</td>
       <td style="color:var(--gold); font-weight:800;">${parseFloat(u.ltm_balance || 0).toFixed(2)}</td>
       <td>$${parseFloat(u.locked_balance || 0).toFixed(2)}</td>
-      <td style="color:var(--accent); font-weight:800;">+$${parseFloat(u.total_profit || 0).toFixed(2)}</td>
+      <td style="color:var(--text-dim);">${u.referred_by || 'Direct'}</td>
       <td>
-        <button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="openAdminEditUserModal('${u.user_id}')">✏️ Edit</button>
+        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openAdminEditUserModal('${u.user_id}')">✏️ Edit</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -313,11 +363,11 @@ function openAdminEditUserModal(userId) {
   document.getElementById("editUserLockedBal").value = activeEditingUser.locked_balance;
   document.getElementById("editUserVipLevel").value = activeEditingUser.vip_level || 1;
 
-  document.getElementById("adminEditUserModal").style.display = "flex";
+  document.getElementById("adminEditUserModal").classList.add("active");
 }
 
 function closeAdminEditUserModal() {
-  document.getElementById("adminEditUserModal").style.display = "none";
+  document.getElementById("adminEditUserModal").classList.remove("active");
 }
 
 async function submitUserBalanceChanges() {
@@ -327,7 +377,7 @@ async function submitUserBalanceChanges() {
   const newLocked = parseFloat(document.getElementById("editUserLockedBal").value);
   const newVip = parseInt(document.getElementById("editUserVipLevel").value);
 
-  adminConfirmAction(`ইউজার ${activeEditingUser.user_id}-এর ব্যালেন্স সরাসরি ক্লাউডে আপডেট করতে চান?`, async () => {
+  adminConfirmAction(`ইউজার ${activeEditingUser.user_id}-এর ব্যালেন্স সরাসরি ক্লাউডে পরিবর্তন করতে চান?`, async () => {
     const dbClient = getDB();
     const { error } = await dbClient.from('users').update({
       main_balance: newMain,
@@ -339,75 +389,15 @@ async function submitUserBalanceChanges() {
     if (!error) {
       closeAdminEditUserModal();
       await loadUserAuditList();
-      alert("ইউজার ডেটাবেজ সফলভাবে আপডেট হয়েছে! ইউজারের পেজে নতুন ব্যালেন্স শো করবে।");
+      await loadPlatformOverview();
+      alert("ইউজার ব্যালেন্স সফলভাবে আপডেট হয়েছে!");
     } else {
-      alert("আপডেট সম্ভব হয়নি: " + error.message);
+      alert("ব্যালেন্স আপডেট ব্যর্থ: " + error.message);
     }
   });
 }
 
-// ডিপোজিট মেথডস (সরাসরি ক্লাউড platform_settings)
-function renderActiveDepositMethods() {
-  const tbody = document.getElementById("activeMethodsTbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  const methods = adminSettings.deposit_methods || [];
-  methods.forEach((m, idx) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong>${m.name}</strong></td>
-      <td><span style="color:#38bdf8; word-break:break-all;">${m.address}</span></td>
-      <td>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteDepositMethod(${idx})">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-async function saveNewDepositMethod() {
-  const name = document.getElementById("newMethodTitle").value.trim();
-  const addr = document.getElementById("newMethodTarget").value.trim();
-  const note = document.getElementById("newMethodInstruction").value.trim();
-
-  if (!name || !addr) {
-    alert("মেথডের নাম এবং নম্বর/অ্যাড্রেস দিন!");
-    return;
-  }
-
-  adminConfirmAction(`নতুন ডিপোজিট মেথড "${name}" ক্লাউডে সেভ করতে চান?`, async () => {
-    const dbClient = getDB();
-    if (!adminSettings.deposit_methods) adminSettings.deposit_methods = [];
-    adminSettings.deposit_methods.push({ name, address: addr, note });
-
-    await dbClient.from('platform_settings').upsert({
-      key: 'deposit_methods',
-      value: adminSettings.deposit_methods
-    });
-
-    renderActiveDepositMethods();
-    document.getElementById("newMethodTitle").value = "";
-    document.getElementById("newMethodTarget").value = "";
-    document.getElementById("newMethodInstruction").value = "";
-    alert("নতুন পেমেন্ট মেথড ক্লাউডে সক্রিয় হয়েছে!");
-  });
-}
-
-async function deleteDepositMethod(idx) {
-  adminConfirmAction("আপনি কি এই ডিপোজিট মেথডটি ডিলিট করতে চান?", async () => {
-    const dbClient = getDB();
-    adminSettings.deposit_methods.splice(idx, 1);
-    await dbClient.from('platform_settings').upsert({
-      key: 'deposit_methods',
-      value: adminSettings.deposit_methods
-    });
-    renderActiveDepositMethods();
-    alert("মেথডটি ডিলিট করা হয়েছে!");
-  });
-}
-
-// পেন্ডিং ডিপোজিট ও উইথড্রাল অনুমোদন
+// ৭. পেন্ডিং ট্রানজেকশন অনুমোদন / বাতিল
 async function loadPendingTransactions() {
   const tbody = document.getElementById("pendingRequestsTbody");
   if (!tbody) return;
@@ -428,11 +418,11 @@ async function loadPendingTransactions() {
       <td><strong style="color:#38bdf8;">${t.user_id}</strong></td>
       <td><span style="color:${t.type === 'deposit' ? 'var(--accent)' : 'var(--gold)'}; font-weight:700;">${t.type === 'deposit' ? 'ডিপোজিট' : 'উত্তোলন'}</span></td>
       <td>$${parseFloat(t.amount).toFixed(2)}</td>
-      <td>${t.method} <br><small style="color:#38bdf8;">TrxID: ${t.trx_id || '-'}</small></td>
+      <td>${t.method} <br><small style="color:#38bdf8;">${t.trx_id ? 'TrxID: ' + t.trx_id : ''}</small></td>
       <td>${new Date(t.created_at).toLocaleString('bn-BD')}</td>
       <td>
-        <button class="btn btn-accent" style="padding:4px 8px; font-size:12px;" onclick="approveTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Approve</button>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="rejectTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Reject</button>
+        <button class="btn btn-accent" style="padding:4px 8px; font-size:11px;" onclick="approveTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Approve</button>
+        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="rejectTransaction(${t.id}, '${t.user_id}', '${t.type}', ${t.amount})">Reject</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -450,7 +440,7 @@ async function approveTransaction(txId, userId, type, amount) {
       }
     }
     await dbClient.from('transactions').update({ status: 'approved' }).eq('id', txId);
-    alert("অনুমোদন সফল হয়েছে! ইউজারের ব্যালেন্স যুক্ত হয়েছে।");
+    alert("অনুমোদন সফল হয়েছে! ব্যালেন্স অ্যাকাউন্টে যুক্ত হয়েছে।");
     await loadPendingTransactions();
     await loadPlatformOverview();
     await loadUserAuditList();
@@ -470,24 +460,217 @@ async function rejectTransaction(txId, userId, type, amount) {
     await dbClient.from('transactions').update({ status: 'rejected' }).eq('id', txId);
     alert("ট্রানজেকশন বাতিল করা হয়েছে!");
     await loadPendingTransactions();
+    await loadPlatformOverview();
     await loadUserAuditList();
   });
 }
 
-// ১০০+ স্টক কমিশন রেঞ্জ (-5% to +5% অটো ও ম্যানুয়াল ওভাররাইড)
+// ৮. নির্দিষ্ট ইউজারকে লাইভ সাপোর্ট মেসেজ পাঠানো
+async function sendAdminDirectMessage() {
+  const targetId = document.getElementById("adminMsgTargetUserId").value.trim();
+  const content = document.getElementById("adminMsgContent").value.trim();
+
+  if (!targetId || !content) {
+    alert("User ID এবং মেসেজ লিখুন!");
+    return;
+  }
+
+  adminConfirmAction(`User ID: ${targetId}-কে এই মেসেজটি পাঠাতে চান?`, async () => {
+    const dbClient = getDB();
+    const { error } = await dbClient.from('user_messages').insert([{
+      user_id: targetId,
+      sender: 'Admin Support',
+      message: content
+    }]);
+
+    if (!error) {
+      document.getElementById("adminMsgTargetUserId").value = "";
+      document.getElementById("adminMsgContent").value = "";
+      alert("মেসেজ সফলভাবে ইউজারের কাছে পৌঁছেছে!");
+      await loadAdminSentMessages();
+    } else {
+      alert("মেসেজ পাঠানো সম্ভব হয়নি: " + error.message);
+    }
+  });
+}
+
+async function loadAdminSentMessages() {
+  const tbody = document.getElementById("adminSentMessagesTbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const dbClient = getDB();
+  if (!dbClient) return;
+
+  const { data: msgs, error } = await dbClient.from('user_messages').select('*').order('created_at', { ascending: false }).limit(20);
+  if (error || !msgs || msgs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:14px;">কোনো মেসেজ পাঠানো হয়নি।</td></tr>`;
+    return;
+  }
+
+  msgs.forEach(m => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong style="color:#38bdf8;">${m.user_id}</strong></td>
+      <td><span style="color:${m.sender === 'Admin Support' ? 'var(--accent)' : '#fff'}">${m.sender}</span></td>
+      <td>${m.message}</td>
+      <td>${new Date(m.created_at).toLocaleString('bn-BD')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ৯. ডিপোজিট মেথডস কনফিগারেশন
+function renderActiveDepositMethods() {
+  const tbody = document.getElementById("activeDepMethodsTbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const methods = adminSettings.deposit_methods || [];
+  methods.forEach((m, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${m.name}</strong></td>
+      <td><span style="color:#38bdf8; word-break:break-all;">${m.address}</span></td>
+      <td>
+        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteDepositMethod(${idx})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function saveNewDepositMethod() {
+  const name = document.getElementById("newDepName").value.trim();
+  const addr = document.getElementById("newDepAddress").value.trim();
+  const note = document.getElementById("newDepNote").value.trim();
+
+  if (!name || !addr) {
+    alert("মেথডের নাম এবং নম্বর/অ্যাড্রেস দিন!");
+    return;
+  }
+
+  adminConfirmAction(`নতুন ডিপোজিট মেথড "${name}" ক্লাউডে সেভ করতে চান?`, async () => {
+    const dbClient = getDB();
+    if (!adminSettings.deposit_methods) adminSettings.deposit_methods = [];
+    adminSettings.deposit_methods.push({ name, address: addr, note });
+
+    await dbClient.from('platform_settings').upsert({
+      key: 'deposit_methods',
+      value: adminSettings.deposit_methods
+    });
+
+    renderActiveDepositMethods();
+    document.getElementById("newDepName").value = "";
+    document.getElementById("newDepAddress").value = "";
+    document.getElementById("newDepNote").value = "";
+    alert("ডিপোজিট মেথড ক্লাউডে সক্রিয় হয়েছে!");
+  });
+}
+
+async function deleteDepositMethod(idx) {
+  adminConfirmAction("এই ডিপোজিট মেথডটি ডিলিট করতে চান?", async () => {
+    const dbClient = getDB();
+    adminSettings.deposit_methods.splice(idx, 1);
+    await dbClient.from('platform_settings').upsert({
+      key: 'deposit_methods',
+      value: adminSettings.deposit_methods
+    });
+    renderActiveDepositMethods();
+    alert("মেথডটি ডিলিট করা হয়েছে!");
+  });
+}
+
+// ১০. উত্তোলন মেথডস ও ফি কনফিগারেশন
+function renderActiveWithdrawMethods() {
+  const tbody = document.getElementById("activeWtdMethodsTbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const methods = adminSettings.withdraw_methods || [];
+  methods.forEach((m, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${m.name}</strong></td>
+      <td>
+        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteWithdrawMethod(${idx})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function saveNewWithdrawMethod() {
+  const name = document.getElementById("newWtdName").value.trim();
+  if (!name) {
+    alert("উত্তোলন মেথডের নাম দিন!");
+    return;
+  }
+
+  adminConfirmAction(`নতুন উত্তোলন মেথড "${name}" ক্লাউডে সেভ করতে চান?`, async () => {
+    const dbClient = getDB();
+    if (!adminSettings.withdraw_methods) adminSettings.withdraw_methods = [];
+    adminSettings.withdraw_methods.push({ name });
+
+    await dbClient.from('platform_settings').upsert({
+      key: 'withdraw_methods',
+      value: adminSettings.withdraw_methods
+    });
+
+    renderActiveWithdrawMethods();
+    document.getElementById("newWtdName").value = "";
+    alert("উত্তোলন মেথড ক্লাউডে সেভ হয়েছে!");
+  });
+}
+
+async function deleteWithdrawMethod(idx) {
+  adminConfirmAction("এই উত্তোলন মেথডটি ডিলিট করতে চান?", async () => {
+    const dbClient = getDB();
+    adminSettings.withdraw_methods.splice(idx, 1);
+    await dbClient.from('platform_settings').upsert({
+      key: 'withdraw_methods',
+      value: adminSettings.withdraw_methods
+    });
+    renderActiveWithdrawMethods();
+    alert("মেথডটি ডিলিট করা হয়েছে!");
+  });
+}
+
+async function saveWithdrawFee() {
+  const fee = parseFloat(document.getElementById("settingWtdFeeInput").value);
+  if (isNaN(fee) || fee < 0) {
+    alert("সঠিক ফি পার্সেন্টেজ লিখুন!");
+    return;
+  }
+
+  adminConfirmAction(`উত্তোলন প্রসেসিং ফি ${fee}% ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.withdraw_fee_percent = fee;
+    await dbClient.from('platform_settings').upsert({
+      key: 'withdraw_fee_percent',
+      value: fee
+    });
+    alert("উত্তোলন ফি সফলভাবে ক্লাউডে সেভ হয়েছে!");
+  });
+}
+
+// ১১. ১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট অফার কন্ট্রোল
 function renderStocksProfitTable() {
   const tbody = document.getElementById("stockProfitTbody");
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  const settings = adminSettings.stock_profit_settings || { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {} };
+  const settings = adminSettings.stock_profit_settings || { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {}, timed_boosts: {} };
   const overrides = settings.manual_overrides || {};
+  const boosts = settings.timed_boosts || {};
 
   document.getElementById("autoMinPercent").value = settings.min_percent !== undefined ? settings.min_percent : -5.0;
   document.getElementById("autoMaxPercent").value = settings.max_percent !== undefined ? settings.max_percent : 5.0;
 
   ADMIN_STOCKS.forEach(stk => {
     const isManual = overrides[stk.id] !== undefined;
+    const boost = boosts[stk.id];
+    const isBoostActive = boost && new Date(boost.expires_at) > new Date();
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -499,16 +682,19 @@ function renderStocksProfitTable() {
       <td><strong>${stk.name}</strong></td>
       <td><span style="color:#38bdf8; font-weight:700;">${stk.ticker}</span></td>
       <td>
-        <input type="number" id="manual_profit_input_${stk.id}" value="${isManual ? overrides[stk.id] : ''}" placeholder="${isManual ? overrides[stk.id] : 'Auto'}" step="0.1" style="width:85px; padding:6px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:8px; color:#fff; text-align:center;"> %
+        <input type="number" id="manual_rate_${stk.id}" value="${isManual ? overrides[stk.id] : ''}" placeholder="${isManual ? overrides[stk.id] : 'Auto'}" step="0.1" style="width:75px; padding:4px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:#fff; text-align:center;"> %
       </td>
       <td>
-        <span style="font-size:11px; padding:3px 8px; border-radius:6px; background:${isManual ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)'}; color:${isManual ? 'var(--gold)' : 'var(--accent)'}; font-weight:700;">
-          ${isManual ? 'Manual Target' : 'Auto Range'}
-        </span>
+        <div style="display:flex; gap:4px; align-items:center;">
+          <input type="number" id="boost_rate_${stk.id}" placeholder="Rate%" style="width:60px; padding:4px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--accent); text-align:center;">
+          <input type="number" id="boost_hrs_${stk.id}" placeholder="Hours" style="width:55px; padding:4px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--gold); text-align:center;">
+          <button class="btn btn-accent" style="padding:4px 8px; font-size:11px;" onclick="applyTimedStockBoost(${stk.id}, '${stk.name}')">Set Boost</button>
+        </div>
+        ${isBoostActive ? `<small style="color:var(--gold); display:block; margin-top:2px;">🔥 Active: +${boost.rate}\% (${new Date(boost.expires_at).toLocaleTimeString()})</small>` : ''}
       </td>
       <td>
-        <button class="btn btn-outline" style="padding:4px 8px; font-size:12px;" onclick="saveSingleStockManualRate(${stk.id}, '${stk.name}')">Save</button>
-        ${isManual ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:12px; margin-left:4px;" onclick="resetStockToAuto(${stk.id})">Reset</button>` : ''}
+        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="saveSingleStockManualRate(${stk.id}, '${stk.name}')">Save</button>
+        ${isManual ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="resetStockToAuto(${stk.id})">Reset</button>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
@@ -524,7 +710,7 @@ async function saveGlobalStockRange() {
     return;
   }
 
-  adminConfirmAction(`গ্লোবাল অটো-কমিশন রেঞ্জ ${minP}% থেকে ${maxP}% ক্লাউডে সেভ করতে চান?`, async () => {
+  adminConfirmAction(`গ্লোবাল কমিশন রেঞ্জ ${minP}% থেকে ${maxP}% ক্লাউডে সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings) adminSettings.stock_profit_settings = {};
     adminSettings.stock_profit_settings.min_percent = minP;
@@ -536,19 +722,19 @@ async function saveGlobalStockRange() {
     });
 
     renderStocksProfitTable();
-    alert("গ্লোবাল অটো-কমিশন রেঞ্জ ক্লাউডে সেভ হয়েছে!");
+    alert("গ্লোবাল অটো কমিশন রেঞ্জ সফলভাবে সেভ হয়েছে!");
   });
 }
 
 async function saveSingleStockManualRate(stockId, stockName) {
-  const inputVal = document.getElementById(`manual_profit_input_${stockId}`).value.trim();
-  if (inputVal === "") {
-    alert("পারসেন্টেজ লিখুন অথবা Auto রাখতে খালি রাখুন!");
+  const val = document.getElementById(`manual_rate_${stockId}`).value.trim();
+  if (val === "") {
+    alert("পারসেন্টেজ লিখুন!");
     return;
   }
 
-  const rate = parseFloat(inputVal);
-  adminConfirmAction(`${stockName}-এর জন্য নির্দিষ্ট ম্যানুয়াল রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
+  const rate = parseFloat(val);
+  adminConfirmAction(`${stockName}-এর জন্য ম্যানুয়াল রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings.manual_overrides) {
       adminSettings.stock_profit_settings.manual_overrides = {};
@@ -566,7 +752,7 @@ async function saveSingleStockManualRate(stockId, stockName) {
 }
 
 async function resetStockToAuto(stockId) {
-  adminConfirmAction("এই কোম্পানিটিকে পুনরায় গ্লোবাল অটো রেঞ্জে ফিরিয়ে নিতে চান?", async () => {
+  adminConfirmAction("কোম্পানিটিকে পুনরায় গ্লোবাল অটো রেঞ্জে ফিরিয়ে নিতে চান?", async () => {
     const dbClient = getDB();
     delete adminSettings.stock_profit_settings.manual_overrides[stockId];
     await dbClient.from('platform_settings').upsert({
@@ -574,11 +760,61 @@ async function resetStockToAuto(stockId) {
       value: adminSettings.stock_profit_settings
     });
     renderStocksProfitTable();
-    alert("কোম্পানিটি পুনরায় গ্লোবাল অটো রেঞ্জে সক্রিয় হয়েছে!");
+    alert("কোম্পানিটি পুনরায় গ্লোবাল রেঞ্জে সক্রিয় হয়েছে!");
   });
 }
 
-// এজেন্ট আবেদন ও ভেরিফিকেশন
+// টাইমার বুস্ট অফার
+async function applyTimedStockBoost(stockId, stockName) {
+  const rateVal = parseFloat(document.getElementById(`boost_rate_${stockId}`).value);
+  const hrsVal = parseFloat(document.getElementById(`boost_hrs_${stockId}`).value);
+
+  if (isNaN(rateVal) || isNaN(hrsVal) || hrsVal <= 0) {
+    alert("সঠিক অফার রেট (%) এবং কত ঘণ্টা চলবে লিখুন!");
+    return;
+  }
+
+  adminConfirmAction(`${stockName}-এ আগামী ${hrsVal} ঘণ্টার জন্য নিশ্চিত +${rateVal}% স্পেশাল অফার বুস্ট সেট করতে চান?`, async () => {
+    const dbClient = getDB();
+    if (!adminSettings.stock_profit_settings.timed_boosts) {
+      adminSettings.stock_profit_settings.timed_boosts = {};
+    }
+
+    const expiresAt = new Date(Date.now() + hrsVal * 60 * 60 * 1000).toISOString();
+    adminSettings.stock_profit_settings.timed_boosts[stockId] = {
+      rate: rateVal,
+      expires_at: expiresAt
+    };
+
+    await dbClient.from('platform_settings').upsert({
+      key: 'stock_profit_settings',
+      value: adminSettings.stock_profit_settings
+    });
+
+    renderStocksProfitTable();
+    alert(`অফার বুস্ট সেট হয়েছে! আগামী ${hrsVal} ঘণ্টা ইউজাররা Apple/নির্দিষ্ট স্টকে ইনভেস্টে +${rateVal}% পাবে।`);
+  });
+}
+
+// ১২. পূর্ণাঙ্গ এজেন্ট আবেদন অডিট ও সিকিউরিটি ফি
+async function saveAgentSecurityFee() {
+  const fee = parseFloat(document.getElementById("settingAgentFeeInput").value);
+  if (isNaN(fee) || fee < 0) {
+    alert("সঠিক সিকিউরিটি ফি লিখুন!");
+    return;
+  }
+
+  adminConfirmAction(`এজেন্ট হওয়ার সিকিউরিটি ফি $${fee} ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.agent_security_fee = fee;
+    await dbClient.from('platform_settings').upsert({
+      key: 'agent_security_fee',
+      value: fee
+    });
+    alert("এজেন্ট সিকিউরিটি ফি সফলভাবে ক্লাউডে সেভ হয়েছে!");
+  });
+}
+
 async function loadAgentAuditList() {
   const tbody = document.getElementById("agentAuditTbody");
   if (!tbody) return;
@@ -589,7 +825,7 @@ async function loadAgentAuditList() {
 
   const { data: agents, error } = await dbClient.from('agent_applications').select('*').order('created_at', { ascending: false });
   if (error || !agents || agents.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">বর্তমানে কোনো এজেন্ট আবেদন নেই।</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">কোনো এজেন্ট আবেদন নেই।</td></tr>`;
     return;
   }
 
@@ -597,16 +833,19 @@ async function loadAgentAuditList() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong style="color:#38bdf8;">${ag.user_id}</strong></td>
-      <td><strong>${ag.shop_name}</strong></td>
-      <td>📞 ${ag.phone}</td>
-      <td>${ag.location}</td>
-      <td>${new Date(ag.created_at).toLocaleDateString('bn-BD')}</td>
+      <td><strong>${ag.full_name || 'N/A'}</strong><br><small style="color:var(--text-muted);">${ag.shop_name}</small></td>
+      <td><span style="color:var(--gold); font-weight:700;">${ag.nid_number || 'N/A'}</span></td>
+      <td>
+        📞 ${ag.phone}<br>
+        <small style="color:var(--text-dim);">Alt 1: ${ag.alt_phone_1 || '-'}, Alt 2: ${ag.alt_phone_2 || '-'}</small>
+      </td>
+      <td><small style="color:var(--text-muted);">${ag.location || ag.full_address || 'N/A'}</small></td>
       <td>
         ${ag.status === 'pending' ? `
-          <button class="btn btn-accent" style="padding:4px 8px; font-size:12px;" onclick="approveAgentApplication(${ag.id}, '${ag.user_id}')">Approve</button>
-          <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="rejectAgentApplication(${ag.id})">Reject</button>
+          <button class="btn btn-accent" style="padding:4px 8px; font-size:11px;" onclick="approveAgentApplication(${ag.id}, '${ag.user_id}')">Approve</button>
+          <button class="btn btn-danger" style="padding:4px 8px; font-size:11px; margin-left:4px;" onclick="rejectAgentApplication(${ag.id})">Reject</button>
         ` : `
-          <span style="color:${ag.status === 'approved' ? 'var(--accent)' : 'var(--danger)'}; font-weight:700;">${ag.status.toUpperCase()}</span>
+          <span style="color:${ag.status === 'approved' ? 'var(--accent)' : 'var(--danger)'}; font-weight:800;">${ag.status.toUpperCase()}</span>
         `}
       </td>
     `;
@@ -619,7 +858,7 @@ async function approveAgentApplication(appId, userId) {
     const dbClient = getDB();
     await dbClient.from('agent_applications').update({ status: 'approved' }).eq('id', appId);
     await dbClient.from('users').update({ is_agent: true }).eq('user_id', userId);
-    alert("এজেন্ট অনুমোদন সম্পন্ন হয়েছে! ইউজার প্যানেলের লাইভ ডিরেক্টরিতে সাথে সাথে যুক্ত হয়েছে।");
+    alert("এজেন্ট অনুমোদন সম্পন্ন হয়েছে! ইউজার প্যানেলের লাইভ ডিরেক্টরিতে সাথে সাথে দৃশ্যমান হবে।");
     await loadAgentAuditList();
   });
 }
@@ -633,7 +872,7 @@ async function rejectAgentApplication(appId) {
   });
 }
 
-// কাস্টম ডায়নামিক বাটন
+// ১৩. ডায়নামিক বাটন
 function renderCustomButtonsTable() {
   const tbody = document.getElementById("customButtonsTbody");
   if (!tbody) return;
@@ -647,7 +886,7 @@ function renderCustomButtonsTable() {
       <td><small style="color:#38bdf8; word-break:break-all;">${b.url}</small></td>
       <td>${b.isEmbed ? 'In-App Player' : 'External Link'}</td>
       <td>
-        <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteCustomButton(${idx})">Delete</button>
+        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteCustomButton(${idx})">Delete</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -664,7 +903,7 @@ async function saveCustomButton() {
     return;
   }
 
-  adminConfirmAction(`হোমপেজে "${title}" বাটনটি সরাসরি ক্লাউডে সেভ করতে চান?`, async () => {
+  adminConfirmAction(`হোমপেজে "${title}" বাটনটি সেভ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.custom_buttons) adminSettings.custom_buttons = [];
     adminSettings.custom_buttons.push({ title, url, isEmbed });
@@ -682,7 +921,7 @@ async function saveCustomButton() {
 }
 
 async function deleteCustomButton(idx) {
-  adminConfirmAction("আপনি কি এই বাটনটি মুছে ফেলতে চান?", async () => {
+  adminConfirmAction("এই বাটনটি মুছে ফেলতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.custom_buttons.splice(idx, 1);
     await dbClient.from('platform_settings').upsert({
@@ -694,7 +933,7 @@ async function deleteCustomButton(idx) {
   });
 }
 
-// সেন্ট্রাল সেটিংস (LTM রেট, মারকুই, ভিডিও, কোম্পানি পোস্ট)
+// ১৪. সেন্ট্রাল সেটিংস (LTM রেট, P2P ফি, রেফার কমিশন, নোটিস, রোডম্যাপ)
 async function saveLtmRate() {
   const rate = parseFloat(document.getElementById("settingLtmRateInput").value);
   if (isNaN(rate) || rate <= 0) return;
@@ -707,33 +946,76 @@ async function saveLtmRate() {
       value: rate
     });
     document.getElementById("statLtmRate").innerText = `$${rate.toFixed(2)}`;
-    alert("LTM রেট সরাসরি ক্লাউডে সেভ হয়েছে! ইউজার প্যানেলের লাইভ রেট বদলে গেছে।");
+    alert("LTM রেট সরাসরি ক্লাউডে সেভ হয়েছে!");
+  });
+}
+
+async function saveP2pFee() {
+  const fee = parseFloat(document.getElementById("settingP2pFeeInput").value);
+  if (isNaN(fee) || fee < 0) return;
+
+  adminConfirmAction(`P2P ট্রান্সফার ফি ${fee}% ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.p2p_fee_percent = fee;
+    await dbClient.from('platform_settings').upsert({
+      key: 'p2p_fee_percent',
+      value: fee
+    });
+    alert("P2P ট্রান্সফার ফি সেভ হয়েছে!");
+  });
+}
+
+async function saveReferralCommission() {
+  const rate = parseFloat(document.getElementById("settingRefRateInput").value);
+  if (isNaN(rate) || rate < 0) return;
+
+  adminConfirmAction(`রেফারেল কমিশন রেট ${rate}% ক্লাউডে নির্ধারণ করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.referral_commission_percent = rate;
+    await dbClient.from('platform_settings').upsert({
+      key: 'referral_commission_percent',
+      value: rate
+    });
+    alert("রেফারেল কমিশন রেট ক্লাউডে সেভ হয়েছে!");
   });
 }
 
 async function saveMarqueeNotice() {
   const text = document.getElementById("settingMarqueeInput").value.trim();
-  adminConfirmAction("হোমপেজ মারকুই নোটিস ক্লাউডে সেভ করতে চান?", async () => {
+  adminConfirmAction("মারকুই নোটিস ক্লাউডে সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.marquee_notice = text;
     await dbClient.from('platform_settings').upsert({
       key: 'marquee_notice',
       value: text
     });
-    alert("মারকুই নোটিস সেভ হয়েছে! ইউজারদের হোমপেজে স্ক্রোল করা শুরু হবে।");
+    alert("মারকুই নোটিস সেভ হয়েছে!");
+  });
+}
+
+async function saveWelcomeNotice() {
+  const text = document.getElementById("settingWelcomeInput").value.trim();
+  adminConfirmAction("প্রথমবার সাইট ওপেনিং নোটিস ক্লাউডে সেভ করতে চান?", async () => {
+    const dbClient = getDB();
+    adminSettings.welcome_notice = text;
+    await dbClient.from('platform_settings').upsert({
+      key: 'welcome_notice',
+      value: text
+    });
+    alert("ওয়েলকাম নোটিস ক্লাউডে সেভ হয়েছে!");
   });
 }
 
 async function saveTutorialVideo() {
   const url = document.getElementById("settingVideoUrlInput").value.trim();
-  adminConfirmAction("কাজের ভিডিও লিংক ক্লাউডে আপডেট করতে চান?", async () => {
+  adminConfirmAction("টিউটোরিয়াল ভিডিও লিংক ক্লাউডে সেভ করতে চান?", async () => {
     const dbClient = getDB();
     adminSettings.tutorial_video_url = url;
     await dbClient.from('platform_settings').upsert({
       key: 'tutorial_video_url',
       value: url
     });
-    alert("ভিডিও লিংক সেভ হয়েছে! ইউজার প্যানেল থেকে দেখা যাবে।");
+    alert("ভিডিও লিংক সেভ হয়েছে!");
   });
 }
 
@@ -742,7 +1024,7 @@ async function saveCompanyPost() {
   const content = document.getElementById("companyPostContentInput").value.trim();
 
   if (!title || !content) {
-    alert("পোস্টের শিরোনাম ও বিবরণ দিন!");
+    alert("রোডম্যাপের শিরোনাম ও বিবরণ লিখুন!");
     return;
   }
 
@@ -758,19 +1040,19 @@ async function saveCompanyPost() {
 
     document.getElementById("companyPostTitleInput").value = "";
     document.getElementById("companyPostContentInput").value = "";
-    alert("পোস্ট ক্লাউডে পাবলিশ হয়েছে!");
+    alert("পোস্ট ক্লাউডে পাবলিশ হয়েছে! ইউজারদের ফুল পেজ রোডম্যাপে দেখা যাবে।");
   });
 }
 
-// ডাবল কনফার্মেশন মোডাল
+// ১৫. কনফার্মেশন মোডাল
 function adminConfirmAction(message, callback) {
   document.getElementById("adminConfirmMessage").innerText = message;
   pendingAdminAction = callback;
-  document.getElementById("adminConfirmModal").style.display = "flex";
+  document.getElementById("adminConfirmModal").classList.add("active");
 }
 
 function closeAdminConfirm() {
-  document.getElementById("adminConfirmModal").style.display = "none";
+  document.getElementById("adminConfirmModal").classList.remove("active");
 }
 
 document.getElementById("adminConfirmOkBtn").addEventListener("click", () => {
