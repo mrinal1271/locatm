@@ -1,16 +1,14 @@
 /**
  * ====================================================================
- * Locatm - Ultra Client Engine (app.js) [Fail-Safe Dual Sync Engine]
+ * Locatm - Ultra Client Engine (app.js) [100% Direct Cloud Sync]
  * ====================================================================
- * ক্লাউড ডাটাবেজ ফেইলওভার প্রটেকশন, জিরো ফেক ব্যালেন্স, ১০০+ স্টক মার্কেট,
- * P2P এসক্রো এবং ফুল ডায়নামিক অ্যাডমিন কন্ট্রোল।
+ * সরাসরি ক্লাউড ডাটাবেজ (Supabase) এর সাথে লাইভ সিঙ্ক।
  */
 
 let currentUser = null;
 let pendingConfirmCallback = null;
 let currentTradeMode = 'buy';
 
-// সেন্ট্রাল কনফিগারেশন
 let platformConfig = {
   ltm_rate: 0.10,
   stock_profit_settings: { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {} },
@@ -130,37 +128,39 @@ const GLOBAL_STOCKS = [
   { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com", min: 0.10 }
 ];
 
-// ফেইল-সেফ ডাটাবেজ হেল্পার (Dual-Engine)
-const DB = {
-  getUsers: () => JSON.parse(localStorage.getItem('locatm_db_users') || '[]'),
-  saveUsers: (u) => localStorage.setItem('locatm_db_users', JSON.stringify(u)),
-  getTxs: () => JSON.parse(localStorage.getItem('locatm_db_txs') || '[]'),
-  saveTxs: (t) => localStorage.setItem('locatm_db_txs', JSON.stringify(t)),
-  getSettings: () => JSON.parse(localStorage.getItem('locatm_db_settings') || '{}'),
-  saveSettings: (s) => localStorage.setItem('locatm_db_settings', JSON.stringify(s)),
-  getInvs: () => JSON.parse(localStorage.getItem('locatm_db_invs') || '[]'),
-  saveInvs: (i) => localStorage.setItem('locatm_db_invs', JSON.stringify(i)),
-  getAgents: () => JSON.parse(localStorage.getItem('locatm_db_agents') || '[]'),
-  saveAgents: (a) => localStorage.setItem('locatm_db_agents', JSON.stringify(a))
-};
+// ক্লাউড ডেটাবেজ ক্লায়েন্ট নিশ্চিতকরণ
+function getDB() {
+  if (typeof getDatabaseClient === 'function') {
+    return getDatabaseClient();
+  }
+  return window.db || null;
+}
 
-// ১. পেজ ইনিশিয়ালাইজেশন
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   initStockMarket();
-  loadPlatformConfig();
-  checkSavedAuth();
+  await loadPlatformConfig();
+  await checkSavedAuth();
 });
 
-// ২. প্ল্যাটফর্ম কনফিগারেশন লোড
-function loadPlatformConfig() {
-  const localSet = DB.getSettings();
-  if (localSet && Object.keys(localSet).length > 0) {
-    platformConfig = { ...platformConfig, ...localSet };
+// ১. ক্লাউড কনফিগারেশন সরাসরি লোড
+async function loadPlatformConfig() {
+  const dbClient = getDB();
+  if (!dbClient) return;
+
+  try {
+    const { data, error } = await dbClient.from('platform_settings').select('*');
+    if (!error && data) {
+      data.forEach(item => {
+        platformConfig[item.key] = item.value;
+      });
+    }
+  } catch (e) {
+    console.error("Config fetch error:", e);
   }
 
-  // রেট ও নোটিস
+  // রিয়েল-টাইম রেট ও নোটিস আপডেট
   if (document.getElementById("tradeCoinRate")) {
-    document.getElementById("tradeCoinRate").innerText = `$${(platformConfig.ltm_rate || 0.10).toFixed(2)}`;
+    document.getElementById("tradeCoinRate").innerText = `$${parseFloat(platformConfig.ltm_rate || 0.10).toFixed(2)}`;
   }
   if (platformConfig.marquee_notice && platformConfig.marquee_notice.trim() !== "") {
     document.getElementById("marqueeNoticeText").innerText = platformConfig.marquee_notice;
@@ -175,21 +175,25 @@ function loadPlatformConfig() {
   renderDepositMethods();
   renderDynamicButtons();
   renderCompanyPosts();
-  renderAgentDirectory();
+  await renderAgentDirectory();
 }
 
-// ৩. সেশন যাচাই
-function checkSavedAuth() {
+// ২. অথেন্টিকেশন ও সেশন (সরাসরি ক্লাউড ডাটাবেজ থেকে)
+async function checkSavedAuth() {
   const savedUserId = localStorage.getItem("locatm_session_uid");
-  if (savedUserId) {
-    const users = DB.getUsers();
-    const user = users.find(u => u.user_id === savedUserId);
-    if (user) {
-      currentUser = user;
-      updateUserUI();
-      document.getElementById("authScreen").style.display = "none";
-      checkInvestmentsExpiry();
-      return;
+  const dbClient = getDB();
+  if (savedUserId && dbClient) {
+    try {
+      const { data: user, error } = await dbClient.from('users').select('*').eq('user_id', savedUserId).maybeSingle();
+      if (!error && user) {
+        currentUser = user;
+        updateUserUI();
+        document.getElementById("authScreen").style.display = "none";
+        await checkInvestmentsExpiry();
+        return;
+      }
+    } catch (e) {
+      console.error("Session check error:", e);
     }
   }
   document.getElementById("authScreen").style.display = "flex";
@@ -209,8 +213,8 @@ function switchAuthTab(type) {
   }
 }
 
-// ৪. নির্ভরযোগ্য লগইন লজিক (কখনো আটকে থাকবে না)
-function handleLogin() {
+// ৩. সরাসরি ক্লাউড লগইন
+async function handleLogin() {
   const ident = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value.trim();
 
@@ -219,23 +223,42 @@ function handleLogin() {
     return;
   }
 
-  const users = DB.getUsers();
-  const matchedUser = users.find(u => (u.email === ident || u.phone === ident) && u.password === pass);
-
-  if (!matchedUser) {
-    alert("লগইন ব্যর্থ! ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।");
+  const dbClient = getDB();
+  if (!dbClient) {
+    alert("ডাটাবেজ কানেক্ট হচ্ছে, অনুগ্রহ করে ৫ সেকেন্ড অপেক্ষা করুন...");
     return;
   }
 
-  currentUser = matchedUser;
-  localStorage.setItem("locatm_session_uid", matchedUser.user_id);
-  updateUserUI();
-  document.getElementById("authScreen").style.display = "none";
-  alert(`স্বাগতম ${matchedUser.name}! সফলভাবে লগইন হয়েছে।`);
+  try {
+    const { data: users, error } = await dbClient.from('users')
+      .select('*')
+      .or(`email.eq.${ident},phone.eq.${ident}`);
+
+    if (error) {
+      alert("ডাটাবেজ এরর: " + error.message);
+      return;
+    }
+
+    const matchedUser = users ? users.find(u => u.password === pass) : null;
+    if (!matchedUser) {
+      alert("লগইন ব্যর্থ! ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।");
+      return;
+    }
+
+    currentUser = matchedUser;
+    localStorage.setItem("locatm_session_uid", matchedUser.user_id);
+    updateUserUI();
+    document.getElementById("authScreen").style.display = "none";
+    await loadPlatformConfig();
+    await checkInvestmentsExpiry();
+    alert(`স্বাগতম ${matchedUser.name}! সফলভাবে লগইন হয়েছে।`);
+  } catch (err) {
+    alert("লগইন সমস্যা: " + err.message);
+  }
 }
 
-// ৫. নির্ভরযোগ্য সাইন-আপ লজিক (জিরো ডেমো, রিয়েল একাউন্ট)
-function handleSignup() {
+// ৪. সরাসরি ক্লাউড সাইন-আপ (জিরো ডেমো)
+async function handleSignup() {
   const nm = document.getElementById("regName").value.trim();
   const em = document.getElementById("regEmail").value.trim();
   const ph = document.getElementById("regPhone").value.trim();
@@ -243,55 +266,62 @@ function handleSignup() {
   const ref = document.getElementById("regRef").value.trim();
 
   if (!nm || !em || !ph || !ps) {
-    alert("অনুগ্রহ করে সবগুলো তথ্য সঠিকভাবে পূরণ করুন!");
+    alert("অনুগ্রহ করে সবগুলো তথ্য পূরণ করুন!");
     return;
   }
-
   if (ps.length < 6) {
     alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!");
     return;
   }
 
-  const users = DB.getUsers();
-  const exists = users.find(u => u.email === em || u.phone === ph);
-  if (exists) {
-    alert("এই ইমেইল বা ফোন নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট রয়েছে! অনুগ্রহ করে লগইন করুন।");
+  const dbClient = getDB();
+  if (!dbClient) {
+    alert("ডাটাবেজ কানেক্ট হচ্ছে, অনুগ্রহ করে ৫ সেকেন্ড অপেক্ষা করুন...");
     return;
   }
 
-  const newUserId = "LTM" + Math.floor(100000 + Math.random() * 900000);
-
-  const newUser = {
-    user_id: newUserId,
-    name: nm,
-    email: em,
-    phone: ph,
-    password: ps,
-    main_balance: 0.00,
-    locked_balance: 0.00,
-    ltm_balance: 0.00,
-    total_profit: 0.00,
-    vip_level: 1,
-    referred_by: ref || null,
-    is_agent: false,
-    created_at: new Date().toISOString()
-  };
-
-  users.push(newUser);
-  DB.saveUsers(users);
-
-  // ক্লাউডে ব্যাকগ্রাউন্ড সিঙ্ক (যদি নেটওয়ার্ক অ্যালাউ করে)
   try {
-    if (typeof db !== 'undefined' && db) {
-      db.from('users').insert([newUser]).then(() => {}).catch(() => {});
-    }
-  } catch (e) {}
+    const { data: existing, error: checkErr } = await dbClient.from('users')
+      .select('id')
+      .or(`email.eq.${em},phone.eq.${ph}`);
 
-  currentUser = newUser;
-  localStorage.setItem("locatm_session_uid", newUser.user_id);
-  updateUserUI();
-  document.getElementById("authScreen").style.display = "none";
-  alert(`অভিনন্দন! আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। আপনার ইউনিক User ID: ${newUser.user_id}`);
+    if (!checkErr && existing && existing.length > 0) {
+      alert("এই ইমেইল বা ফোন নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট রয়েছে! অনুগ্রহ করে লগইন করুন।");
+      return;
+    }
+
+    const newUserId = "LTM" + Math.floor(100000 + Math.random() * 900000);
+
+    const newUserPayload = {
+      user_id: newUserId,
+      name: nm,
+      email: em,
+      phone: ph,
+      password: ps,
+      main_balance: 0.00,
+      locked_balance: 0.00,
+      ltm_balance: 0.00,
+      total_profit: 0.00,
+      vip_level: 1,
+      referred_by: ref || null,
+      is_agent: false
+    };
+
+    const { data, error } = await dbClient.from('users').insert([newUserPayload]).select().single();
+
+    if (error) {
+      alert("অ্যাকাউন্ট তৈরি ব্যর্থ: " + error.message);
+      return;
+    }
+
+    currentUser = data;
+    localStorage.setItem("locatm_session_uid", data.user_id);
+    updateUserUI();
+    document.getElementById("authScreen").style.display = "none";
+    alert(`অভিনন্দন! আপনার অ্যাকাউন্ট ক্লাউডে সফলভাবে তৈরি হয়েছে। User ID: ${currentUser.user_id}`);
+  } catch (err) {
+    alert("সাইন-আপ সমস্যা: " + err.message);
+  }
 }
 
 function triggerLogout() {
@@ -341,7 +371,7 @@ function openModalAndCloseDrawer(modalId) {
   openModal(modalId);
 }
 
-// ৬. ডিপোজিট লজিক
+// ৫. ডিপোজিট সাবমিট (সরাসরি ক্লাউড টেবিলে জমা)
 function renderDepositMethods() {
   const sel = document.getElementById("depositMethodSelect");
   if (!sel) return;
@@ -384,7 +414,7 @@ function copyDepositAddress() {
   }
 }
 
-function submitDeposit() {
+async function submitDeposit() {
   const sel = document.getElementById("depositMethodSelect");
   const idx = parseInt(sel.value);
   const curMethod = platformConfig.deposit_methods[idx];
@@ -398,30 +428,30 @@ function submitDeposit() {
 
   closeModal("depositModal");
 
-  requestConfirm(`আপনি কি নিশ্চিতভাবে $${amt} ডিপোজিটের রিকোয়েস্ট পাঠাতে চান?\n(TrxID: ${trx})`, () => {
-    const txs = DB.getTxs();
-    const newTx = {
-      id: Date.now(),
+  requestConfirm(`আপনি কি নিশ্চিতভাবে $${amt} ডিপোজিটের রিকোয়েস্ট পাঠাতে চান?\n(TrxID: ${trx})`, async () => {
+    const dbClient = getDB();
+    const { error } = await dbClient.from('transactions').insert([{
       user_id: currentUser.user_id,
       type: 'deposit',
       amount: amt,
       method: curMethod.name,
       trx_id: trx,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    };
-    txs.push(newTx);
-    DB.saveTxs(txs);
+      status: 'pending'
+    }]);
 
-    alert("ডিপোজিট রিকোয়েস্ট সফলভাবে জমা হয়েছে! অ্যাডমিন পর্যালোচনার পর ব্যালেন্স যুক্ত হবে।");
-    document.getElementById("depositAmountInput").value = "";
-    document.getElementById("depositTrxInput").value = "";
+    if (!error) {
+      alert("ডিপোজিট রিকোয়েস্ট সরাসরি অ্যাডমিন প্যানেলে জমা হয়েছে! অ্যাডমিন পর্যালোচনার পর ব্যালেন্স যুক্ত হবে।");
+      document.getElementById("depositAmountInput").value = "";
+      document.getElementById("depositTrxInput").value = "";
+    } else {
+      alert("রিকোয়েস্ট জমা দেওয়া সম্ভব হয়নি: " + error.message);
+    }
   });
 }
 
-// ৭. উইথড্রাল লজিক
-function submitWithdrawal() {
-  if (platformConfig.feature_toggles.withdrawals === false) {
+// ৬. উত্তোলন (সরাসরি ক্লাউড টেবিলে জমা ও ব্যালেন্স ডিডাক্ট)
+async function submitWithdrawal() {
+  if (platformConfig.feature_toggles && platformConfig.feature_toggles.withdrawals === false) {
     alert("কোম্পানি সরাসরি উত্তোলন বর্তমানে বন্ধ আছে।");
     return;
   }
@@ -445,35 +475,31 @@ function submitWithdrawal() {
 
   closeModal("withdrawModal");
 
-  requestConfirm(`উত্তোলন নিশ্চিতকরণ:\nমেথড: ${method}\nপরিমাণ: $${amt}\nঅ্যাকাউন্ট: ${target}`, () => {
+  requestConfirm(`উত্তোলন নিশ্চিতকরণ:\nমেথড: ${method}\nপরিমাণ: $${amt}\nঅ্যাকাউন্ট: ${target}`, async () => {
+    const dbClient = getDB();
     const newBal = parseFloat(currentUser.main_balance) - amt;
-    currentUser.main_balance = newBal;
 
-    const users = DB.getUsers();
-    const uIdx = users.findIndex(u => u.user_id === currentUser.user_id);
-    if (uIdx !== -1) {
-      users[uIdx].main_balance = newBal;
-      DB.saveUsers(users);
+    const { error: uErr } = await dbClient.from('users').update({ main_balance: newBal }).eq('user_id', currentUser.user_id);
+    if (uErr) {
+      alert("উত্তোলন ব্যর্থ: " + uErr.message);
+      return;
     }
 
-    const txs = DB.getTxs();
-    txs.push({
-      id: Date.now(),
+    await dbClient.from('transactions').insert([{
       user_id: currentUser.user_id,
       type: 'withdraw',
       amount: amt,
       method: `${method} (${target})`,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    });
-    DB.saveTxs(txs);
+      status: 'pending'
+    }]);
 
+    currentUser.main_balance = newBal;
     updateUserUI();
     alert("উত্তোলন রিকোয়েস্ট সফলভাবে জমা হয়েছে!");
   });
 }
 
-// ৮. Trade LTM টোকেন সোয়াপ
+// ৭. Trade LTM
 function switchTradeMode(mode) {
   currentTradeMode = mode;
   if (mode === 'buy') {
@@ -487,8 +513,8 @@ function switchTradeMode(mode) {
   }
 }
 
-function processTradeLTM() {
-  if (platformConfig.feature_toggles.trade_ltm === false) {
+async function processTradeLTM() {
+  if (platformConfig.feature_toggles && platformConfig.feature_toggles.trade_ltm === false) {
     alert("ট্রেড মার্কেট বর্তমানে বন্ধ আছে।");
     return;
   }
@@ -500,7 +526,8 @@ function processTradeLTM() {
   }
 
   closeModal("tradeModal");
-  const rate = platformConfig.ltm_rate || 0.10;
+  const rate = parseFloat(platformConfig.ltm_rate || 0.10);
+  const dbClient = getDB();
 
   if (currentTradeMode === 'buy') {
     if (parseFloat(currentUser.main_balance) < val) {
@@ -508,11 +535,13 @@ function processTradeLTM() {
       return;
     }
     const coinsToGet = val / rate;
-    requestConfirm(`আপনি কি নিশ্চিতভাবে $${val} ডলার দিয়ে ${coinsToGet.toFixed(2)} LTM কিনতে চান?`, () => {
-      currentUser.main_balance = parseFloat(currentUser.main_balance) - val;
-      currentUser.ltm_balance = parseFloat(currentUser.ltm_balance) + coinsToGet;
+    requestConfirm(`আপনি কি নিশ্চিতভাবে $${val} ডলার দিয়ে ${coinsToGet.toFixed(2)} LTM কিনতে চান?`, async () => {
+      const newMain = parseFloat(currentUser.main_balance) - val;
+      const newLtm = parseFloat(currentUser.ltm_balance) + coinsToGet;
 
-      syncCurrentUser();
+      await dbClient.from('users').update({ main_balance: newMain, ltm_balance: newLtm }).eq('user_id', currentUser.user_id);
+      currentUser.main_balance = newMain;
+      currentUser.ltm_balance = newLtm;
       updateUserUI();
       alert(`সফলভাবে ${coinsToGet.toFixed(2)} LTM কেনা হয়েছে!`);
     });
@@ -522,20 +551,22 @@ function processTradeLTM() {
       return;
     }
     const usdToGet = val * rate;
-    requestConfirm(`আপনি কি নিশ্চিতভাবে ${val} LTM বিক্রি করে $${usdToGet.toFixed(2)} নিতে চান?`, () => {
-      currentUser.ltm_balance = parseFloat(currentUser.ltm_balance) - val;
-      currentUser.main_balance = parseFloat(currentUser.main_balance) + usdToGet;
+    requestConfirm(`আপনি কি নিশ্চিতভাবে ${val} LTM বিক্রি করে $${usdToGet.toFixed(2)} নিতে চান?`, async () => {
+      const newLtm = parseFloat(currentUser.ltm_balance) - val;
+      const newMain = parseFloat(currentUser.main_balance) + usdToGet;
 
-      syncCurrentUser();
+      await dbClient.from('users').update({ main_balance: newMain, ltm_balance: newLtm }).eq('user_id', currentUser.user_id);
+      currentUser.main_balance = newMain;
+      currentUser.ltm_balance = newLtm;
       updateUserUI();
       alert(`বিক্রি সফল! মেইন ব্যালেন্সে $${usdToGet.toFixed(2)} যুক্ত হয়েছে।`);
     });
   }
 }
 
-// ৯. P2P ট্রান্সফার (এসক্রো)
-function submitP2PTransfer() {
-  if (platformConfig.feature_toggles.p2p === false) {
+// ৮. P2P ট্রান্সফার (ক্লাউড এসক্রো)
+async function submitP2PTransfer() {
+  if (platformConfig.feature_toggles && platformConfig.feature_toggles.p2p === false) {
     alert("P2P ট্রান্সফার বর্তমানে বন্ধ আছে।");
     return;
   }
@@ -556,38 +587,35 @@ function submitP2PTransfer() {
     return;
   }
 
-  const users = DB.getUsers();
-  const recIdx = users.findIndex(u => u.user_id === targetId);
-  if (recIdx === -1) {
-    alert("এই User ID-এর কোনো মেম্বার পাওয়া যায়নি!");
+  const dbClient = getDB();
+  const { data: recipient, error } = await dbClient.from('users').select('*').eq('user_id', targetId).maybeSingle();
+  if (error || !recipient) {
+    alert("এই User ID-এর কোনো মেম্বার ক্লাউড ডাটাবেজে পাওয়া যায়নি!");
     return;
   }
 
   closeModal("p2pModal");
 
-  requestConfirm(`${users[recIdx].name} (${targetId})-কে $${amt} ট্রান্সফার করতে চান?`, () => {
-    currentUser.main_balance = parseFloat(currentUser.main_balance) - amt;
-    users[recIdx].main_balance = parseFloat(users[recIdx].main_balance) + amt;
+  requestConfirm(`${recipient.name} (${targetId})-কে $${amt} ট্রান্সফার করতে চান?`, async () => {
+    const senderBal = parseFloat(currentUser.main_balance) - amt;
+    const recBal = parseFloat(recipient.main_balance) + amt;
 
-    const uIdx = users.findIndex(u => u.user_id === currentUser.user_id);
-    if (uIdx !== -1) users[uIdx].main_balance = currentUser.main_balance;
+    await dbClient.from('users').update({ main_balance: senderBal }).eq('user_id', currentUser.user_id);
+    await dbClient.from('users').update({ main_balance: recBal }).eq('user_id', targetId);
 
-    DB.saveUsers(users);
+    await dbClient.from('transactions').insert([
+      { user_id: currentUser.user_id, type: 'p2p_send', amount: amt, target_user_id: targetId, status: 'approved' },
+      { user_id: targetId, type: 'p2p_receive', amount: amt, target_user_id: currentUser.user_id, status: 'approved' }
+    ]);
 
-    const txs = DB.getTxs();
-    txs.push(
-      { id: Date.now(), user_id: currentUser.user_id, type: 'p2p_send', amount: amt, target_user_id: targetId, status: 'approved', created_at: new Date().toISOString() },
-      { id: Date.now() + 1, user_id: targetId, type: 'p2p_receive', amount: amt, target_user_id: currentUser.user_id, status: 'approved', created_at: new Date().toISOString() }
-    );
-    DB.saveTxs(txs);
-
+    currentUser.main_balance = senderBal;
     updateUserUI();
     alert(`$${amt} সফলভাবে ট্রান্সফার হয়েছে!`);
   });
 }
 
-// ১০. এজেন্ট আবেদন ও ভেরিফায়েড ডিরেক্টরি
-function submitAgentApplication() {
+// ৯. এজেন্ট আবেদন ও ভেরিফায়েড ডিরেক্টরি
+async function submitAgentApplication() {
   const shop = document.getElementById("agentShopInput").value.trim();
   const phone = document.getElementById("agentPhoneInput").value.trim();
   const loc = document.getElementById("agentLocationInput").value.trim();
@@ -598,34 +626,37 @@ function submitAgentApplication() {
   }
 
   closeModal("agentApplyModal");
+  const dbClient = getDB();
 
-  const agents = DB.getAgents();
-  agents.push({
-    id: Date.now(),
+  const { error } = await dbClient.from('agent_applications').insert([{
     user_id: currentUser.user_id,
     shop_name: shop,
     phone: phone,
     location: loc,
-    status: 'pending',
-    created_at: new Date().toISOString()
-  });
-  DB.saveAgents(agents);
+    status: 'pending'
+  }]);
 
-  alert("আবেদন জমা হয়েছে! অ্যাডমিন পর্যালোচনার পর ডিরেক্টরিতে আসবে।");
+  if (!error) {
+    alert("আবেদন সরাসরি অ্যাডমিন প্যানেলে জমা হয়েছে! পর্যালোচনার পর অ্যাপ্রুভ করা হবে।");
+  } else {
+    alert("আবেদন জমা হয়নি: " + error.message);
+  }
 }
 
-function renderAgentDirectory() {
+async function renderAgentDirectory() {
   const list = document.getElementById("agentDirectoryList");
   if (!list) return;
   list.innerHTML = "";
 
-  if (platformConfig.feature_toggles.agent_system === false) {
+  if (platformConfig.feature_toggles && platformConfig.feature_toggles.agent_system === false) {
     list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px;">এজেন্ট ক্যাশ-আউট নেটওয়ার্ক বর্তমানে প্রস্তুত করা হচ্ছে। শীঘ্রই চালু হবে।</div>`;
     return;
   }
 
-  const agents = DB.getAgents().filter(a => a.status === 'approved');
-  if (agents.length === 0) {
+  const dbClient = getDB();
+  const { data: agents } = await dbClient.from('agent_applications').select('*').eq('status', 'approved');
+
+  if (!agents || agents.length === 0) {
     list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px;">বর্তমানে কোনো অনুমোদিত এজেন্ট নেই।</div>`;
     return;
   }
@@ -648,7 +679,7 @@ function renderAgentDirectory() {
   });
 }
 
-// ১১. স্টক মার্কেট ও আপনার চাওয়া -৫% থেকে +৫% কমিশন রেঞ্জ
+// ১০. স্টক মার্কেট ও আপনার চাওয়া -৫% থেকে +৫% কমিশন রেঞ্জ
 let activeInvestStock = null;
 
 function initStockMarket() {
@@ -675,8 +706,8 @@ function initStockMarket() {
   });
 }
 
-function confirmStockInvest() {
-  if (platformConfig.feature_toggles.investments === false) {
+async function confirmStockInvest() {
+  if (platformConfig.feature_toggles && platformConfig.feature_toggles.investments === false) {
     alert("ইনভেস্টমেন্ট সিস্টেম বন্ধ আছে।");
     return;
   }
@@ -693,7 +724,6 @@ function confirmStockInvest() {
 
   closeModal("investModal");
 
-  // কমিশন ক্যালকুলেশন (-5% to +5% অথবা ম্যানুয়াল রেট)
   const settings = platformConfig.stock_profit_settings || {};
   let finalRate = 0;
   if (settings.manual_overrides && settings.manual_overrides[activeInvestStock.id] !== undefined) {
@@ -704,95 +734,98 @@ function confirmStockInvest() {
     finalRate = parseFloat((Math.random() * (maxP - minP) + minP).toFixed(2));
   }
 
-  requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name}-এ $${amt} ইনভেস্ট করতে চান?\n(২৪ ঘণ্টা সাইকেল, প্রত্যাশিত রেট: ${finalRate > 0 ? '+' : ''}${finalRate}%)`, () => {
-    currentUser.main_balance = parseFloat(currentUser.main_balance) - amt;
-    currentUser.locked_balance = parseFloat(currentUser.locked_balance) + amt;
+  requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name}-এ $${amt} ইনভেস্ট করতে চান?\n(২৪ ঘণ্টা সাইকেল, রেট: ${finalRate > 0 ? '+' : ''}${finalRate}%)`, async () => {
+    const dbClient = getDB();
+    const newMain = parseFloat(currentUser.main_balance) - amt;
+    const newLocked = parseFloat(currentUser.locked_balance) + amt;
 
-    syncCurrentUser();
-
-    const invs = DB.getInvs();
-    invs.push({
-      id: Date.now(),
+    await dbClient.from('users').update({ main_balance: newMain, locked_balance: newLocked }).eq('user_id', currentUser.user_id);
+    await dbClient.from('investments').insert([{
       user_id: currentUser.user_id,
       stock_name: activeInvestStock.name,
       amount: amt,
       profit_percent: finalRate,
-      status: 'active',
-      created_at: new Date().toISOString(),
-      ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-    });
-    DB.saveInvs(invs);
+      status: 'active'
+    }]);
 
+    currentUser.main_balance = newMain;
+    currentUser.locked_balance = newLocked;
     updateUserUI();
-    renderActiveInvestments();
+    await checkInvestmentsExpiry();
     alert(`$${amt} সফলভাবে ইনভেস্ট হয়েছে!`);
   });
 }
 
-function checkInvestmentsExpiry() {
+async function checkInvestmentsExpiry() {
   if (!currentUser) return;
-  const invs = DB.getInvs();
-  const now = new Date();
-  let updated = false;
+  const dbClient = getDB();
+  if (!dbClient) return;
 
-  invs.forEach(inv => {
-    if (inv.user_id === currentUser.user_id && inv.status === 'active') {
-      if (new Date(inv.ends_at) <= now) {
-        const cap = parseFloat(inv.amount);
-        const prof = cap * (parseFloat(inv.profit_percent) / 100);
-        const total = cap + prof;
+  const { data: list } = await dbClient.from('investments')
+    .select('*')
+    .eq('user_id', currentUser.user_id)
+    .eq('status', 'active');
 
-        currentUser.main_balance = parseFloat(currentUser.main_balance) + total;
-        currentUser.locked_balance = parseFloat(currentUser.locked_balance) - cap;
-        currentUser.total_profit = parseFloat(currentUser.total_profit) + prof;
-
-        inv.status = 'completed';
-        updated = true;
-      }
-    }
-  });
-
-  if (updated) {
-    DB.saveInvs(invs);
-    syncCurrentUser();
-    updateUserUI();
-  }
-  renderActiveInvestments();
-}
-
-function renderActiveInvestments() {
   const container = document.getElementById("activeInvestList");
-  if (!container || !currentUser) return;
 
-  const myInvs = DB.getInvs().filter(i => i.user_id === currentUser.user_id && i.status === 'active');
-  if (myInvs.length === 0) {
-    container.innerHTML = `
-      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; color:var(--text-muted); font-size:13px; text-align:center;">
-        বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
-      </div>
-    `;
+  if (!list || list.length === 0) {
+    if (container) {
+      container.innerHTML = `
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; color:var(--text-muted); font-size:13px; text-align:center;">
+          বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
+        </div>
+      `;
+    }
     return;
   }
 
-  container.innerHTML = "";
-  myInvs.forEach(i => {
-    const d = document.createElement("div");
-    d.style.cssText = "background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;";
-    d.innerHTML = `
-      <div>
-        <strong style="color:#38bdf8;">${i.stock_name}</strong><br>
-        <small style="color:var(--text-muted);">ইনভেস্ট: $${parseFloat(i.amount).toFixed(2)}</small>
-      </div>
-      <div style="text-align:right;">
-        <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:700;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
-        <small style="color:var(--gold);">চলমান (Active)</small>
-      </div>
-    `;
-    container.appendChild(d);
-  });
+  if (container) {
+    container.innerHTML = "";
+    list.forEach(i => {
+      const d = document.createElement("div");
+      d.style.cssText = "background:var(--bg-card); border:1px solid var(--glass-border); padding:14px; border-radius:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;";
+      d.innerHTML = `
+        <div>
+          <strong style="color:#38bdf8;">${i.stock_name}</strong><br>
+          <small style="color:var(--text-muted);">ইনভেস্ট: $${parseFloat(i.amount).toFixed(2)}</small>
+        </div>
+        <div style="text-align:right;">
+          <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:700;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
+          <small style="color:var(--gold);">চলমান (Active)</small>
+        </div>
+      `;
+      container.appendChild(d);
+    });
+  }
+
+  const now = new Date();
+  for (let inv of list) {
+    if (new Date(inv.ends_at) <= now) {
+      const capital = parseFloat(inv.amount);
+      const profit = capital * (parseFloat(inv.profit_percent) / 100);
+      const totalReturn = capital + profit;
+
+      const updatedMain = parseFloat(currentUser.main_balance) + totalReturn;
+      const updatedLocked = parseFloat(currentUser.locked_balance) - capital;
+      const updatedTotalProfit = parseFloat(currentUser.total_profit) + profit;
+
+      await dbClient.from('users').update({
+        main_balance: updatedMain,
+        locked_balance: updatedLocked,
+        total_profit: updatedTotalProfit
+      }).eq('user_id', currentUser.user_id);
+
+      await dbClient.from('investments').update({ status: 'completed' }).eq('id', inv.id);
+
+      currentUser.main_balance = updatedMain;
+      currentUser.locked_balance = updatedLocked;
+      currentUser.total_profit = updatedTotalProfit;
+      updateUserUI();
+    }
+  }
 }
 
-// ১২. ডায়নামিক বাটন ও ভিডিও
+// ১১. ডায়নামিক বাটন ও ভিডিও
 function renderDynamicButtons() {
   const wrapper = document.getElementById("dynamicActionBarWrapper");
   const bar = document.getElementById("customActionBar");
@@ -853,16 +886,7 @@ function renderCompanyPosts() {
   });
 }
 
-// সাহায্যকারী ফাংশন
-function syncCurrentUser() {
-  const users = DB.getUsers();
-  const idx = users.findIndex(u => u.user_id === currentUser.user_id);
-  if (idx !== -1) {
-    users[idx] = currentUser;
-    DB.saveUsers(users);
-  }
-}
-
+// কনফার্মেশন ও মোডাল হেল্পার
 function requestConfirm(msg, callback) {
   document.getElementById("confirmMessage").innerText = msg;
   pendingConfirmCallback = callback;
