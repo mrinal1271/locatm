@@ -4,7 +4,7 @@
  * ====================================================================
  */
 
-const SUPABASE_URL = "https://wixfgflqghyffjbbayuv.supabase.co";
+const SUPABASE_URL = "https://sxdacammcppmfrowparx.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_cDVOg5YfsL_m4If4tyE3BQ_rArOq7gu";
 
 // গ্লোবাল ডাটাবেজ ক্লায়েন্ট ইনিশিয়ালাইজেশন
