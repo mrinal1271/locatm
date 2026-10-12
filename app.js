@@ -1,6 +1,6 @@
 /**
  * ====================================================================
- * Locatm - Ultra Client Engine (app.js) [Real-time Direct Sync & Live Portfolio]
+ * Locatm - Ultra Client Engine (app.js) [Direct Cloud Production]
  * ====================================================================
  */
 
@@ -9,7 +9,6 @@ let pendingConfirmCallback = null;
 let currentTradeMode = 'buy';
 let currentLanguage = localStorage.getItem('locatm_lang') || 'bn';
 let deferredPwaPrompt = null;
-let activeSpecialStockTimerInterval = null;
 let userTransactionsCache = [];
 let realtimeSubscriptions = [];
 
@@ -181,7 +180,7 @@ const TRANSLATIONS = {
   }
 };
 
-// ১০০+ গ্লোবাল স্টক কোম্পানি
+// ১০৪টি আন্তর্জাতিক কোম্পানি ও স্টক সম্পূর্ণ তালিকা
 const GLOBAL_STOCKS = [
   { id: 1, name: "Apple Inc.", ticker: "AAPL", logo: "https://logo.clearbit.com/apple.com", min: 0.10 },
   { id: 2, name: "Microsoft Corp.", ticker: "MSFT", logo: "https://logo.clearbit.com/microsoft.com", min: 0.10 },
@@ -222,7 +221,71 @@ const GLOBAL_STOCKS = [
   { id: 37, name: "Nike Athletics", ticker: "NKE", logo: "https://logo.clearbit.com/nike.com", min: 0.10 },
   { id: 38, name: "McDonald's Corp.", ticker: "MCD", logo: "https://logo.clearbit.com/mcdonalds.com", min: 0.10 },
   { id: 39, name: "Starbucks Coffee", ticker: "SBUX", logo: "https://logo.clearbit.com/starbucks.com", min: 0.10 },
-  { id: 40, name: "Pfizer Health", ticker: "PFE", logo: "https://logo.clearbit.com/pfizer.com", min: 0.10 }
+  { id: 40, name: "Pfizer Health", ticker: "PFE", logo: "https://logo.clearbit.com/pfizer.com", min: 0.10 },
+  { id: 41, name: "AstraZeneca", ticker: "AZN", logo: "https://logo.clearbit.com/astrazeneca.com", min: 0.10 },
+  { id: 42, name: "Novartis Pharma", ticker: "NVS", logo: "https://logo.clearbit.com/novartis.com", min: 0.10 },
+  { id: 43, name: "SAP Software", ticker: "SAP", logo: "https://logo.clearbit.com/sap.com", min: 0.10 },
+  { id: 44, name: "Siemens Energy", ticker: "SIE", logo: "https://logo.clearbit.com/siemens.com", min: 0.10 },
+  { id: 45, name: "IBM Computing", ticker: "IBM", logo: "https://logo.clearbit.com/ibm.com", min: 0.10 },
+  { id: 46, name: "Airbus Aerospace", ticker: "AIR", logo: "https://logo.clearbit.com/airbus.com", min: 0.10 },
+  { id: 47, name: "Boeing Aviation", ticker: "BA", logo: "https://logo.clearbit.com/boeing.com", min: 0.10 },
+  { id: 48, name: "SpaceX Starlink", ticker: "SPCX", logo: "https://logo.clearbit.com/spacex.com", min: 0.10 },
+  { id: 49, name: "Uber Technologies", ticker: "UBER", logo: "https://logo.clearbit.com/uber.com", min: 0.10 },
+  { id: 50, name: "Spotify Music", ticker: "SPOT", logo: "https://logo.clearbit.com/spotify.com", min: 0.10 },
+  { id: 51, name: "Airbnb Travel", ticker: "ABNB", logo: "https://logo.clearbit.com/airbnb.com", min: 0.10 },
+  { id: 52, name: "Shopify E-Commerce", ticker: "SHOP", logo: "https://logo.clearbit.com/shopify.com", min: 0.10 },
+  { id: 53, name: "PayPal Payments", ticker: "PYPL", logo: "https://logo.clearbit.com/paypal.com", min: 0.10 },
+  { id: 54, name: "Square Block", ticker: "SQ", logo: "https://logo.clearbit.com/squareup.com", min: 0.10 },
+  { id: 55, name: "Robinhood Finance", ticker: "HOOD", logo: "https://logo.clearbit.com/robinhood.com", min: 0.10 },
+  { id: 56, name: "Binance Ecosystem", ticker: "BNB", logo: "https://logo.clearbit.com/binance.com", min: 0.10 },
+  { id: 57, name: "Coinbase Global", ticker: "COIN", logo: "https://logo.clearbit.com/coinbase.com", min: 0.10 },
+  { id: 58, name: "Sony Music", ticker: "SME", logo: "https://logo.clearbit.com/sonymusic.com", min: 0.10 },
+  { id: 59, name: "Nintendo Corp.", ticker: "NTDOY", logo: "https://logo.clearbit.com/nintendo.com", min: 0.10 },
+  { id: 60, name: "EA Electronic Arts", ticker: "EA", logo: "https://logo.clearbit.com/ea.com", min: 0.10 },
+  { id: 61, name: "Target Retail", ticker: "TGT", logo: "https://logo.clearbit.com/target.com", min: 0.10 },
+  { id: 62, name: "LVMH Luxury", ticker: "MC", logo: "https://logo.clearbit.com/lvmh.com", min: 0.10 },
+  { id: 63, name: "Hermes Fashion", ticker: "RMS", logo: "https://logo.clearbit.com/hermes.com", min: 0.10 },
+  { id: 64, name: "Ferrari Motors", ticker: "RACE", logo: "https://logo.clearbit.com/ferrari.com", min: 0.10 },
+  { id: 65, name: "Porsche Auto", ticker: "P911", logo: "https://logo.clearbit.com/porsche.com", min: 0.10 },
+  { id: 66, name: "BMW Group", ticker: "BMW", logo: "https://logo.clearbit.com/bmw.com", min: 0.10 },
+  { id: 67, name: "Mercedes-Benz", ticker: "MBG", logo: "https://logo.clearbit.com/mercedes-benz.com", min: 0.10 },
+  { id: 68, name: "Audi Motors", ticker: "AUDI", logo: "https://logo.clearbit.com/audi.com", min: 0.10 },
+  { id: 69, name: "Honda Motor", ticker: "HMC", logo: "https://logo.clearbit.com/honda.com", min: 0.10 },
+  { id: 70, name: "Hyundai Auto", ticker: "HYMTF", logo: "https://logo.clearbit.com/hyundai.com", min: 0.10 },
+  { id: 71, name: "FedEx Express", ticker: "FDX", logo: "https://logo.clearbit.com/fedex.com", min: 0.10 },
+  { id: 72, name: "UPS Logistics", ticker: "UPS", logo: "https://logo.clearbit.com/ups.com", min: 0.10 },
+  { id: 73, name: "DHL Global", ticker: "DPW", logo: "https://logo.clearbit.com/dhl.com", min: 0.10 },
+  { id: 74, name: "Baidu Search", ticker: "BIDU", logo: "https://logo.clearbit.com/baidu.com", min: 0.10 },
+  { id: 75, name: "JD.com Retail", ticker: "JD", logo: "https://logo.clearbit.com/jd.com", min: 0.10 },
+  { id: 76, name: "Xiaomi Tech", ticker: "XIACF", logo: "https://logo.clearbit.com/mi.com", min: 0.10 },
+  { id: 77, name: "BYD Electric Auto", ticker: "BYDDY", logo: "https://logo.clearbit.com/byd.com", min: 0.10 },
+  { id: 78, name: "Foxconn Industry", ticker: "HNHPF", logo: "https://logo.clearbit.com/foxconn.com", min: 0.10 },
+  { id: 79, name: "Dell Technologies", ticker: "DELL", logo: "https://logo.clearbit.com/dell.com", min: 0.10 },
+  { id: 80, name: "HP Computers", ticker: "HPQ", logo: "https://logo.clearbit.com/hp.com", min: 0.10 },
+  { id: 81, name: "Lenovo Group", ticker: "LNVGY", logo: "https://logo.clearbit.com/lenovo.com", min: 0.10 },
+  { id: 82, name: "Canon Optics", ticker: "CAJ", logo: "https://logo.clearbit.com/canon.com", min: 0.10 },
+  { id: 83, name: "Nikon Imaging", ticker: "NINOY", logo: "https://logo.clearbit.com/nikon.com", min: 0.10 },
+  { id: 84, name: "Panasonic Corp.", ticker: "PCRFY", logo: "https://logo.clearbit.com/panasonic.com", min: 0.10 },
+  { id: 85, name: "LG Electronics", ticker: "LG", logo: "https://logo.clearbit.com/lg.com", min: 0.10 },
+  { id: 86, name: "Tata Motors Global", ticker: "TTM", logo: "https://logo.clearbit.com/tatamotors.com", min: 0.10 },
+  { id: 87, name: "Infosys Tech", ticker: "INFY", logo: "https://logo.clearbit.com/infosys.com", min: 0.10 },
+  { id: 88, name: "Reliance Industries", ticker: "RIGD", logo: "https://logo.clearbit.com/ril.com", min: 0.10 },
+  { id: 89, name: "Unilever Consumer", ticker: "UL", logo: "https://logo.clearbit.com/unilever.com", min: 0.10 },
+  { id: 90, name: "Nestle Nutrition", ticker: "NSRGY", logo: "https://logo.clearbit.com/nestle.com", min: 0.10 },
+  { id: 91, name: "Mondelez Snacks", ticker: "MDLZ", logo: "https://logo.clearbit.com/mondelezinternational.com", min: 0.10 },
+  { id: 92, name: "Danone Dairy", ticker: "DANOY", logo: "https://logo.clearbit.com/danone.com", min: 0.10 },
+  { id: 93, name: "Rolex Holdings", ticker: "ROLX", logo: "https://logo.clearbit.com/rolex.com", min: 0.10 },
+  { id: 94, name: "Zara Inditex", ticker: "IDEXY", logo: "https://logo.clearbit.com/zara.com", min: 0.10 },
+  { id: 95, name: "H&M Fashion", ticker: "HNNMY", logo: "https://logo.clearbit.com/hm.com", min: 0.10 },
+  { id: 96, name: "Puma Sportswear", ticker: "PUMSY", logo: "https://logo.clearbit.com/puma.com", min: 0.10 },
+  { id: 97, name: "Lego Group", ticker: "LEGO", logo: "https://logo.clearbit.com/lego.com", min: 0.10 },
+  { id: 98, name: "Colgate-Palmolive", ticker: "CL", logo: "https://logo.clearbit.com/colgatepalmolive.com", min: 0.10 },
+  { id: 99, name: "Red Bull Energy", ticker: "RDBL", logo: "https://logo.clearbit.com/redbull.com", min: 0.10 },
+  { id: 100, name: "Monster Beverage", ticker: "MNST", logo: "https://logo.clearbit.com/monsterenergy.com", min: 0.10 },
+  { id: 101, name: "Zoom Communications", ticker: "ZM", logo: "https://logo.clearbit.com/zoom.us", min: 0.10 },
+  { id: 102, name: "Slack Technologies", ticker: "WORK", logo: "https://logo.clearbit.com/slack.com", min: 0.10 },
+  { id: 103, name: "Dropbox Cloud", ticker: "DBX", logo: "https://logo.clearbit.com/dropbox.com", min: 0.10 },
+  { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com", min: 0.10 }
 ];
 
 function getDB() {
@@ -298,12 +361,17 @@ async function loadPlatformConfig() {
   if (document.getElementById("tradeCoinRate")) {
     document.getElementById("tradeCoinRate").innerText = `$${parseFloat(platformConfig.ltm_rate || 0.10).toFixed(2)}`;
   }
+
+  // মারকুই নোটিস সচল রাখা
   if (platformConfig.marquee_notice && platformConfig.marquee_notice.trim() !== "") {
-    document.getElementById("marqueeNoticeText").innerText = platformConfig.marquee_notice;
-    document.getElementById("marqueeBarContainer").style.display = "flex";
+    const marqueeBar = document.getElementById("marqueeBarContainer");
+    const marqueeTxt = document.getElementById("marqueeNoticeText");
+    marqueeTxt.innerText = platformConfig.marquee_notice;
+    marqueeBar.style.display = "flex";
   } else {
     document.getElementById("marqueeBarContainer").style.display = "none";
   }
+
   if (platformConfig.tutorial_video_url && platformConfig.tutorial_video_url.trim() !== "") {
     document.getElementById("tutorialVideoIframe").src = platformConfig.tutorial_video_url;
   }
@@ -380,7 +448,7 @@ async function checkSavedAuth() {
   document.getElementById("authScreen").classList.add("active");
 }
 
-// ================= রিয়েল-টাইম অটো সিঙ্ক =================
+// রিয়েল-টাইম অটো সিঙ্ক
 function initUserRealtimeSync() {
   const dbClient = getDB();
   if (!dbClient || !currentUser) return;
@@ -534,6 +602,7 @@ async function handleSignup() {
       ltm_balance: 0.00,
       total_profit: 0.00,
       vip_level: 1,
+      is_agent: false,
       referred_by: ref || null
     };
 
@@ -592,13 +661,19 @@ function updateUserUI() {
   document.getElementById("headerUserIdBadge").innerText = `ID: ${currentUser.user_id}`;
   document.getElementById("drawerUserName").innerText = currentUser.name;
   document.getElementById("drawerUserEmail").innerText = currentUser.email;
-  document.getElementById("drawerUserId").innerText = `User ID: ${currentUser.user_id}`;
+  document.getElementById("drawerUserId").innerText = `User ID: ${currentUser.user_id}${currentUser.is_agent ? ' [এজেন্ট]' : ''}`;
   document.getElementById("mainBalance").innerText = `$${parseFloat(currentUser.main_balance || 0).toFixed(2)}`;
   document.getElementById("lockedBalance").innerText = `$${parseFloat(currentUser.locked_balance || 0).toFixed(2)}`;
   document.getElementById("coinBalance").innerText = parseFloat(currentUser.ltm_balance || 0).toFixed(2);
   document.getElementById("coinUsdVal").innerText = `($${(parseFloat(currentUser.ltm_balance || 0) * (platformConfig.ltm_rate || 0.10)).toFixed(2)})`;
   document.getElementById("totalProfit").innerText = `$${parseFloat(currentUser.total_profit || 0).toFixed(2)}`;
   
+  // এজেন্ট বনাম সাধারণ ইউজারের উত্তোলন সীমার হেল্প টেক্সট
+  const limitHelp = document.getElementById("withdrawLimitHelpText");
+  if (limitHelp) {
+    limitHelp.innerText = currentUser.is_agent ? "এজেন্ট ন্যূনতম উত্তোলন: $১০.০০" : "সাধারণ ইউজার ন্যূনতম উত্তোলন: $৫০.০০";
+  }
+
   document.getElementById("profUserId").value = currentUser.user_id;
   document.getElementById("profName").value = currentUser.name;
   document.getElementById("profEmail").value = currentUser.email;
@@ -764,7 +839,7 @@ async function submitDeposit() {
   });
 }
 
-// উত্তোলন
+// উত্তোলন (এজেন্ট বনাম সাধারণ ইউজার লিমিট)
 function renderWithdrawMethods() {
   const sel = document.getElementById("withdrawMethodSelect");
   if (!sel) return;
@@ -794,8 +869,10 @@ async function submitWithdrawal() {
   const method = document.getElementById("withdrawMethodSelect").value;
   const target = document.getElementById("withdrawAddressInput").value.trim();
 
-  if (isNaN(amt) || amt < 50) {
-    alert("ন্যূনতম উত্তোলন সীমা $৫০ ডলার!");
+  // উত্তোলন সীমা যাচাই
+  const minLimit = currentUser.is_agent ? 10.0 : 50.0;
+  if (isNaN(amt) || amt < minLimit) {
+    alert(`আপনার জন্য ন্যূনতম উত্তোলন সীমা $${minLimit.toFixed(2)} ডলার!`);
     return;
   }
   if (!target) {
@@ -839,7 +916,7 @@ async function submitWithdrawal() {
   });
 }
 
-// P2P ট্রান্সফার
+// ================= P2P ট্রান্সফার লজিক (কোম্পানি বনাম এজেন্ট কমিশন) =================
 async function submitP2PTransfer() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.p2p === false) {
     alert("P2P ট্রান্সফার বন্ধ আছে।");
@@ -878,14 +955,23 @@ async function submitP2PTransfer() {
 
   requestConfirm(`${recipient.name} (${targetId})-কে $${amt} পাঠাতে চান?\nফি (${p2pFeePercent}%): $${p2pFeeAmount.toFixed(2)}\nমোট কাটবে: $${totalSenderDeduct.toFixed(2)}`, async () => {
     const senderBal = parseFloat(currentUser.main_balance) - totalSenderDeduct;
-    const recBal = parseFloat(recipient.main_balance) + amt;
 
+    // যদি প্রাপক সক্রিয় এজেন্ট হন, তবে সে কমিশন পাবে; অন্যথায় কমিশন পাবে কোম্পানি (ইউজার শুধু মূল $amt পাবে)
+    let recipientReceives = amt;
+    if (recipient.is_agent === true) {
+      recipientReceives = amt + p2pFeeAmount; // এজেন্ট হিসেবে ফি কমিশন লাভ
+    }
+
+    const recBal = parseFloat(recipient.main_balance) + recipientReceives;
+
+    // ডাটাবেজ আপডেট
     await dbClient.from('users').update({ main_balance: senderBal }).eq('user_id', currentUser.user_id);
     await dbClient.from('users').update({ main_balance: recBal }).eq('user_id', targetId);
 
+    // ট্রানজেকশন রেকর্ড
     await dbClient.from('transactions').insert([
       { user_id: currentUser.user_id, type: 'p2p_send', amount: amt, target_user_id: targetId, status: 'approved' },
-      { user_id: targetId, type: 'p2p_receive', amount: amt, target_user_id: currentUser.user_id, status: 'approved' }
+      { user_id: targetId, type: 'p2p_receive', amount: recipientReceives, target_user_id: currentUser.user_id, status: 'approved' }
     ]);
 
     currentUser.main_balance = senderBal;
@@ -895,7 +981,7 @@ async function submitP2PTransfer() {
   });
 }
 
-// ================= সম্পূর্ণ লেনদেন হিস্টোরি (Transaction History) =================
+// সম্পূর্ণ লেনদেন হিস্টোরি
 async function loadUserTransactionHistory() {
   if (!currentUser) return;
   const dbClient = getDB();
@@ -1088,7 +1174,7 @@ async function renderAgentDirectory() {
   });
 }
 
-// স্টক মার্কেট
+// ১০০+ স্টক মার্কেট
 let activeInvestStock = null;
 
 function initStockMarket() {
@@ -1102,7 +1188,6 @@ function initStockMarket() {
     card.onclick = () => {
       activeInvestStock = stk;
       document.getElementById("investModalStockTitle").innerText = `${stk.name} শেয়ার`;
-      checkStockSpecialTimedBoost(stk.id);
       openModal("investModal");
     };
     card.innerHTML = `
@@ -1116,41 +1201,7 @@ function initStockMarket() {
   });
 }
 
-function checkStockSpecialTimedBoost(stockId) {
-  if (activeSpecialStockTimerInterval) {
-    clearInterval(activeSpecialStockTimerInterval);
-  }
-
-  const box = document.getElementById("stockSpecialOfferBox");
-  const txt = document.getElementById("stockSpecialOfferText");
-  const timerEl = document.getElementById("stockSpecialOfferTimer");
-  
-  const settings = platformConfig.stock_profit_settings || {};
-  const boosts = settings.timed_boosts || {};
-  const boost = boosts[stockId];
-
-  if (boost && new Date(boost.expires_at) > new Date()) {
-    box.style.display = "block";
-    txt.innerText = `বিশেষ অফার চলমান! নিশ্চিত বোনাস বরাদ্দ।`;
-    
-    activeSpecialStockTimerInterval = setInterval(() => {
-      const remainingMs = new Date(boost.expires_at) - new Date();
-      if (remainingMs <= 0) {
-        clearInterval(activeSpecialStockTimerInterval);
-        box.style.display = "none";
-      } else {
-        const hrs = Math.floor(remainingMs / (1000 * 60 * 60));
-        const mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-        const secs = Math.floor((remainingMs % (1000 * 60)) / 1000);
-        timerEl.innerText = `বাকি সময়: ${hrs}h ${mins}m ${secs}s`;
-      }
-    }, 1000);
-  } else {
-    box.style.display = "none";
-  }
-}
-
-// ================= লকড ব্যালেন্সে ক্লিকে লাইভ পোর্টফোলিও ওপেন লজিক =================
+// লকড ব্যালেন্সে ক্লিকে লাইভ পোর্টফোলিও ওপেন
 async function openLockedInvestDetails() {
   openModal('activeInvestDetailsModal');
   const modalContainer = document.getElementById("modalActiveInvestList");
@@ -1160,7 +1211,7 @@ async function openLockedInvestDetails() {
   await checkInvestmentsExpiry();
 }
 
-// শেয়ার কেনার সরল ও প্রফেশনাল বার্তা
+// শেয়ার কেনার সরল বার্তা
 async function confirmStockInvest() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.investments === false) {
     alert("ইনভেস্টমেন্ট সিস্টেম বন্ধ আছে।");
@@ -1179,6 +1230,7 @@ async function confirmStockInvest() {
 
   closeModal("investModal");
 
+  // রেট নির্ধারণ (ব্যাকগ্রাউন্ডে বুস্ট থাকলে অটো কাজ করবে, ইউজার কিছু দেখবে না)
   const settings = platformConfig.stock_profit_settings || {};
   let finalRate = 0;
 
@@ -1229,7 +1281,7 @@ async function confirmStockInvest() {
   });
 }
 
-// সক্রিয় ইনভেস্টমেন্ট এবং লকড ব্যালেন্স পপআপ রেন্ডার (তাৎক্ষণিক লাইভ ফেচ)
+// সক্রিয় ইনভেস্টমেন্ট এবং লকড ব্যালেন্স পপআপ রেন্ডার
 async function checkInvestmentsExpiry() {
   if (!currentUser) return;
   const dbClient = getDB();

@@ -13,7 +13,7 @@
 </head>
 <body>
 
-  <!-- ================= ১. সিকিউর লগইন / সাইনআপ / পাসওয়ার্ড রিকভারি ================= -->
+  <!-- ১. সিকিউর লগইন / সাইনআপ / পাসওয়ার্ড রিকভারি -->
   <div id="authScreen" class="modal-overlay active" style="z-index:9999;">
     <div class="modal-box" style="max-width:390px;">
       <div style="text-align:center; margin-bottom:16px;">
@@ -52,7 +52,7 @@
   <div class="modal-overlay" id="forgotPassModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;" data-i18n="forgot_title">🔑 পাসওয়ার্ড পুনরুদ্ধার</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;" data-i18n="forgot_desc">আপনার অ্যাকাউন্টের নিবন্ধিত ইমেইল বা ফোন নম্বর দিন।</p>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;" data-i18n="forgot_desc">আপনার নিবন্ধিত ইমেইল বা ফোন নম্বর দিন।</p>
       <input type="text" id="forgotIdentInput" class="input-field" placeholder="ইমেইল বা ফোন নম্বর">
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('forgotPassModal')" data-i18n="cancel">বাতিল</button>
@@ -61,7 +61,7 @@
     </div>
   </div>
 
-  <!-- ================= ২. প্রথমবার সাইট ওপেন ওয়েলকাম পপআপ ================= -->
+  <!-- ২. প্রথমবার সাইট ওপেন ওয়েলকাম পপআপ -->
   <div class="modal-overlay" id="welcomeAnnouncementModal">
     <div class="modal-box" style="border: 1px solid var(--accent);">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -73,34 +73,29 @@
     </div>
   </div>
 
-  <!-- ================= ৩. পরিচ্ছন্ন ও আধুনিক মোবাইল-রেসপনসিভ হেডার ================= -->
+  <!-- ৩. পরিচ্ছন্ন মোবাইল হেডার -->
   <header>
     <div class="logo-wrap">
       <span class="brand-logo">Locatm</span>
       <span class="vip-badge" id="userVipBadge">👑 VIP 1</span>
     </div>
 
-    <!-- মাঝে স্পষ্ট ইউজার আইডি ব্যাজ -->
     <div class="header-user-id" id="headerUserIdBadge">ID: ----</div>
     
-    <!-- ডানে আইকন বাটনসমূহ -->
     <div class="header-actions">
-      <!-- PWA অ্যাপ ইনস্টল বাটন -->
       <button id="pwaInstallBtn" class="icon-btn" title="ইনস্টল অ্যাপ" onclick="triggerPWAInstall()" style="color:var(--accent);">
         📲
       </button>
 
-      <!-- ভাষা পরিবর্তন বাটন (বাংলা ⇄ English) -->
       <button class="icon-btn" id="langSwitchBtn" title="Language" onclick="toggleLanguage()">
         🌐 <span id="currentLangLabel" style="font-size:10px; font-weight:800;">BN</span>
       </button>
 
-      <!-- থ্রি-ডট ড্রয়ার মেনু বাটন -->
       <button class="icon-btn" onclick="toggleDrawer(true)">☰</button>
     </div>
   </header>
 
-  <!-- ================= ৪. সাইড ড্রয়ার থ্রি-ডট মেনু ================= -->
+  <!-- ৪. সাইড ড্রয়ার মেনু -->
   <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
   <div class="drawer-content" id="drawerMenu">
     <div class="drawer-header">
@@ -190,23 +185,23 @@
     </ul>
   </div>
 
-  <!-- ================= ৫. লাইভ মারকুই নোটিস ================= -->
+  <!-- ৫. লাইভ মারকুই স্লাইডার নোটিস (সচল) -->
   <div class="marquee-bar" id="marqueeBarContainer" style="display:none;">
     <span class="marquee-badge" data-i18n="notice_badge">নোটিস</span>
-    <marquee id="marqueeNoticeText"></marquee>
+    <marquee id="marqueeNoticeText" scrollamount="6" behavior="scroll" direction="left"></marquee>
   </div>
 
-  <!-- ================= ৬. মূল ড্যাশবোর্ড কন্টেন্ট ================= -->
+  <!-- ৬. মূল ড্যাশবোর্ড কন্টেন্ট -->
   <div class="container">
     
-    <!-- ৩D ওয়ালেট ব্যালেন্স কার্ড (লকড অ্যামাউন্ট নিশ্চিত ক্লিকেবল) -->
+    <!-- ৩D ওয়ালেট ব্যালেন্স কার্ড -->
     <div class="wallet-card">
       <div class="wallet-item">
         <h4 data-i18n="w_main">Main Balance</h4>
         <p id="mainBalance">$0.00</p>
       </div>
 
-      <!-- লকড ব্যালেন্স - ক্লিক করলে পপআপ নিশ্চিতভাবে খুলবে -->
+      <!-- লকড ব্যালেন্স - ক্লিকেবল -->
       <div class="wallet-item clickable" onclick="openLockedInvestDetails()" title="ক্লিক করে সক্রিয় শেয়ারের তালিকা দেখুন">
         <h4><span data-i18n="w_locked">Locked</span> <span style="font-size:12px; color:#38bdf8;">🔍 দেখুন</span></h4>
         <p id="lockedBalance" style="color:#38bdf8;">$0.00</p>
@@ -222,7 +217,7 @@
       </div>
     </div>
 
-    <!-- ৪টি প্রধান কুইক অ্যাকশন বাটন (ডিপোজিট, উত্তোলন, P2P, হিস্টোরি) -->
+    <!-- ৪টি কুইক অ্যাকশন বাটন -->
     <div class="quick-action-grid">
       <div class="action-card-btn" onclick="openModal('depositModal')">
         <div class="action-icon bg-dep">💳</div>
@@ -244,7 +239,7 @@
 
     <!-- গ্লোবাল ১০০+ স্টক মার্কেট -->
     <div class="section-title">
-      <span>🌐 <span data-i18n="stock_title">Global Stock Market</span></span>
+      <span>🌐 <span data-i18n="stock_title">Global Stock Market</span> (100+ Companies)</span>
       <small data-i18n="stock_cycle">২৪ ঘণ্টা সাইকেল</small>
     </div>
     <div class="stock-grid" id="stockGridContainer"></div>
@@ -269,16 +264,16 @@
 
   </div>
 
-  <!-- ================= ৭. পূর্ণাঙ্গ মোডালসমূহ ================= -->
+  <!-- ৭. পূর্ণাঙ্গ মোডালসমূহ -->
 
-  <!-- লকড ইনভেস্টমেন্ট ডিটেইলস মোডাল (লকড ব্যালেন্সে ক্লিকে ওপেন হবে) -->
+  <!-- লকড ইনভেস্টমেন্ট ডিটেইলস মোডাল -->
   <div class="modal-overlay" id="activeInvestDetailsModal">
     <div class="modal-box" style="max-width:440px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="color:#38bdf8;">📊 সক্রিয় শেয়ার পোর্টফোলিও</h3>
         <button class="icon-btn" style="width:28px; height:28px;" onclick="closeModal('activeInvestDetailsModal')">✕</button>
       </div>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">আপনার কোন কোন কোম্পানিতে কত ডলার লক/ইনভেস্ট রয়েছে তার বিস্তারিত:</p>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">আপনার কোন কোন কোম্পানিতে কত ডলার ইনভেস্ট রয়েছে তার বিস্তারিত:</p>
       <div id="modalActiveInvestList" style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto;"></div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('activeInvestDetailsModal')">বন্ধ করুন</button>
@@ -308,7 +303,7 @@
     </div>
   </div>
 
-  <!-- সর্বজনীন ডাবল কনফার্মেশন মোডাল -->
+  <!-- ডাবল কনফার্মেশন মোডাল -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;" data-i18n="confirm_title">⚠️ নিশ্চিতকরণ</h3>
@@ -360,7 +355,8 @@
       <select id="withdrawMethodSelect" class="input-field"></select>
 
       <label style="font-size:12px; color:var(--text-muted);" data-i18n="wtd_amount">উত্তোলন অ্যামাউন্ট ($):</label>
-      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="মিনিমাম $৫০">
+      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="পরিমাণ দিন">
+      <small id="withdrawLimitHelpText" style="color:var(--text-muted); font-size:11px; display:block; margin-top:-6px; margin-bottom:10px;">মিনিমাম উত্তোলন: $৫০.০০</small>
 
       <label style="font-size:12px; color:var(--text-muted);" data-i18n="wtd_addr">আপনার ওয়ালেট বা ফোন নম্বর:</label>
       <input type="text" id="withdrawAddressInput" class="input-field" placeholder="অ্যাড্রেস বা নম্বর বসান">
@@ -426,7 +422,7 @@
     </div>
   </div>
 
-  <!-- এজেন্ট আবেদন ফর্ম (ফি ডিসপ্লে) -->
+  <!-- এজেন্ট আবেদন ফর্ম -->
   <div class="modal-overlay" id="agentApplyModal">
     <div class="modal-box" style="max-width:440px;">
       <h3 style="color:#f87171;" data-i18n="agent_apply_title">📝 এজেন্ট হওয়ার আবেদন ফর্ম</h3>
@@ -466,16 +462,11 @@
     </div>
   </div>
 
-  <!-- স্টক ইনভেস্টমেন্ট মোডাল -->
+  <!-- স্টক ইনভেস্টমেন্ট মোডাল (সম্পূর্ণ পরিচ্ছন্ন) -->
   <div class="modal-overlay" id="investModal">
     <div class="modal-box">
       <h3 id="investModalStockTitle" style="color:#38bdf8;">শেয়ার কেনা</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;" data-i18n="invest_desc">২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও লভ্যাংশ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।</p>
-      
-      <div id="stockSpecialOfferBox" style="display:none; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); padding:10px; border-radius:12px; margin-bottom:12px; font-size:12px; color:var(--gold);">
-        🔥 <strong id="stockSpecialOfferText">বিশেষ অফার চলমান!</strong><br>
-        <small id="stockSpecialOfferTimer">বাকি সময়: --:--:--</small>
-      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;" data-i18n="invest_desc">২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও লভ্যাংশ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।</p>
 
       <label style="font-size:12px; color:var(--text-muted);" data-i18n="invest_amount_label">কত ডলারের শেয়ার কিনবেন ($):</label>
       <input type="number" id="investStockAmount" class="input-field" value="10" min="0.1" step="0.1">
@@ -487,7 +478,7 @@
     </div>
   </div>
 
-  <!-- রেফারেল অ্যান্ড আর্ন ড্যাশবোর্ড মোডাল -->
+  <!-- রেফারেল অ্যান্ড আর্ন মোডাল -->
   <div class="modal-overlay" id="referralModal">
     <div class="modal-box" style="max-width:460px;">
       <h3 style="color:#60a5fa;" data-i18n="refer_dash_title">👥 রেফারেল ড্যাশবোর্ড ও আর্নিং</h3>
@@ -525,7 +516,7 @@
     </div>
   </div>
 
-  <!-- ইউজার প্রোফাইল লাইভ এডিটর মোডাল -->
+  <!-- প্রোফাইল এডিটর মোডাল -->
   <div class="modal-overlay" id="profileModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;" data-i18n="profile_edit_title">👤 প্রোফাইল এডিটর</h3>
@@ -563,7 +554,7 @@
     </div>
   </div>
 
-  <!-- ইন-অ্যাপ ফুলস্ক্রিন অ্যাকশন প্লেয়ার -->
+  <!-- ইন-অ্যাপ প্লেয়ার মোডাল -->
   <div class="modal-overlay" id="inAppPlayerModal">
     <div class="modal-box" style="max-width:700px; width:95%;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -576,7 +567,7 @@
     </div>
   </div>
 
-  <!-- ================= ৮. কোম্পানির ভবিষ্যৎ রোডম্যাপ ================= -->
+  <!-- ৮. রোডম্যাপ ফুল পেজ -->
   <div class="fullscreen-page-view" id="fullscreenRoadmapView">
     <div style="max-width:850px; margin:0 auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -590,7 +581,7 @@
     </div>
   </div>
 
-  <!-- ================= ৯. লাইভ চ্যাট উইন্ডো ও বাবল ================= -->
+  <!-- ৯. লাইভ চ্যাট -->
   <div class="chat-floating-btn" onclick="toggleLiveChatWindow()" title="লাইভ চ্যাট সাপোর্ট">
     💬
   </div>
