@@ -5,9 +5,9 @@
  */
 
 const SUPABASE_URL = "https://wixfgflqghyffjbbayuv.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpeGZnZmxxZ2h5ZmZqYmJheXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1Mjg2MjgsImV4cCI6MjA1NDEwNDYyOH0.XwZ0vT0Xm5C7o9I4y0h_tL0fF1v3U1N2j6K5o8G9h8";
+const SUPABASE_ANON_KEY = "sb_publishable_cDVOg5YfsL_m4If4tyE3BQ_rArOq7gu";
 
-// গ্লোবাল ইনিশিয়ালাইজার
+// গ্লোবাল ডাটাবেজ ক্লায়েন্ট ইনিশিয়ালাইজেশন
 function getDatabaseClient() {
   if (typeof window.db !== 'undefined' && window.db) {
     return window.db;
@@ -21,5 +21,5 @@ function getDatabaseClient() {
   return null;
 }
 
-// অবিলম্বে ইনিট
+// লোড হওয়ার সাথে সাথে ইনিট
 getDatabaseClient();
