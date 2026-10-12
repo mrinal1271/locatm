@@ -104,7 +104,7 @@ const GLOBAL_STOCKS = [
   { id: 82, name: "Canon Optics", ticker: "CAJ", logo: "https://logo.clearbit.com/canon.com", min: 0.10 },
   { id: 83, name: "Nikon Imaging", ticker: "NINOY", logo: "https://logo.clearbit.com/nikon.com", min: 0.10 },
   { id: 84, name: "Panasonic Corp.", ticker: "PCRFY", logo: "https://logo.clearbit.com/panasonic.com", min: 0.10 },
-  { id: 85, name: "LG Electronics", ticker: "LGEIY", logo: "https://logo.clearbit.com/lg.com", min: 0.10 },
+  { id: 85, name: "LG Electronics", ticker: "LG", logo: "https://logo.clearbit.com/lg.com", min: 0.10 },
   { id: 86, name: "Tata Motors Global", ticker: "TTM", logo: "https://logo.clearbit.com/tatamotors.com", min: 0.10 },
   { id: 87, name: "Infosys Tech", ticker: "INFY", logo: "https://logo.clearbit.com/infosys.com", min: 0.10 },
   { id: 88, name: "Reliance Industries", ticker: "RIGD", logo: "https://logo.clearbit.com/ril.com", min: 0.10 },
@@ -126,20 +126,27 @@ const GLOBAL_STOCKS = [
   { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com", min: 0.10 }
 ];
 
+// ডাটাবেজ হেল্পার
+function getDB() {
+  if (typeof getDatabaseClient === 'function') {
+    return getDatabaseClient();
+  }
+  return window.db || null;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   initStockMarket();
   await loadPlatformConfig();
   await checkSavedAuth();
 });
 
-// প্ল্যাটফর্ম সেটিংস লোড
+// সেটিংস লোড
 async function loadPlatformConfig() {
+  const dbClient = getDB();
+  if (!dbClient) return;
+
   try {
-    if (typeof db === 'undefined') {
-      console.error("Database connection client missing!");
-      return;
-    }
-    const { data, error } = await db.from('platform_settings').select('*');
+    const { data, error } = await dbClient.from('platform_settings').select('*');
     if (!error && data) {
       data.forEach(item => {
         platformConfig[item.key] = item.value;
@@ -149,7 +156,6 @@ async function loadPlatformConfig() {
     console.error("Config fetch error:", e);
   }
 
-  // রেট ও নোটিস আপডেট
   if (document.getElementById("tradeCoinRate")) {
     document.getElementById("tradeCoinRate").innerText = `$${(platformConfig.ltm_rate || 0.10).toFixed(2)}`;
   }
@@ -169,17 +175,22 @@ async function loadPlatformConfig() {
   renderAgentDirectory();
 }
 
-// অথেন্টিকেশন সেশন চেক
+// সেশন যাচাই
 async function checkSavedAuth() {
   const savedUserId = localStorage.getItem("locatm_session_uid");
-  if (savedUserId && typeof db !== 'undefined') {
-    const { data: user, error } = await db.from('users').select('*').eq('user_id', savedUserId).maybeSingle();
-    if (!error && user) {
-      currentUser = user;
-      updateUserUI();
-      document.getElementById("authScreen").style.display = "none";
-      await checkInvestmentsExpiry();
-      return;
+  const dbClient = getDB();
+  if (savedUserId && dbClient) {
+    try {
+      const { data: user, error } = await dbClient.from('users').select('*').eq('user_id', savedUserId).maybeSingle();
+      if (!error && user) {
+        currentUser = user;
+        updateUserUI();
+        document.getElementById("authScreen").style.display = "none";
+        await checkInvestmentsExpiry();
+        return;
+      }
+    } catch (e) {
+      console.error("Session check error:", e);
     }
   }
   document.getElementById("authScreen").style.display = "flex";
@@ -199,7 +210,7 @@ function switchAuthTab(type) {
   }
 }
 
-// ফিক্সড লগইন লজিক
+// লগইন লজিক
 async function handleLogin() {
   const ident = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value.trim();
@@ -209,14 +220,14 @@ async function handleLogin() {
     return;
   }
 
-  if (typeof db === 'undefined') {
-    alert("ডাটাবেজ সংযোগ পাওয়া যায়নি! config.js ফাইলটি চেক করুন।");
+  const dbClient = getDB();
+  if (!dbClient) {
+    alert("ডাটাবেজ ইঞ্জিন প্রস্তুত হচ্ছে, ২ সেকেন্ড পর আবার চেষ্টা করুন!");
     return;
   }
 
   try {
-    // ইমেইল বা ফোন দিয়ে ইউজার খোঁজা
-    const { data: users, error } = await db.from('users')
+    const { data: users, error } = await dbClient.from('users')
       .select('*')
       .or(`email.eq.${ident},phone.eq.${ident}`);
 
@@ -238,11 +249,11 @@ async function handleLogin() {
     document.getElementById("authScreen").style.display = "none";
     alert(`স্বাগতম ${matchedUser.name}! সফলভাবে লগইন হয়েছে।`);
   } catch (err) {
-    alert("লগইন সিস্টেমে সমস্যা হয়েছে: " + err.message);
+    alert("লগইন সমস্যা: " + err.message);
   }
 }
 
-// ফিক্সড সাইন-আপ লজিক
+// সাইন-আপ লজিক
 async function handleSignup() {
   const nm = document.getElementById("regName").value.trim();
   const em = document.getElementById("regEmail").value.trim();
@@ -260,18 +271,18 @@ async function handleSignup() {
     return;
   }
 
-  if (typeof db === 'undefined') {
-    alert("ডাটাবেজ সংযোগ পাওয়া যায়নি! config.js ফাইলটি চেক করুন।");
+  const dbClient = getDB();
+  if (!dbClient) {
+    alert("ডাটাবেজ ইঞ্জিন প্রস্তুত হচ্ছে, ২ সেকেন্ড পর আবার চেষ্টা করুন!");
     return;
   }
 
   try {
-    // ডুপ্লিকেট ইমেইল বা ফোন চেক
-    const { data: existing } = await db.from('users')
+    const { data: existing, error: checkErr } = await dbClient.from('users')
       .select('id')
       .or(`email.eq.${em},phone.eq.${ph}`);
 
-    if (existing && existing.length > 0) {
+    if (!checkErr && existing && existing.length > 0) {
       alert("এই ইমেইল অথবা ফোন নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট রয়েছে! দয়া করে লগইন করুন।");
       return;
     }
@@ -292,10 +303,10 @@ async function handleSignup() {
       referred_by: ref || null
     };
 
-    const { data, error } = await db.from('users').insert([newUserPayload]).select().single();
+    const { data, error } = await dbClient.from('users').insert([newUserPayload]).select().single();
 
     if (error) {
-      alert("অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে: " + error.message);
+      alert("অ্যাকাউন্ট তৈরি ব্যর্থ: " + error.message);
       return;
     }
 
@@ -413,7 +424,8 @@ async function submitDeposit() {
   closeModal("depositModal");
 
   requestConfirm(`আপনি কি নিশ্চিতভাবে $${amt} ডিপোজিটের রিকোয়েস্ট পাঠাতে চান?\n(TrxID: ${trx})`, async () => {
-    const { error } = await db.from('transactions').insert([{
+    const dbClient = getDB();
+    const { error } = await dbClient.from('transactions').insert([{
       user_id: currentUser.user_id,
       type: 'deposit',
       amount: amt,
@@ -459,9 +471,10 @@ async function submitWithdrawal() {
   closeModal("withdrawModal");
 
   requestConfirm(`উত্তোলন নিশ্চিতকরণ:\nমেথড: ${method}\nপরিমাণ: $${amt}\nঅ্যাকাউন্ট: ${target}`, async () => {
+    const dbClient = getDB();
     const newBal = parseFloat(currentUser.main_balance) - amt;
-    await db.from('users').update({ main_balance: newBal }).eq('user_id', currentUser.user_id);
-    await db.from('transactions').insert([{
+    await dbClient.from('users').update({ main_balance: newBal }).eq('user_id', currentUser.user_id);
+    await dbClient.from('transactions').insert([{
       user_id: currentUser.user_id,
       type: 'withdraw',
       amount: amt,
@@ -475,7 +488,7 @@ async function submitWithdrawal() {
   });
 }
 
-// টোকেন সোয়াপ
+// টোকেন ট্রেড
 function switchTradeMode(mode) {
   currentTradeMode = mode;
   if (mode === 'buy') {
@@ -503,6 +516,7 @@ async function processTradeLTM() {
 
   closeModal("tradeModal");
   const rate = platformConfig.ltm_rate || 0.10;
+  const dbClient = getDB();
 
   if (currentTradeMode === 'buy') {
     if (parseFloat(currentUser.main_balance) < val) {
@@ -514,7 +528,7 @@ async function processTradeLTM() {
       const newMain = parseFloat(currentUser.main_balance) - val;
       const newLtm = parseFloat(currentUser.ltm_balance) + coinsToGet;
 
-      await db.from('users').update({ main_balance: newMain, ltm_balance: newLtm }).eq('user_id', currentUser.user_id);
+      await dbClient.from('users').update({ main_balance: newMain, ltm_balance: newLtm }).eq('user_id', currentUser.user_id);
       currentUser.main_balance = newMain;
       currentUser.ltm_balance = newLtm;
       updateUserUI();
@@ -530,7 +544,7 @@ async function processTradeLTM() {
       const newLtm = parseFloat(currentUser.ltm_balance) - val;
       const newMain = parseFloat(currentUser.main_balance) + usdToGet;
 
-      await db.from('users').update({ main_balance: newMain, ltm_balance: newLtm }).eq('user_id', currentUser.user_id);
+      await dbClient.from('users').update({ main_balance: newMain, ltm_balance: newLtm }).eq('user_id', currentUser.user_id);
       currentUser.main_balance = newMain;
       currentUser.ltm_balance = newLtm;
       updateUserUI();
@@ -562,7 +576,8 @@ async function submitP2PTransfer() {
     return;
   }
 
-  const { data: recipient, error } = await db.from('users').select('*').eq('user_id', targetId).maybeSingle();
+  const dbClient = getDB();
+  const { data: recipient, error } = await dbClient.from('users').select('*').eq('user_id', targetId).maybeSingle();
   if (error || !recipient) {
     alert("প্রাপক মেম্বার পাওয়া যায়নি!");
     return;
@@ -572,12 +587,12 @@ async function submitP2PTransfer() {
 
   requestConfirm(`${recipient.name} (${targetId})-কে $${amt} ট্রান্সফার করতে চান?`, async () => {
     const senderBal = parseFloat(currentUser.main_balance) - amt;
-    await db.from('users').update({ main_balance: senderBal }).eq('user_id', currentUser.user_id);
+    await dbClient.from('users').update({ main_balance: senderBal }).eq('user_id', currentUser.user_id);
 
     const recipientBal = parseFloat(recipient.main_balance) + amt;
-    await db.from('users').update({ main_balance: recipientBal }).eq('user_id', targetId);
+    await dbClient.from('users').update({ main_balance: recipientBal }).eq('user_id', targetId);
 
-    await db.from('transactions').insert([
+    await dbClient.from('transactions').insert([
       { user_id: currentUser.user_id, type: 'p2p_send', amount: amt, target_user_id: targetId, status: 'approved' },
       { user_id: targetId, type: 'p2p_receive', amount: amt, target_user_id: currentUser.user_id, status: 'approved' }
     ]);
@@ -600,8 +615,9 @@ async function submitAgentApplication() {
   }
 
   closeModal("agentApplyModal");
+  const dbClient = getDB();
 
-  const { error } = await db.from('agent_applications').insert([{
+  const { error } = await dbClient.from('agent_applications').insert([{
     user_id: currentUser.user_id,
     shop_name: shop,
     phone: phone,
@@ -626,7 +642,8 @@ async function renderAgentDirectory() {
     return;
   }
 
-  const { data: agents } = await db.from('agent_applications').select('*').eq('status', 'approved');
+  const dbClient = getDB();
+  const { data: agents } = await dbClient.from('agent_applications').select('*').eq('status', 'approved');
   if (!agents || agents.length === 0) {
     list.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px;">বর্তমানে কোনো অনুমোদিত এজেন্ট নেই।</div>`;
     return;
@@ -706,11 +723,12 @@ async function confirmStockInvest() {
   }
 
   requestConfirm(`আপনি কি নিশ্চিতভাবে ${activeInvestStock.name}-এ $${amt} ইনভেস্ট করতে চান?\n(২৪ ঘণ্টা সাইকেল, রেট: ${finalRate > 0 ? '+' : ''}${finalRate}%)`, async () => {
+    const dbClient = getDB();
     const newMain = parseFloat(currentUser.main_balance) - amt;
     const newLocked = parseFloat(currentUser.locked_balance) + amt;
 
-    await db.from('users').update({ main_balance: newMain, locked_balance: newLocked }).eq('user_id', currentUser.user_id);
-    await db.from('investments').insert([{
+    await dbClient.from('users').update({ main_balance: newMain, locked_balance: newLocked }).eq('user_id', currentUser.user_id);
+    await dbClient.from('investments').insert([{
       user_id: currentUser.user_id,
       stock_name: activeInvestStock.name,
       amount: amt,
@@ -727,7 +745,10 @@ async function confirmStockInvest() {
 
 async function checkInvestmentsExpiry() {
   if (!currentUser) return;
-  const { data: list } = await db.from('investments')
+  const dbClient = getDB();
+  if (!dbClient) return;
+
+  const { data: list } = await dbClient.from('investments')
     .select('*')
     .eq('user_id', currentUser.user_id)
     .eq('status', 'active');
@@ -744,13 +765,13 @@ async function checkInvestmentsExpiry() {
         const updatedLocked = parseFloat(currentUser.locked_balance) - capital;
         const updatedTotalProfit = parseFloat(currentUser.total_profit) + profit;
 
-        await db.from('users').update({
+        await dbClient.from('users').update({
           main_balance: updatedMain,
           locked_balance: updatedLocked,
           total_profit: updatedTotalProfit
         }).eq('user_id', currentUser.user_id);
 
-        await db.from('investments').update({ status: 'completed' }).eq('id', inv.id);
+        await dbClient.from('investments').update({ status: 'completed' }).eq('id', inv.id);
 
         currentUser.main_balance = updatedMain;
         currentUser.locked_balance = updatedLocked;

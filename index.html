@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   
-  <!-- সুপাবেস সিডিএন এবং কনফিগ সবার আগে লোড নিশ্চিতকরণ -->
+  <!-- সুপাবেস সিডিএন ও কনফিগ লোডার -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
 </head>
@@ -143,7 +143,7 @@
     </ul>
   </div>
 
-  <!-- ================= ৪. লাইভ মারকুই (অ্যাডমিন নিয়ন্ত্রিত) ================= -->
+  <!-- ================= ৪. লাইভ মারকুই ================= -->
   <div class="marquee-bar" id="marqueeBarContainer" style="display:none;">
     <marquee id="marqueeNoticeText"></marquee>
   </div>
@@ -151,7 +151,7 @@
   <!-- ================= ৫. মেইন প্ল্যাটফর্ম ================= -->
   <div class="container">
     
-    <!-- ৩D ওয়ালেট ব্যালেন্স কার্ড (জিরো ডেমো) -->
+    <!-- ৩D ওয়ালেট ব্যালেন্স কার্ড -->
     <div class="wallet-card">
       <div class="wallet-item">
         <h4>Main Balance</h4>
@@ -176,9 +176,7 @@
       <span>🌐 Global Stock Market (100+ Companies)</span>
       <small style="color:var(--text-muted); font-size:12px;">২৪ ঘণ্টা সাইকেল</small>
     </div>
-    <div class="stock-grid" id="stockGridContainer">
-      <!-- ১০০+ কোম্পানি app.js থেকে আসবে -->
-    </div>
+    <div class="stock-grid" id="stockGridContainer"></div>
 
     <!-- সক্রিয় ইনভেস্টমেন্ট তালিকা -->
     <div class="section-title">
@@ -195,16 +193,14 @@
       <div class="section-title">
         <span>⚡ লাইভ আপডেট ও বিনোদন</span>
       </div>
-      <div class="dynamic-action-bar" id="customActionBar">
-        <!-- অ্যাডমিন থেকে সেভ করা বাটন এখানে আসবে -->
-      </div>
+      <div class="dynamic-action-bar" id="customActionBar"></div>
     </div>
 
   </div>
 
   <!-- ================= ৬. ৩D মোডালসমূহ ================= -->
 
-  <!-- সর্বজনীন ডাবল কনফার্মেশন (Yes / No) -->
+  <!-- কনফার্মেশন মোডাল -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;">⚠️ নিশ্চিতকরণ</h3>
@@ -223,9 +219,7 @@
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">পেমেন্ট মেথড নির্বাচন করে দেওয়া নম্বরে বা অ্যাড্রেসে টাকা পাঠিয়ে TrxID দিন।</p>
       
       <label style="font-size:12px; color:var(--text-muted);">পেমেন্ট মেথড:</label>
-      <select id="depositMethodSelect" class="input-field" onchange="onDepositMethodChange()">
-        <!-- অ্যাডমিনের মেথড ডায়নামিকালি আসবে -->
-      </select>
+      <select id="depositMethodSelect" class="input-field" onchange="onDepositMethodChange()"></select>
 
       <div id="depositInstructionsBox" style="background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:12px; font-size:12px;">
         <span id="depositAddressText">লোড হচ্ছে...</span>
@@ -292,7 +286,7 @@
     </div>
   </div>
 
-  <!-- P2P ট্রান্সফার মোডাল -->
+  <!-- P2P মোডাল -->
   <div class="modal-overlay" id="p2pModal">
     <div class="modal-box">
       <h3 style="color:#22d3ee;">🔄 P2P ইনস্ট্যান্ট ফান্ড ট্রান্সফার</h3>
@@ -316,9 +310,7 @@
     <div class="modal-box" style="max-width:540px;">
       <h3 style="color:#f87171;">📍 ভেরিফাইড ক্যাশআউট এজেন্ট নেটওয়ার্ক</h3>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">আপনার লোকাল এজেন্টের সাথে সরাসরি কল বা হোয়াটসঅ্যাপে কথা বলে ক্যাশআউট করুন।</p>
-      <div id="agentDirectoryList" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
-        <!-- ডাটাবেজের ভেরিফাইড এজেন্টরা এখানে আসবে -->
-      </div>
+      <div id="agentDirectoryList" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;"></div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('agentModal')">Close</button>
       </div>
@@ -401,7 +393,7 @@
     </div>
   </div>
 
-  <!-- প্রোফাইল ও কেওয়াইসি মোডাল -->
+  <!-- প্রোফাইল মোডাল -->
   <div class="modal-overlay" id="profileModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;">👤 প্রোফাইল সেটিংস</h3>
@@ -417,13 +409,11 @@
     </div>
   </div>
 
-  <!-- কোম্পানি ভিশন ও নোটিস মোডাল -->
+  <!-- কোম্পানি ভিশন ও রোডম্যাপ -->
   <div class="modal-overlay" id="companyModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;">🏢 কোম্পানির পরিকল্পনা ও পোস্ট</h3>
-      <div id="companyPostsContainer" style="margin:14px 0; max-height:320px; overflow-y:auto; font-size:13px; line-height:1.6;">
-        <!-- অ্যাডমিন থেকে সেভ করা পোস্ট এখানে আসবে -->
-      </div>
+      <div id="companyPostsContainer" style="margin:14px 0; max-height:320px; overflow-y:auto; font-size:13px; line-height:1.6;"></div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('companyModal')">Close</button>
       </div>
