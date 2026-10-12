@@ -4,21 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Locatm - Pocket ATM & Global Stock Market</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="theme-default">
+<body>
 
-  <!-- ================= ১. লগইন / সাইনআপ ওভারলে ================= -->
-  <div id="authScreen" style="display:flex; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(11,15,25,0.95); z-index:999; align-items:center; justify-content:center; padding:15px;">
-    <div class="modal-box" style="max-width:380px;">
-      <div style="text-align:center; margin-bottom:15px;">
-        <h2 style="color:#38bdf8; font-size:24px;">Locatm</h2>
-        <p style="font-size:12px; color:var(--text-muted);">Secure Pocket ATM & Stock Hub</p>
+  <!-- ================= ১. সিকিউর লগইন / সাইনআপ গেটওয়ে ================= -->
+  <div id="authScreen" style="display:flex; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(7,10,19,0.96); backdrop-filter:blur(10px); z-index:999; align-items:center; justify-content:center; padding:16px;">
+    <div class="modal-box" style="max-width:390px;">
+      <div style="text-align:center; margin-bottom:18px;">
+        <h2 class="brand-logo" style="font-size:28px;">Locatm</h2>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Decentralized Pocket ATM & Stock Hub</p>
       </div>
 
-      <!-- ট্যাব সুইচ -->
-      <div style="display:flex; gap:10px; margin-bottom:15px;">
+      <div style="display:flex; gap:10px; margin-bottom:16px;">
         <button id="authTabLogin" class="btn btn-primary" style="flex:1;" onclick="switchAuthTab('login')">লগইন</button>
         <button id="authTabSignup" class="btn btn-outline" style="flex:1;" onclick="switchAuthTab('signup')">রেজিস্ট্রেশন</button>
       </div>
@@ -27,128 +27,185 @@
       <div id="loginForm">
         <input type="text" id="loginEmail" class="input-field" placeholder="ইমেইল বা ফোন নম্বর">
         <input type="password" id="loginPass" class="input-field" placeholder="পাসওয়ার্ড">
-        <button class="btn btn-primary" style="width:100%; margin-top:5px;" onclick="handleLogin()">লগইন করুন</button>
+        <button class="btn btn-primary" style="width:100%; margin-top:6px;" onclick="handleLogin()">লগইন করুন</button>
       </div>
 
       <!-- রেজিস্ট্রেশন ফর্ম -->
       <div id="signupForm" style="display:none;">
-        <input type="text" id="regName" class="input-field" placeholder="পূর্ণ নাম">
-        <input type="text" id="regEmail" class="input-field" placeholder="ইমেইল অ্যাড্রেস">
+        <input type="text" id="regName" class="input-field" placeholder="আপনার পূর্ণ নাম">
+        <input type="email" id="regEmail" class="input-field" placeholder="সঠিক ইমেইল অ্যাড্রেস">
         <input type="tel" id="regPhone" class="input-field" placeholder="ফোন নম্বর (বিকাশ/নগদ)">
-        <input type="password" id="regPass" class="input-field" placeholder="পাসওয়ার্ড">
-        <input type="text" id="regRef" class="input-field" placeholder="রেফার কোড (ঐচ্ছিক)">
-        <button class="btn btn-accent" style="width:100%; margin-top:5px;" onclick="handleSignup()">একাউন্ট তৈরি করুন</button>
+        <input type="password" id="regPass" class="input-field" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
+        <input type="text" id="regRef" class="input-field" placeholder="রেফারার User ID (যদি থাকে)">
+        <button class="btn btn-accent" style="width:100%; margin-top:6px;" onclick="handleSignup()">অ্যাকাউন্ট তৈরি করুন</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= ২. হেডার বার (ক্লিন ভিউ) ================= -->
+  <!-- ================= ২. ৩D নিয়ন গ্লাস হেডার ================= -->
   <header>
     <div class="logo-wrap">
-      <span class="brand-logo" id="brandTitle">Locatm</span>
+      <span class="brand-logo">Locatm</span>
       <span class="vip-badge" id="userVipBadge">👑 VIP 1</span>
     </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span id="headerUserIdBadge" style="font-size:12px; color:#38bdf8; font-weight:700;">ID: ----</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="headerUserIdBadge" style="font-size:12px; color:#38bdf8; font-weight:800; background:rgba(56,189,248,0.1); padding:4px 8px; border-radius:8px; border:1px solid rgba(56,189,248,0.3);">ID: ----</span>
       <button class="menu-btn" onclick="toggleDrawer(true)">☰</button>
     </div>
   </header>
 
-  <!-- ================= ৩. থ্রি-ডট সাইডবার ড্রয়ার ================= -->
+  <!-- ================= ৩. ৩D রঙিন সাইড ড্রয়ার মেনু ================= -->
   <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
   <div class="drawer-content" id="drawerMenu">
     <div class="drawer-header">
-      <h3 style="color:#38bdf8;">মেনুবার</h3>
-      <button class="btn btn-outline" style="padding:4px 8px;" onclick="toggleDrawer(false)">✕</button>
+      <h3 style="color:#38bdf8; font-size:18px;">কন্ট্রোল মেনু</h3>
+      <button class="menu-btn" style="width:32px; height:32px;" onclick="toggleDrawer(false)">✕</button>
     </div>
 
     <!-- ইউজার কার্ড -->
     <div class="drawer-user-info">
-      <strong id="drawerUserName">User</strong><br>
+      <strong id="drawerUserName" style="font-size:15px; color:#fff;">User</strong><br>
       <small style="color:var(--text-muted);" id="drawerUserEmail">user@example.com</small><br>
-      <small style="color:#38bdf8; font-weight:700;" id="drawerUserId">User ID: ----</small>
+      <small style="color:#38bdf8; font-weight:800;" id="drawerUserId">User ID: ----</small>
     </div>
 
-    <!-- ফিচার লিংক তালিকা -->
+    <!-- ৩D রঙিন ফাংশন বাটন তালিকা -->
     <ul class="drawer-links">
-      <li><button onclick="openModalAndCloseDrawer('depositModal')">💳 ডিপোজিট (Deposit)</button></li>
-      <li><button onclick="openModalAndCloseDrawer('withdrawModal')">💸 উত্তোলন (Withdraw)</button></li>
-      <li><button onclick="openModalAndCloseDrawer('p2pModal')">🔄 P2P ট্রান্সফার (বাইনান্স স্টাইল)</button></li>
-      <li><button onclick="openModalAndCloseDrawer('agentModal')">📍 ক্যাশআউট এজেন্ট ডিরেক্টরি</button></li>
-      <li><button onclick="openModalAndCloseDrawer('tradeModal')">🪙 Trade LTM (কয়েন বাই/সেল)</button></li>
-      <li><button onclick="openModalAndCloseDrawer('referralModal')">👥 Refer & Earn (লাভ কমিশন)</button></li>
-      <li><button onclick="openModalAndCloseDrawer('profileModal')">👤 প্রোফাইল ও কেওয়াইসি</button></li>
-      <li><button onclick="openModalAndCloseDrawer('companyModal')">🏢 কোম্পানির পরিকল্পনা ও পোস্ট</button></li>
-      <li><button onclick="openModalAndCloseDrawer('videoModal')">📺 কাজের নিয়ম ও টিউটোরিয়াল</button></li>
-      <li><button onclick="openModalAndCloseDrawer('themeModal')">🎨 থিম ও ভাষা পরিবর্তন</button></li>
-      <li><button style="color:var(--danger);" onclick="triggerLogout()">🚪 লগআউট (Logout)</button></li>
+      <li>
+        <button class="drawer-btn btn-dep" onclick="openModalAndCloseDrawer('depositModal')">
+          <div class="btn-icon-wrap">💳</div>
+          <span>ডিপোজিট (Deposit)</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-wtd" onclick="openModalAndCloseDrawer('withdrawModal')">
+          <div class="btn-icon-wrap">💸</div>
+          <span>উত্তোলন (Withdraw)</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-p2p" onclick="openModalAndCloseDrawer('p2pModal')">
+          <div class="btn-icon-wrap">🔄</div>
+          <span>P2P ফান্ড ট্রান্সফার</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-trd" onclick="openModalAndCloseDrawer('tradeModal')">
+          <div class="btn-icon-wrap">🪙</div>
+          <span>Trade LTM টোকেন মার্কেট</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-agt" onclick="openModalAndCloseDrawer('agentModal')">
+          <div class="btn-icon-wrap">📍</div>
+          <span>ক্যাশআউট এজেন্ট নেটওয়ার্ক</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-agt" style="border-style:dashed;" onclick="openModalAndCloseDrawer('agentApplyModal')">
+          <div class="btn-icon-wrap">📝</div>
+          <span>এজেন্ট হওয়ার আবেদন</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-ref" onclick="openModalAndCloseDrawer('referralModal')">
+          <div class="btn-icon-wrap">👥</div>
+          <span>রেফার অ্যান্ড আর্ন (১০% বোনাস)</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-std" onclick="openModalAndCloseDrawer('profileModal')">
+          <div class="btn-icon-wrap">👤</div>
+          <span>প্রোফাইল সেটিংস</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-std" onclick="openModalAndCloseDrawer('companyModal')">
+          <div class="btn-icon-wrap">🏢</div>
+          <span>কোম্পানির ভবিষ্যৎ রোডম্যাপ</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-std" onclick="openModalAndCloseDrawer('tutorialModal')">
+          <div class="btn-icon-wrap">📺</div>
+          <span>কাজের ভিডিও গাইড</span>
+        </button>
+      </li>
+      <li>
+        <button class="drawer-btn btn-out" onclick="triggerLogout()">
+          <div class="btn-icon-wrap">🚪</div>
+          <span>লগআউট করুন</span>
+        </button>
+      </li>
     </ul>
   </div>
 
-  <!-- ================= ৪. লাইভ মারকুই ও ব্যানার ================= -->
-  <div class="marquee-bar">
-    <marquee id="marqueeNotice">📢 স্বাগতম Locatm-এ! আপনার লোকাল ভেরিফাইড এজেন্টের সাথে সরাসরি যোগাযোগ করে ক্যাশ-আউট করুন। দৈনিক সেরা ইনভেস্টর পাবেন বিশেষ বোনাস!</marquee>
+  <!-- ================= ৪. লাইভ মারকুই (অ্যাডমিন নিয়ন্ত্রিত) ================= -->
+  <div class="marquee-bar" id="marqueeBarContainer" style="display:none;">
+    <marquee id="marqueeNoticeText"></marquee>
   </div>
 
-  <!-- ================= ৫. মেইন কন্টেইনার ================= -->
+  <!-- ================= ৫. মেইন প্ল্যাটফর্ম ================= -->
   <div class="container">
     
-    <!-- ওয়ালেট কার্ড -->
+    <!-- ৩D ওয়ালেট ব্যালেন্স কার্ড (জিরো ডেমো) -->
     <div class="wallet-card">
       <div class="wallet-item">
-        <h4>💳 Main Balance</h4>
+        <h4>Main Balance</h4>
         <p id="mainBalance">$0.00</p>
       </div>
       <div class="wallet-item">
-        <h4>🔒 Locked / Invested</h4>
+        <h4>Locked / Invested</h4>
         <p id="lockedBalance">$0.00</p>
       </div>
       <div class="wallet-item">
-        <h4>🪙 LTM Token</h4>
+        <h4>LTM Token</h4>
         <p><span id="coinBalance">0.00</span> <small style="font-size:11px; color:var(--accent);" id="coinUsdVal">($0.00)</small></p>
       </div>
       <div class="wallet-item">
-        <h4>📈 Total Profit</h4>
+        <h4>Total Profit</h4>
         <p class="profit-text" id="totalProfit">$0.00</p>
       </div>
     </div>
 
-    <!-- গ্লোবাল স্টক মার্কেট ১০০+ গ্রিড -->
+    <!-- গ্লোবাল ১০০+ স্টক মার্কেট -->
     <div class="section-title">
       <span>🌐 Global Stock Market (100+ Companies)</span>
-      <small style="color:var(--text-muted); font-size:12px;">২৪ ঘণ্টা অটো-সাইকেল</small>
+      <small style="color:var(--text-muted); font-size:12px;">২৪ ঘণ্টা সাইকেল</small>
     </div>
     <div class="stock-grid" id="stockGridContainer">
       <!-- ১০০+ কোম্পানি app.js থেকে আসবে -->
     </div>
 
-    <!-- রানিং ইনভেস্টমেন্ট সেকশন -->
+    <!-- সক্রিয় ইনভেস্টমেন্ট তালিকা -->
     <div class="section-title">
       <span>⏳ আপনার সক্রিয় ইনভেস্টমেন্ট</span>
     </div>
-    <div id="activeInvestList" style="margin-bottom:20px;">
-      <div style="background:var(--bg-card); border:1px solid var(--border); padding:14px; border-radius:10px; color:var(--text-muted); font-size:13px; text-align:center;">
+    <div id="activeInvestList" style="margin-bottom:24px;">
+      <div style="background:var(--bg-card); border:1px solid var(--glass-border); padding:16px; border-radius:14px; color:var(--text-muted); font-size:13px; text-align:center;">
         বর্তমানে কোনো ইনভেস্টমেন্ট সক্রিয় নেই।
       </div>
     </div>
 
-    <!-- অ্যাডমিন নিয়ন্ত্রিত কাস্টম ডায়নামিক বাটন সেকশন (যেমন: লাইভ ক্রিকেট / ইউটিউব) -->
-    <div class="section-title">
-      <span>⚡ লাইভ আপডেট ও বিনোদন</span>
-    </div>
-    <div class="dynamic-action-bar" id="customActionBar">
-      <!-- অ্যাডমিন প্যানেল থেকে যোগ করা বাটন এখানে থাকবে -->
+    <!-- অ্যাডমিন ডায়নামিক বাটন সেকশন (যেমন: লাইভ ক্রিকেট বা ইউটিউব স্ট্রিমিং) -->
+    <div id="dynamicActionBarWrapper" style="display:none; margin-bottom:25px;">
+      <div class="section-title">
+        <span>⚡ লাইভ আপডেট ও বিনোদন</span>
+      </div>
+      <div class="dynamic-action-bar" id="customActionBar">
+        <!-- অ্যাডমিন থেকে সেভ করা বাটন এখানে আসবে -->
+      </div>
     </div>
 
   </div>
 
-  <!-- ================= ৬. মোডালসমূহ ================= -->
+  <!-- ================= ৬. ৩D মোডালসমূহ ================= -->
 
   <!-- সর্বজনীন ডাবল কনফার্মেশন (Yes / No) -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;">⚠️ নিশ্চিতকরণ</h3>
-      <p id="confirmMessage" style="font-size:14px; margin:12px 0; color:var(--text-muted);"></p>
+      <p id="confirmMessage" style="font-size:14px; margin:14px 0; color:var(--text-muted);"></p>
       <div class="modal-btns">
         <button class="btn btn-danger" onclick="closeModal('confirmModal')">না (No)</button>
         <button class="btn btn-accent" id="confirmOkBtn">হ্যাঁ (Yes)</button>
@@ -156,53 +213,53 @@
     </div>
   </div>
 
-  <!-- ডিপোজিট মোডাল (আনলিমিটেড মেথড ও TrxID) -->
+  <!-- ডিপোজিট মোডাল -->
   <div class="modal-overlay" id="depositModal">
     <div class="modal-box">
-      <h3>➕ ব্যালেন্স ডিপোজিট</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">পেমেন্ট মেথড নির্বাচন করুন, দেওয়া নম্বরে/অ্যাড্রেসে টাকা পাঠিয়ে ট্রানজেকশন আইডি দিন।</p>
+      <h3 style="color:#34d399;">💳 ডিপোজিট ফান্ড</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">পেমেন্ট মেথড নির্বাচন করে দেওয়া নম্বরে বা অ্যাড্রেসে টাকা পাঠিয়ে TrxID দিন।</p>
       
-      <label style="font-size:12px;">পেমেন্ট মেথড নির্বাচন করুন:</label>
-      <select id="depositMethodSelect" class="input-field" onchange="updateDepositDetails()">
-        <!-- মেথড ডায়নামিকালি আসবে -->
+      <label style="font-size:12px; color:var(--text-muted);">পেমেন্ট মেথড:</label>
+      <select id="depositMethodSelect" class="input-field" onchange="onDepositMethodChange()">
+        <!-- অ্যাডমিনের মেথড ডায়নামিকালি আসবে -->
       </select>
 
-      <div id="depositInstructionsBox" style="background:var(--bg-main); border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px;">
+      <div id="depositInstructionsBox" style="background:rgba(11,17,32,0.8); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:12px; font-size:12px;">
         <span id="depositAddressText">লোড হচ্ছে...</span>
-        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; margin-top:6px; width:100%;" onclick="copyDepositAddress()">📋 অ্যাড্রেস / নম্বর কপি করুন</button>
+        <button class="btn btn-outline" style="padding:6px 10px; font-size:11px; margin-top:8px; width:100%;" onclick="copyDepositAddress()">📋 অ্যাড্রেস / নম্বর কপি করুন</button>
       </div>
 
-      <label style="font-size:12px;">ডিপোজিট অ্যামাউন্ট ($):</label>
-      <input type="number" id="depositAmountInput" class="input-field" placeholder="যেমন: 100">
+      <label style="font-size:12px; color:var(--text-muted);">ডিপোজিট অ্যামাউন্ট ($):</label>
+      <input type="number" id="depositAmountInput" class="input-field" placeholder="পরিমাণ লিখুন">
 
-      <label style="font-size:12px;">ট্রানজেকশন আইডি (TrxID / Hash):</label>
-      <input type="text" id="depositTrxInput" class="input-field" placeholder="টাকা পাঠানোর ট্রানজেকশন আইডি বসান">
+      <label style="font-size:12px; color:var(--text-muted);">ট্রানজেকশন আইডি (TrxID / Hash):</label>
+      <input type="text" id="depositTrxInput" class="input-field" placeholder="টাকা পাঠানোর TrxID দিন">
 
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('depositModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitDeposit()">ডিপোজিট রিকোয়েস্ট পাঠান</button>
+        <button class="btn btn-accent" onclick="submitDeposit()">ডিপোজিট সাবমিট করুন</button>
       </div>
     </div>
   </div>
 
-  <!-- উইথড্রাল মোডাল (মাল্টি কারেন্সি ও মেথড) -->
+  <!-- উত্তোলন মোডাল -->
   <div class="modal-overlay" id="withdrawModal">
     <div class="modal-box">
-      <h3>💸 ব্যালেন্স উত্তোলন (Withdraw)</h3>
-      <label style="font-size:12px;">উইথড্রাল মেথড:</label>
+      <h3 style="color:#fbbf24;">💸 ব্যালেন্স উত্তোলন (Withdraw)</h3>
+      <label style="font-size:12px; color:var(--text-muted);">উইথড্রাল মেথড:</label>
       <select id="withdrawMethodSelect" class="input-field">
         <option value="Binance USDT (TRC20)">Binance USDT (TRC20)</option>
         <option value="Binance BTC">Binance BTC</option>
         <option value="Binance LTC">Binance LTC</option>
-        <option value="বিকাশ (ব্যক্তিগত)">বিকাশ (ব্যক্তিগত)</option>
-        <option value="নগদ (ব্যক্তিগত)">নগদ (ব্যক্তিগত)</option>
+        <option value="বিকাশ (Personal)">বিকাশ (Personal)</option>
+        <option value="নগদ (Personal)">নগদ (Personal)</option>
       </select>
 
-      <label style="font-size:12px;">উইথড্রাল অ্যামাউন্ট ($):</label>
+      <label style="font-size:12px; color:var(--text-muted);">উইথড্রাল অ্যামাউন্ট ($):</label>
       <input type="number" id="withdrawAmountInput" class="input-field" placeholder="মিনিমাম $৫০">
 
-      <label style="font-size:12px;">আপনার ওয়ালেট অ্যাড্রেস / ফোন নম্বর:</label>
-      <input type="text" id="withdrawAddressInput" class="input-field" placeholder="ওয়ালেট অ্যাড্রেস বা বিকাশ নম্বর">
+      <label style="font-size:12px; color:var(--text-muted);">আপনার ওয়ালেট অ্যাড্রেস বা ফোন নম্বর:</label>
+      <input type="text" id="withdrawAddressInput" class="input-field" placeholder="অ্যাড্রেস বা নম্বর বসান">
 
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('withdrawModal')">Cancel</button>
@@ -211,53 +268,53 @@
     </div>
   </div>
 
-  <!-- Trade LTM (কয়েন বাই ও সেল মার্কেট) -->
+  <!-- Trade LTM মোডাল -->
   <div class="modal-overlay" id="tradeModal">
     <div class="modal-box">
-      <h3>🪙 Trade LTM Token</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">১টি LTM কয়েনের বর্তমান দর: <strong style="color:var(--accent);" id="tradeCoinRate">$0.10</strong></p>
+      <h3 style="color:#a78bfa;">🪙 Trade LTM Token</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">১টি LTM টোকেনের বর্তমান লাইভ দর: <strong style="color:var(--accent);" id="tradeCoinRate">$0.10</strong></p>
 
-      <div style="display:flex; gap:10px; margin-bottom:12px;">
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
         <button id="tradeTabBuy" class="btn btn-primary" style="flex:1;" onclick="switchTradeMode('buy')">কয়েন কিনুন (Buy)</button>
         <button id="tradeTabSell" class="btn btn-outline" style="flex:1;" onclick="switchTradeMode('sell')">কয়েন বেচুন (Sell)</button>
       </div>
 
-      <label style="font-size:12px;" id="tradeInputLabel">কত ডলারের LTM কয়েন কিনবেন ($):</label>
-      <input type="number" id="tradeAmountInput" class="input-field" placeholder="পরিমাণ লিখুন">
+      <label style="font-size:12px; color:var(--text-muted);" id="tradeInputLabel">কত ডলারের LTM কিনবেন ($):</label>
+      <input type="number" id="tradeAmountInput" class="input-field" placeholder="পরিমাণ দিন">
 
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('tradeModal')">Cancel</button>
-        <button class="btn btn-accent" id="tradeConfirmBtn" onclick="processTradeLTM()">অর্ডার সম্পন্ন করুন</button>
+        <button class="btn btn-accent" onclick="processTradeLTM()">অর্ডার সম্পন্ন করুন</button>
       </div>
     </div>
   </div>
 
-  <!-- P2P ইনস্ট্যান্ট ফান্ড ট্রান্সফার (User ID ভিত্তিক) -->
+  <!-- P2P ট্রান্সফার মোডাল -->
   <div class="modal-overlay" id="p2pModal">
     <div class="modal-box">
-      <h3>🔄 P2P ইনস্ট্যান্ট ট্রান্সফার</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">যেকোনো ভেরিফাইড ইউজারের আইডিতে তাত্ক্ষণিক ডলার পাঠান (এসক্রো সুরক্ষিত)।</p>
+      <h3 style="color:#22d3ee;">🔄 P2P ইনস্ট্যান্ট ফান্ড ট্রান্সফার</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">যেকোনো ভেরিফাইড মেম্বারের User ID-তে তাৎক্ষণিক ডলার পাঠান।</p>
 
-      <label style="font-size:12px;">প্রাপকের User ID:</label>
-      <input type="text" id="p2pTargetIdInput" class="input-field" placeholder="যেমন: LTM4901">
+      <label style="font-size:12px; color:var(--text-muted);">প্রাপকের User ID:</label>
+      <input type="text" id="p2pTargetIdInput" class="input-field" placeholder="যেমন: LTM7392">
 
-      <label style="font-size:12px;">ট্রান্সফার অ্যামাউন্ট ($):</label>
+      <label style="font-size:12px; color:var(--text-muted);">ট্রান্সফার অ্যামাউন্ট ($):</label>
       <input type="number" id="p2pAmountInput" class="input-field" placeholder="ডলারের পরিমাণ">
 
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('p2pModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="submitP2PTransfer()">সেন্ড মানি করুন</button>
+        <button class="btn btn-primary" onclick="submitP2PTransfer()">ট্রান্সফার করুন</button>
       </div>
     </div>
   </div>
 
-  <!-- লোকাল এজেন্ট ক্যাশআউট ডিরেক্টরি (Direct Call & WhatsApp) -->
+  <!-- এজেন্ট ডিরেক্টরি মোডাল -->
   <div class="modal-overlay" id="agentModal">
-    <div class="modal-box" style="max-width:550px;">
-      <h3>📍 Verified Agent Cashout Nodes</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">এজেন্টদের সাথে সরাসরি কল বা হোয়াটসঅ্যাপে কথা বলে ফেস-টু-ফেস ক্যাশ নিন।</p>
-      <div id="agentDirectoryList" style="display:flex; flex-direction:column; gap:10px; max-height:350px; overflow-y:auto;">
-        <!-- এজেন্টের তালিকা app.js থেকে আসবে -->
+    <div class="modal-box" style="max-width:540px;">
+      <h3 style="color:#f87171;">📍 ভেরিফাইড ক্যাশআউট এজেন্ট নেটওয়ার্ক</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">আপনার লোকাল এজেন্টের সাথে সরাসরি কল বা হোয়াটসঅ্যাপে কথা বলে ক্যাশআউট করুন।</p>
+      <div id="agentDirectoryList" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
+        <!-- ডাটাবেজের ভেরিফাইড এজেন্টরা এখানে আসবে -->
       </div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('agentModal')">Close</button>
@@ -265,72 +322,48 @@
     </div>
   </div>
 
-  <!-- ইনভেস্টমেন্ট কনফার্মেশন মোডাল -->
+  <!-- এজেন্ট আবেদন ফর্ম মোডাল -->
+  <div class="modal-overlay" id="agentApplyModal">
+    <div class="modal-box">
+      <h3 style="color:#f87171;">📝 এজেন্ট হওয়ার আবেদন</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">তথ্য পূরণ করুন। অ্যাডমিন পর্যালোচনা করে অনুমোদন দিলে আপনি লোকাল এজেন্ট হিসেবে তালিকাভুক্ত হবেন।</p>
+      
+      <label style="font-size:12px; color:var(--text-muted);">দোকান বা ব্যবসা প্রতিষ্ঠানের নাম:</label>
+      <input type="text" id="agentShopInput" class="input-field" placeholder="প্রতিষ্ঠানের নাম">
+
+      <label style="font-size:12px; color:var(--text-muted);">অফিসিয়াল যোগাযোগ নম্বর (WhatsApp):</label>
+      <input type="tel" id="agentPhoneInput" class="input-field" placeholder="01XXXXXXXXX">
+
+      <label style="font-size:12px; color:var(--text-muted);">এলাকা ও সম্পূর্ণ ঠিকানা:</label>
+      <input type="text" id="agentLocationInput" class="input-field" placeholder="যেমন: কোনাবাড়ী বাজার, গাজীপুর">
+
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('agentApplyModal')">Cancel</button>
+        <button class="btn btn-accent" onclick="submitAgentApplication()">আবেদন জমা দিন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ইনভেস্টমেন্ট মোডাল -->
   <div class="modal-overlay" id="investModal">
     <div class="modal-box">
-      <h3 id="investModalStockTitle">ইনভেস্টমেন্ট</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">২৪ ঘণ্টা সাইকেল। ম্যাচিউর হলে লাভ ও মূল টাকা সরাসরি মেইন ব্যালেন্সে যুক্ত হবে।</p>
-      <label style="font-size:12px;">ইনভেস্টমেন্ট অ্যামাউন্ট ($):</label>
+      <h3 id="investModalStockTitle" style="color:#38bdf8;">ইনভেস্টমেন্ট</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">২৪ ঘণ্টা সাইকেল শেষে মূল ডলার ও নির্ধারিত লাভ সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।</p>
+      <label style="font-size:12px; color:var(--text-muted);">ইনভেস্টমেন্ট অ্যামাউন্ট ($):</label>
       <input type="number" id="investStockAmount" class="input-field" value="10" min="0.1" step="0.1">
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('investModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmStockInvest()">ইনভেস্ট নিশ্চিত করুন</button>
+        <button class="btn btn-primary" onclick="confirmStockInvest()">ইনভেস্ট সম্পন্ন করুন</button>
       </div>
     </div>
   </div>
 
-  <!-- কোম্পানি রোডম্যাপ ও ভিশন মোডাল -->
-  <div class="modal-overlay" id="companyModal">
-    <div class="modal-box">
-      <h3>🏢 কোম্পানির পরিকল্পনা ও প্ল্যাটফর্ম নোটিস</h3>
-      <div id="companyPostsContainer" style="margin:12px 0; max-height:300px; overflow-y:auto; font-size:13px; line-height:1.6;">
-        <!-- অ্যাডমিনের লেখা পোস্ট এখানে লোড হবে -->
-      </div>
-      <div class="modal-btns">
-        <button class="btn btn-outline" onclick="closeModal('companyModal')">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- থিম ও ভাষা সিলেক্টর মোডাল -->
-  <div class="modal-overlay" id="themeModal">
-    <div class="modal-box">
-      <h3>🎨 থিম ও ভাষা কাস্টমাইজেশন</h3>
-      
-      <label style="font-size:12px;">প্ল্যাটফর্মের ভাষা:</label>
-      <select id="langSelector" class="input-field" onchange="changeLanguage(this.value)">
-        <option value="bn">বাংলা (Bengali)</option>
-        <option value="en">English</option>
-        <option value="ar">العربية (Arabic)</option>
-        <option value="hi">हिन्दी (Hindi)</option>
-      </select>
-
-      <label style="font-size:12px; margin-top:10px;">কালার থিম নির্বাচন করুন (১০টি অপশন):</label>
-      <select id="themeSelector" class="input-field" onchange="applyColorTheme(this.value)">
-        <option value="theme-default">1. Cyber Midnight (ডিফল্ট)</option>
-        <option value="theme-emerald">2. Emerald Forest</option>
-        <option value="theme-goldvip">3. Royal Gold VIP</option>
-        <option value="theme-crimson">4. Crimson Red</option>
-        <option value="theme-royalpurple">5. Royal Purple</option>
-        <option value="theme-oceanblue">6. Deep Ocean Blue</option>
-        <option value="theme-neonpunk">7. Neon Cyberpunk</option>
-        <option value="theme-darkamoled">8. Pure AMOLED Black</option>
-        <option value="theme-slate">9. Modern Slate Grey</option>
-        <option value="theme-lightlux">10. Light Luxury Clean</option>
-      </select>
-
-      <div class="modal-btns">
-        <button class="btn btn-primary" onclick="closeModal('themeModal')">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ইন-অ্যাপ ফুলস্ক্রিন ভিডিও প্লেয়ার মোডাল -->
+  <!-- ইন-অ্যাপ ফুলস্ক্রিন ভিডিও প্লেয়ার -->
   <div class="modal-overlay" id="inAppPlayerModal">
-    <div class="modal-box" style="max-width:680px; width:95%;">
+    <div class="modal-box" style="max-width:700px; width:95%;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h4 id="videoPlayerTitle">ভিডিও স্ট্রিমিং</h4>
-        <button class="btn btn-outline" style="padding:2px 8px;" onclick="closeVideoPlayer()">✕</button>
+        <button class="menu-btn" style="width:30px; height:30px;" onclick="closeVideoPlayer()">✕</button>
       </div>
       <div class="video-frame-container">
         <iframe id="inAppIframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
@@ -338,43 +371,58 @@
     </div>
   </div>
 
-  <!-- টিউটোরিয়াল ও রেফারেল মোডাল -->
-  <div class="modal-overlay" id="videoModal">
+  <!-- কাজের ভিডিও টিউটোরিয়াল মোডাল -->
+  <div class="modal-overlay" id="tutorialModal">
     <div class="modal-box">
-      <h3>📺 কাজের নিয়ম ও গাইড</h3>
-      <p style="font-size:13px; color:var(--text-muted); margin:10px 0;">নিচে দেওয়া ভিডিও থেকে কীভাবে কাজ করতে হয় এবং কীভাবে টাকা লেনদেন করতে হয় তা বিস্তারিত দেখে নিন।</p>
+      <h3 style="color:#38bdf8;">📺 প্ল্যাটফর্ম ভিডিও গাইড</h3>
       <div class="video-frame-container">
-        <iframe id="tutorialVideoIframe" src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+        <iframe id="tutorialVideoIframe" src="" allowfullscreen></iframe>
       </div>
       <div class="modal-btns">
-        <button class="btn btn-outline" onclick="closeModal('videoModal')">Close</button>
+        <button class="btn btn-outline" onclick="closeModal('tutorialModal')">Close</button>
       </div>
     </div>
   </div>
 
+  <!-- রেফার অ্যান্ড আর্ন মোডাল -->
   <div class="modal-overlay" id="referralModal">
     <div class="modal-box">
-      <h3>👥 Refer & Profit Share</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">আপনার রেফার করা সদস্যদের ২৪ ঘণ্টার লাভ থেকে আপনি সরাসরি ১০% প্রফিট বোনাস পাবেন!</p>
+      <h3 style="color:#60a5fa;">👥 Refer & Earn</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">আপনার রেফার কোড বা লিংক শেয়ার করুন। মেম্বারদের ২৪ ঘণ্টার মুনাফা থেকে সরাসরি ১০% বোনাস পাবেন।</p>
+      <label style="font-size:12px; color:var(--text-muted);">আপনার রেফারেল লিংক:</label>
       <input type="text" id="myReferralLinkInput" class="input-field" readonly>
-      <button class="btn btn-primary" style="width:100%; margin-top:5px;" onclick="copyReferralLink()">📋 লিংক কপি করুন</button>
+      <button class="btn btn-primary" style="width:100%;" onclick="copyReferralLink()">📋 লিংক কপি করুন</button>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('referralModal')">Close</button>
       </div>
     </div>
   </div>
 
+  <!-- প্রোফাইল ও কেওয়াইসি মোডাল -->
   <div class="modal-overlay" id="profileModal">
     <div class="modal-box">
-      <h3>👤 প্রোফাইল ও কেওয়াইসি</h3>
-      <div style="margin:10px 0; font-size:13px; display:flex; flex-direction:column; gap:8px;">
+      <h3 style="color:#38bdf8;">👤 প্রোফাইল সেটিংস</h3>
+      <div style="margin:14px 0; font-size:13px; display:flex; flex-direction:column; gap:8px;">
         <p>নাম: <strong id="profileName">-</strong></p>
         <p>ইমেইল: <strong id="profileEmail">-</strong></p>
-        <p>ফোন: <strong id="profilePhone">-</strong></p>
-        <p>User ID: <strong id="profileUserId" style="color:#38bdf8;">-</strong></p>
+        <p>ফোন নম্বর: <strong id="profilePhone">-</strong></p>
+        <p>ইউনিক User ID: <strong id="profileUserId" style="color:#38bdf8;">-</strong></p>
       </div>
       <div class="modal-btns">
         <button class="btn btn-outline" onclick="closeModal('profileModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- কোম্পানি ভিশন ও নোটিস মোডাল -->
+  <div class="modal-overlay" id="companyModal">
+    <div class="modal-box">
+      <h3 style="color:#38bdf8;">🏢 কোম্পানির পরিকল্পনা ও পোস্ট</h3>
+      <div id="companyPostsContainer" style="margin:14px 0; max-height:320px; overflow-y:auto; font-size:13px; line-height:1.6;">
+        <!-- অ্যাডমিন থেকে সেভ করা পোস্ট এখানে আসবে -->
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal('companyModal')">Close</button>
       </div>
     </div>
   </div>

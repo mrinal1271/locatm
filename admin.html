@@ -3,52 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Locatm - Super Admin Control Center</title>
+  <title>Locatm - Super Master Control Hub</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { padding-bottom: 40px; }
+    body { padding-bottom: 50px; }
     .admin-nav {
-      background: #0f172a;
-      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
       padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     .admin-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 14px;
       margin-bottom: 25px;
     }
     .stat-box {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
     }
-    .stat-box h4 { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-    .stat-box p { font-size: 20px; font-weight: 700; color: #38bdf8; }
+    .stat-box h4 { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+    .stat-box p { font-size: 22px; font-weight: 800; color: #38bdf8; }
 
     .tab-bar {
       display: flex;
       gap: 8px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
-      margin-bottom: 20px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 12px;
+      margin-bottom: 22px;
       overflow-x: auto;
     }
     .tab-btn {
-      padding: 8px 14px;
+      padding: 10px 16px;
       background: var(--bg-card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--glass-border);
       color: var(--text-muted);
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 13px;
       white-space: nowrap;
       transition: all 0.2s;
@@ -57,15 +62,17 @@
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
+      box-shadow: 0 4px 12px var(--primary-glow);
     }
 
     .table-responsive {
       overflow-x: auto;
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 14px;
       margin-bottom: 25px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
     table {
       width: 100%;
@@ -74,23 +81,23 @@
       text-align: left;
     }
     th, td {
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--border);
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--glass-border);
       white-space: nowrap;
     }
-    th { color: var(--text-muted); font-weight: 600; }
+    th { color: var(--text-muted); font-weight: 700; }
 
     .switch-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 12px;
       margin-bottom: 25px;
     }
     .switch-card {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -98,16 +105,16 @@
     .toggle-switch {
       position: relative;
       display: inline-block;
-      width: 44px;
-      height: 24px;
+      width: 46px;
+      height: 26px;
     }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155; transition: .3s; border-radius: 24px;
+      background-color: #334155; transition: .3s; border-radius: 26px;
     }
     .slider:before {
-      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
       background-color: white; transition: .3s; border-radius: 50%;
     }
     input:checked + .slider { background-color: var(--accent); }
@@ -116,261 +123,315 @@
 </head>
 <body>
 
-  <!-- টপবার -->
-  <div class="admin-nav">
-    <div style="font-size:18px; font-weight:800; color:#38bdf8;">Locatm • Super Master Control</div>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span class="token-badge" style="color:var(--danger); border-color:var(--danger);">🔒 Root Admin Mode</span>
-      <button class="btn btn-outline" style="padding:4px 10px; font-size:12px;" onclick="window.location.href='index.html'">View Client</button>
+  <!-- ================= ১. সিকিউর অ্যাডমিন লগইন গেটওয়ে ================= -->
+  <div id="adminAuthScreen" style="display:flex; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(7,10,19,0.98); backdrop-filter:blur(12px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+    <div class="modal-box" style="max-width:380px;">
+      <div style="text-align:center; margin-bottom:18px;">
+        <h2 style="color:#ef4444; font-size:24px;">🔒 Root Admin Login</h2>
+        <p style="font-size:12px; color:var(--text-muted);">Master Authorization Required</p>
+      </div>
+      <input type="email" id="adminLogEmail" class="input-field" placeholder="অ্যাডমিন ইমেইল">
+      <input type="password" id="adminLogPass" class="input-field" placeholder="অ্যাডমিন মাস্টার পাসওয়ার্ড">
+      <button class="btn btn-danger" style="width:100%; margin-top:6px;" onclick="verifyAdminLogin()">লগইন করুন</button>
     </div>
   </div>
 
-  <div class="container" style="margin-top:15px;">
+  <!-- ================= ২. অ্যাডমিন প্যানেল কনটেন্ট ================= -->
+  <div id="adminDashboardWrapper" style="display:none;">
 
-    <!-- মেট্রিক্স ড্যাশবোর্ড -->
-    <div class="admin-grid">
-      <div class="stat-box">
-        <h4>নিবন্ধিত ইউজার</h4>
-        <p id="statTotalUsers">1,248 জন</p>
-      </div>
-      <div class="stat-box">
-        <h4>মোট প্ল্যাটফর্ম ডিপোজিট</h4>
-        <p id="statTotalDeposit">$58,210.00</p>
-      </div>
-      <div class="stat-box">
-        <h4>মোট উইথড্র পরিশোধ</h4>
-        <p id="statTotalWithdraw" style="color:var(--accent);">$21,430.00</p>
-      </div>
-      <div class="stat-box">
-        <h4>LTM বর্তমান মার্কেট রেট</h4>
-        <p id="statLtmRate" style="color:var(--gold);">$0.10 / LTM</p>
+    <!-- টপবার -->
+    <div class="admin-nav">
+      <div style="font-size:18px; font-weight:900; color:#38bdf8;">Locatm • Master Control Hub</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; color:var(--accent); font-weight:800; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:8px;">🟢 Live Database Sync</span>
+        <button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" onclick="window.open('index.html', '_blank')">🌐 Client View</button>
+        <button class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="adminLogout()">Logout</button>
       </div>
     </div>
 
-    <!-- গ্লোবাল ফিচার মাস্টার সুইচ -->
-    <div class="section-title">
-      <span>⚙️ গ্লোবাল ফিচার অন / অফ সুইচ (Master Feature Toggles)</span>
-      <small style="color:var(--text-muted); font-size:12px;">যেকোনো সময় ফিচার বন্ধ বা চালু করুন</small>
-    </div>
-    <div class="switch-grid">
-      <div class="switch-card">
-        <div>
-          <strong>এজেন্ট ক্যাশ-আউট নেটওয়ার্ক</strong><br>
-          <small style="color:var(--text-muted);">বর্তমানে বন্ধ (মেম্বার বাড়লে চালু করুন)</small>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="switchAgent" onchange="toggleFeatureState('এজেন্ট ক্যাশ-আউট নেটওয়ার্ক', this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="switch-card">
-        <div>
-          <strong>কোম্পানি সরাসরি উইথড্রাল</strong><br>
-          <small style="color:var(--text-muted);">উত্তোলন রিকোয়েস্ট জমা নেওয়া</small>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="switchWithdraw" checked onchange="toggleFeatureState('কোম্পানি সরাসরি উইথড্রাল', this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="switch-card">
-        <div>
-          <strong>স্টক ইনভেস্টমেন্ট সাইকেল</strong><br>
-          <small style="color:var(--text-muted);">২৪ ঘণ্টার ইনভেস্টমেন্ট সিস্টেম</small>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="switchInvest" checked onchange="toggleFeatureState('স্টক ইনভেস্টমেন্ট সাইকেল', this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="switch-card">
-        <div>
-          <strong>P2P ট্রান্সফার (বাইনান্স স্টাইল)</strong><br>
-          <small style="color:var(--text-muted);">ইউজার-টু-ইউজার এসক্রো ট্রান্সফার</small>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="switchP2P" checked onchange="toggleFeatureState('P2P ট্রান্সফার', this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="switch-card">
-        <div>
-          <strong>Trade LTM (বাই/সেল সোয়াপ)</strong><br>
-          <small style="color:var(--text-muted);">টোকেন কেনা ও বেচার মার্কেট</small>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="switchTrade" checked onchange="toggleFeatureState('Trade LTM সোয়াপ', this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="switch-card">
-        <div>
-          <strong>রেফারেল প্রফিট বোনাস</strong><br>
-          <small style="color:var(--text-muted);">লাভ থেকে ১০% কমিশন ডিস্ট্রিবিউশন</small>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="switchRef" checked onchange="toggleFeatureState('রেফারেল প্রফিট কমিশন', this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
+    <div class="container" style="margin-top:20px;">
 
-    <!-- ম্যানেজমেন্ট ট্যাব নেভিগেশন -->
-    <div class="tab-bar">
-      <button class="tab-btn active" onclick="showAdminTab('tabUsers', this)">👥 সকল ইউজার (A to Z অডিট)</button>
-      <button class="tab-btn" onclick="showAdminTab('tabDeposits', this)">💳 আনলিমিটেড ডিপোজিট মেথডস</button>
-      <button class="tab-btn" onclick="showAdminTab('tabPending', this)">⏳ পেন্ডিং ডিপোজিট ও উইথড্র</button>
-      <button class="tab-btn" onclick="showAdminTab('tabStocks', this)">📈 ১০০+ স্টক প্রফিট রেট</button>
-      <button class="tab-btn" onclick="showAdminTab('tabButtons', this)">🏏 লাইভ বাটন ও ভিডিও কন্ট্রোল</button>
-      <button class="tab-btn" onclick="showAdminTab('tabPosts', this)">🏢 কোম্পানি পোস্ট ও রোডম্যাপ</button>
-    </div>
-
-    <!-- ট্যাব ১: ইউজার এ টু জেড ডিপ-ইনস্পেকশন -->
-    <div id="tabUsers" class="admin-tab-pane">
-      <div style="margin-bottom:12px; display:flex; gap:10px;">
-        <input type="text" id="userSearchInput" class="input-field" placeholder="নাম, ইমেইল, ফোন বা User ID দিয়ে খুঁজুন..." onkeyup="searchUsers()">
+      <!-- মেট্রিক্স কার্ডসমূহ -->
+      <div class="admin-grid">
+        <div class="stat-box">
+          <h4>নিবন্ধিত ইউজার</h4>
+          <p id="statTotalUsers">0 জন</p>
+        </div>
+        <div class="stat-box">
+          <h4>মোট প্ল্যাটফর্ম ডিপোজিট</h4>
+          <p id="statTotalDeposit">$0.00</p>
+        </div>
+        <div class="stat-box">
+          <h4>মোট পেইড উইথড্রাল</h4>
+          <p id="statTotalWithdraw" style="color:var(--accent);">$0.00</p>
+        </div>
+        <div class="stat-box">
+          <h4>LTM বর্তমান রেট</h4>
+          <p id="statLtmRate" style="color:var(--gold);">$0.10</p>
+        </div>
       </div>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>User ID</th>
-              <th>নাম ও ইমেইল</th>
-              <th>ফোন নম্বর</th>
-              <th>জয়েনিং ডেট</th>
-              <th>মেইন ব্যালেন্স</th>
-              <th>LTM টোকেন</th>
-              <th>ইনভেস্টেড</th>
-              <th>মোট প্রফিট</th>
-              <th>রেফারেল আয়</th>
-              <th>অ্যাকশন</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody">
-            <!-- ইউজারের পূর্ণ ডাটা ডায়নামিকালি আসবে -->
-          </tbody>
-        </table>
-      </div>
-    </div>
 
-    <!-- ট্যাব ২: আনলিমিটেড ডিপোজিট মেথড ম্যানেজার -->
-    <div id="tabDeposits" class="admin-tab-pane" style="display:none;">
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px;">
-          <h4 style="margin-bottom:12px; color:#38bdf8;">➕ নতুন ডিপোজিট মেথড যোগ করুন</h4>
-          <input type="text" id="newMethodName" class="input-field" placeholder="মেথডের নাম (যেমন: Binance USDT BEP20, রকেট)">
-          <input type="text" id="newMethodAddress" class="input-field" placeholder="ওয়ালেট অ্যাড্রেস বা ফোন নম্বর">
-          <textarea id="newMethodNote" class="input-field" rows="2" placeholder="ইউজার কীভাবে পেমেন্ট করবে সেই সংক্রান্ত নির্দেশনা..."></textarea>
-          <button class="btn btn-primary" style="width:100%;" onclick="addNewDepositMethod()">মেথড যোগ করুন</button>
+      <!-- গ্লোবাল ফিচার মাস্টার সুইচ -->
+      <div class="section-title">
+        <span>⚙️ গ্লোবাল ফিচার অন/অফ সুইচ (Master Toggles)</span>
+        <small style="color:var(--text-muted); font-size:12px;">এক ক্লিকে ক্লায়েন্ট ফিচার চালু বা বন্ধ করুন</small>
+      </div>
+      <div class="switch-grid">
+        <div class="switch-card">
+          <div>
+            <strong>এজেন্ট ক্যাশ-আউট নেটওয়ার্ক</strong><br>
+            <small style="color:var(--text-muted);">মেম্বার বাড়লে চালু করুন</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="switchAgent" onchange="toggleMasterFeature('agent_system', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-card">
+          <div>
+            <strong>কোম্পানি সরাসরি উইথড্রাল</strong><br>
+            <small style="color:var(--text-muted);">টাকা তোলার রিকোয়েস্ট গ্রহণ</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="switchWithdraw" checked onchange="toggleMasterFeature('withdrawals', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-card">
+          <div>
+            <strong>স্টক ইনভেস্টমেন্ট সাইকেল</strong><br>
+            <small style="color:var(--text-muted);">২৪ ঘণ্টার ইনভেস্টমেন্ট</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="switchInvest" checked onchange="toggleMasterFeature('investments', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-card">
+          <div>
+            <strong>P2P ফান্ড ট্রান্সফার</strong><br>
+            <small style="color:var(--text-muted);">ইউজার-টু-ইউজার এসক্রো</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="switchP2P" checked onchange="toggleMasterFeature('p2p', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-card">
+          <div>
+            <strong>Trade LTM সোয়াপ</strong><br>
+            <small style="color:var(--text-muted);">টোকেন বাই ও সেল মার্কেট</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="switchTrade" checked onchange="toggleMasterFeature('trade_ltm', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ম্যানেজমেন্ট ট্যাব নেভিগেশন -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchAdminTab('tabUsers', this)">👥 সকল ইউজার (A to Z অডিট)</button>
+        <button class="tab-btn" onclick="switchAdminTab('tabDeposits', this)">💳 আনলিমিটেড ডিপোজিট মেথডস</button>
+        <button class="tab-btn" onclick="switchAdminTab('tabPending', this)">⏳ পেন্ডিং ডিপোজিট ও উইথড্র</button>
+        <button class="tab-btn" onclick="switchAdminTab('tabStocks', this)">📈 ১০০+ স্টক কমিশন রেঞ্জ (-5% to +5%)</button>
+        <button class="tab-btn" onclick="switchAdminTab('tabAgents', this)">📍 এজেন্ট আবেদন ও ডিরেক্টরি</button>
+        <button class="tab-btn" onclick="switchAdminTab('tabButtons', this)">🏏 লাইভ বাটন ও ভিডিও কন্ট্রোল</button>
+        <button class="tab-btn" onclick="switchAdminTab('tabSettings', this)">📢 নোটিস, রোডম্যাপ ও সেটিংস</button>
+      </div>
+
+      <!-- ট্যাব ১: ইউজার অডিট টেবিল -->
+      <div id="tabUsers" class="admin-pane">
+        <div style="margin-bottom:14px; display:flex; gap:10px;">
+          <input type="text" id="userFilterInput" class="input-field" placeholder="নাম, ইমেইল, ফোন অথবা User ID দিয়ে খুঁজুন..." onkeyup="filterUserAuditTable()">
         </div>
         <div class="table-responsive">
-          <h4>সক্রিয় ডিপোজিট গেটওয়েসমূহ</h4>
           <table>
             <thead>
               <tr>
-                <th>মেথড</th>
-                <th>অ্যাড্রেস / নম্বর</th>
+                <th>User ID</th>
+                <th>নাম ও ইমেইল</th>
+                <th>ফোন নম্বর</th>
+                <th>মেইন ব্যালেন্স</th>
+                <th>LTM টোকেন</th>
+                <th>লকড ব্যালেন্স</th>
+                <th>মোট প্রফিট</th>
                 <th>অ্যাকশন</th>
               </tr>
             </thead>
-            <tbody id="activeMethodsTableBody">
-              <!-- মেথড রো -->
+            <tbody id="userAuditTbody">
+              <!-- ডাটাবেজ থেকে আসবে -->
             </tbody>
           </table>
         </div>
       </div>
-    </div>
 
-    <!-- ট্যাব ৩: পেন্ডিং ডিপোজিট ও উইথড্রাল রিকোয়েস্ট -->
-    <div id="tabPending" class="admin-tab-pane" style="display:none;">
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>ইউজার ID</th>
-              <th>টাইপ</th>
-              <th>পরিমাণ</th>
-              <th>মেথড ও ট্রানজেকশন ID</th>
-              <th>তারিখ ও সময়</th>
-              <th>সিদ্ধান্ত</th>
-            </tr>
-          </thead>
-          <tbody id="pendingRequestsBody">
-            <tr>
-              <td><strong style="color:#38bdf8;">LTM7392</strong></td>
-              <td><span style="color:var(--accent);">ডিপোজিট</span></td>
-              <td>$100.00</td>
-              <td>Binance USDT | TrxID: TX990145AKZ8</td>
-              <td>আজ, ১২:৩০ PM</td>
-              <td>
-                <button class="btn btn-accent" style="padding:4px 8px; font-size:12px;" onclick="adminConfirmAction('এই ডিপোজিট অনুমোদন করতে চান?')">Approve</button>
-                <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="adminConfirmAction('এই ডিপোজিট বাতিল করতে চান?')">Reject</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ট্যাব ৪: ১০০+ কোম্পানির গোপন প্রফিট রেট ও LTM কয়েন মূল্য -->
-    <div id="tabStocks" class="admin-tab-pane" style="display:none;">
-      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:20px; max-width:450px;">
-        <h4 style="color:var(--gold); margin-bottom:8px;">🪙 LTM টোকেনের লাইভ দর নির্ধারণ</h4>
-        <div style="display:flex; gap:10px;">
-          <input type="number" id="ltmPriceInput" class="input-field" value="0.10" step="0.01" style="margin-bottom:0;">
-          <button class="btn btn-gold" onclick="updateLtmRate()">Update Price</button>
+      <!-- ট্যাব ২: আনলিমিটেড ডিপোজিট মেথডস -->
+      <div id="tabDeposits" class="admin-pane" style="display:none;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; padding:20px;">
+            <h4 style="color:#38bdf8; margin-bottom:14px;">➕ নতুন পেমেন্ট মেথড যোগ করুন</h4>
+            <input type="text" id="newMethodTitle" class="input-field" placeholder="মেথডের নাম (যেমন: Binance USDT TRC20, বিকাশ পার্সোনাল)">
+            <input type="text" id="newMethodTarget" class="input-field" placeholder="ওয়ালেট অ্যাড্রেস বা ফোন নম্বর">
+            <textarea id="newMethodInstruction" class="input-field" rows="2" placeholder="পেমেন্ট করার নিয়মাবলী বা নোট..."></textarea>
+            <button class="btn btn-primary" style="width:100%;" onclick="saveNewDepositMethod()">মেথড যোগ করুন</button>
+          </div>
+          <div class="table-responsive">
+            <h4 style="margin-bottom:12px;">সক্রিয় ডিপোজিট গেটওয়েসমূহ</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>মেথড</th>
+                  <th>অ্যাড্রেস / নম্বর</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="activeMethodsTbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>লোগো</th>
-              <th>কোম্পানির নাম</th>
-              <th>টিকার</th>
-              <th>২৪ ঘণ্টা প্রফিট রেট (%)</th>
-              <th>অ্যাকশন</th>
-            </tr>
-          </thead>
-          <tbody id="stocksTableBody">
-            <!-- ১০০+ কোম্পানির তালিকা ডায়নামিকালি আসবে -->
-          </tbody>
-        </table>
+      <!-- ট্যাব ৩: পেন্ডিং ডিপোজিট ও উইথড্রাল -->
+      <div id="tabPending" class="admin-pane" style="display:none;">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>টাইপ</th>
+                <th>পরিমাণ</th>
+                <th>মেথড ও TrxID</th>
+                <th>তারিখ ও সময়</th>
+                <th>সিদ্ধান্ত</th>
+              </tr>
+            </thead>
+            <tbody id="pendingRequestsTbody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <!-- ট্যাব ৫: কাস্টম ডায়নামিক বাটন ও ইন-অ্যাপ লাইভ ভিডিও কন্ট্রোল -->
-    <div id="tabButtons" class="admin-tab-pane" style="display:none;">
-      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px; max-width:650px;">
-        <h4 style="color:#38bdf8; margin-bottom:12px;">🏏 হোমপেজে নতুন ডায়নামিক বাটন যোগ করুন</h4>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">ইউটিউব লাইভ ক্রিকেট বা অন্য কোনো ওয়েবসাইটের লিঙ্ক দিন। এটি সরাসরি ইন-অ্যাপ ফুলস্ক্রিন প্লেয়ারে চলবে।</p>
-        <input type="text" id="customBtnTitle" class="input-field" placeholder="বাটনের শিরোনাম (যেমন: 🏏 লাইভ ক্রিকেট ম্যাচ, টেলিগ্রাম গ্রুপ)">
-        <input type="text" id="customBtnUrl" class="input-field" placeholder="URL লিঙ্ক (যেমন: https://www.youtube.com/embed/...)">
-        <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
-          <input type="checkbox" id="customBtnEmbed" checked> এটি কি সরাসরি অ্যাপের ভেতরে ভিডিও আকারে চলবে? (In-App Player)
-        </label>
-        <button class="btn btn-primary" onclick="addCustomButton()">বাটন যোগ করুন</button>
+      <!-- ট্যাব ৪: ১০০+ স্টক অটো ও ম্যানুয়াল কমিশন কন্ট্রোল -->
+      <div id="tabStocks" class="admin-pane" style="display:none;">
+        <!-- গ্লোবাল অটো রেন্জ বক্স (-5% থেকে +5%) -->
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; padding:20px; margin-bottom:20px; max-width:650px;">
+          <h4 style="color:#38bdf8; margin-bottom:8px;">⚙️ গ্লোবাল অটো-কমিশন রেঞ্জ সেটিংস</h4>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+            সব কোম্পানিতে স্বয়ংক্রিয়ভাবে লাভ বা লস দেওয়ার রেঞ্জ নির্ধারণ করুন। নির্দিষ্ট কোনো কোম্পানিতে আলাদা রেট দিতে চাইলে নিচের টেবিল থেকে ম্যানুয়ালি সেট করুন।
+          </p>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <label style="font-size:12px;">মিনিমাম (%):</label>
+            <input type="number" id="autoMinPercent" class="input-field" style="width:90px; margin-bottom:0;" value="-5.0" step="0.1">
+            <label style="font-size:12px;">ম্যাক্সিমাম (%):</label>
+            <input type="number" id="autoMaxPercent" class="input-field" style="width:90px; margin-bottom:0;" value="5.0" step="0.1">
+            <button class="btn btn-accent" onclick="saveGlobalStockRange()">সেভ রেঞ্জ</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>লোগো</th>
+                <th>কোম্পানির নাম</th>
+                <th>টিকার</th>
+                <th>নির্ধারিত ২৪ ঘণ্টা রেট (%)</th>
+                <th>স্ট্যাটাস</th>
+                <th>অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="stockProfitTbody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <!-- ট্যাব ৬: কোম্পানি পোস্ট ও রোডম্যাপ পাবলিশার -->
-    <div id="tabPosts" class="admin-tab-pane" style="display:none;">
-      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px; max-width:650px;">
-        <h4 style="color:#38bdf8; margin-bottom:12px;">🏢 নতুন কোম্পানি নোটিস বা ভবিষ্যৎ পরিকল্পনা পোস্ট করুন</h4>
-        <input type="text" id="postTitleInput" class="input-field" placeholder="পোস্টের শিরোনাম">
-        <textarea id="postContentInput" class="input-field" rows="4" placeholder="কোম্পানির বিস্তারিত পরিকল্পনা বা নোটিস লিখুন..."></textarea>
-        <button class="btn btn-accent" onclick="publishCompanyPost()">পোস্ট প্রকাশ করুন</button>
+      <!-- ট্যাব ৫: এজেন্ট আবেদন ও ভেরিফিকেশন -->
+      <div id="tabAgents" class="admin-pane" style="display:none;">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>দোকান বা ব্যবসা</th>
+                <th>ফোন নম্বর</th>
+                <th>ঠিকানা</th>
+                <th>আবেদনের তারিখ</th>
+                <th>অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="agentAuditTbody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
+      <!-- ট্যাব ৬: লাইভ বাটন ও ইন-অ্যাপ ভিডিও -->
+      <div id="tabButtons" class="admin-pane" style="display:none;">
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; padding:20px; max-width:650px; margin-bottom:20px;">
+          <h4 style="color:#38bdf8; margin-bottom:12px;">🏏 হোমপেজে নতুন ডায়নামিক বাটন যোগ করুন</h4>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">লাইভ ক্রিকেট, ইউটিউব স্ট্রিমিং বা যেকোনো ওয়েবসাইটের লিংক যোগ করুন।</p>
+          <input type="text" id="customButtonTitleInput" class="input-field" placeholder="বাটনের নাম (যেমন: 🏏 লাইভ ক্রিকেট ম্যাচ)">
+          <input type="text" id="customButtonUrlInput" class="input-field" placeholder="URL লিংক (যেমন: https://www.youtube.com/embed/...)">
+          <label style="font-size:12px; display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+            <input type="checkbox" id="customButtonEmbedCheck" checked> ইন-অ্যাপ ফুলস্ক্রিন প্লেয়ারে চলবে?
+          </label>
+          <button class="btn btn-primary" onclick="saveCustomButton()">বাটন যোগ করুন</button>
+        </div>
+        <div class="table-responsive">
+          <h4 style="margin-bottom:12px;">সক্রিয় ডায়নামিক বাটনসমূহ</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>শিরোনাম</th>
+                <th>লিংক</th>
+                <th>প্লেয়ার মোড</th>
+                <th>অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="customButtonsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ট্যাব ৭: নোটিস, রোডম্যাপ ও সেটিংস -->
+      <div id="tabSettings" class="admin-pane" style="display:none;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+          
+          <!-- LTM রেট ও মারকুই -->
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; padding:20px;">
+            <h4 style="color:var(--gold); margin-bottom:12px;">🪙 LTM লাইভ মার্কেট প্রাইস</h4>
+            <div style="display:flex; gap:10px; margin-bottom:18px;">
+              <input type="number" id="settingLtmRateInput" class="input-field" step="0.01" style="margin-bottom:0;">
+              <button class="btn btn-primary" onclick="saveLtmRate()">Update</button>
+            </div>
+
+            <h4 style="color:#38bdf8; margin-bottom:12px;">📢 হোমপেজ মারকুই নোটিস</h4>
+            <textarea id="settingMarqueeInput" class="input-field" rows="3" placeholder="হোমপেজে যে নোটিস চলবে..."></textarea>
+            <button class="btn btn-accent" style="width:100%;" onclick="saveMarqueeNotice()">সেভ নোটিস</button>
+          </div>
+
+          <!-- কাজের ভিডিও ও কোম্পানি পোস্ট -->
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; padding:20px;">
+            <h4 style="color:#38bdf8; margin-bottom:12px;">📺 কাজের নিয়ম ভিডিও লিংক</h4>
+            <input type="text" id="settingVideoUrlInput" class="input-field" placeholder="YouTube Embed URL (যেমন: https://www.youtube.com/embed/...)">
+            <button class="btn btn-primary" style="width:100%; margin-bottom:18px;" onclick="saveTutorialVideo()">ভিডিও সেট করুন</button>
+
+            <h4 style="color:#38bdf8; margin-bottom:12px;">🏢 নতুন কোম্পানি রোডম্যাপ পোস্ট</h4>
+            <input type="text" id="companyPostTitleInput" class="input-field" placeholder="পোস্টের শিরোনাম">
+            <textarea id="companyPostContentInput" class="input-field" rows="3" placeholder="কোম্পানির পরিকল্পনা বা নোটিস..."></textarea>
+            <button class="btn btn-accent" style="width:100%;" onclick="saveCompanyPost()">পোস্ট পাবলিশ করুন</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- ডাবল কনফার্মেশন মোডাল (Yes / No) -->
+  <!-- ডাবল কনফার্মেশন প্রম্পট (Yes / No) -->
   <div class="modal-overlay" id="adminConfirmModal">
     <div class="modal-box">
       <h3 style="color:#38bdf8;">⚠️ নিশ্চিতকরণ প্রম্পট</h3>
-      <p id="adminConfirmMessage" style="font-size:14px; margin:12px 0; color:var(--text-muted);"></p>
+      <p id="adminConfirmMessage" style="font-size:14px; margin:14px 0; color:var(--text-muted);"></p>
       <div class="modal-btns">
         <button class="btn btn-danger" onclick="closeAdminConfirm()">না (Cancel)</button>
         <button class="btn btn-accent" id="adminConfirmOkBtn">হ্যাঁ (Confirm)</button>
@@ -378,26 +439,26 @@
     </div>
   </div>
 
-  <!-- ইউজার ব্যালেন্স ও ডাটা এডিটর মোডাল -->
-  <div class="modal-overlay" id="editUserModal">
+  <!-- ইউজার ব্যালেন্স এডিটর -->
+  <div class="modal-overlay" id="adminEditUserModal">
     <div class="modal-box">
-      <h3>✏️ ইউজার অ্যাকাউন্ট এডিটর (<span id="editingUserTitle"></span>)</h3>
-      <div style="margin:12px 0;">
+      <h3>✏️ ইউজার ব্যালেন্স এডিটর (<span id="editUserTargetIdText" style="color:#38bdf8;"></span>)</h3>
+      <div style="margin:14px 0;">
         <label style="font-size:12px; color:var(--text-muted);">মেইন ব্যালেন্স ($):</label>
-        <input type="number" id="editMainBal" class="input-field" style="margin-bottom:8px;">
+        <input type="number" id="editUserMainBal" class="input-field">
 
         <label style="font-size:12px; color:var(--text-muted);">LTM টোকেন ব্যালেন্স:</label>
-        <input type="number" id="editLtmBal" class="input-field" style="margin-bottom:8px;">
+        <input type="number" id="editUserLtmBal" class="input-field">
 
         <label style="font-size:12px; color:var(--text-muted);">লকড / ইনভেস্টেড ব্যালেন্স ($):</label>
-        <input type="number" id="editLockedBal" class="input-field" style="margin-bottom:8px;">
+        <input type="number" id="editUserLockedBal" class="input-field">
 
         <label style="font-size:12px; color:var(--text-muted);">ভিআইপি লেভেল:</label>
-        <input type="number" id="editVipLevel" class="input-field" style="margin-bottom:8px;">
+        <input type="number" id="editUserVipLevel" class="input-field">
       </div>
       <div class="modal-btns">
-        <button class="btn btn-outline" onclick="closeEditUserModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveUserChanges()">Save Changes</button>
+        <button class="btn btn-outline" onclick="closeAdminEditUserModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitUserBalanceChanges()">Save Changes</button>
       </div>
     </div>
   </div>
