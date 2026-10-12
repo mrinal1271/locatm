@@ -128,7 +128,6 @@ const GLOBAL_STOCKS = [
   { id: 104, name: "Palantir Tech", ticker: "PLTR", logo: "https://logo.clearbit.com/palantir.com", min: 0.10 }
 ];
 
-// ক্লাউড ডেটাবেজ ক্লায়েন্ট নিশ্চিতকরণ
 function getDB() {
   if (typeof getDatabaseClient === 'function') {
     return getDatabaseClient();
@@ -142,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await checkSavedAuth();
 });
 
-// ১. ক্লাউড কনফিগারেশন সরাসরি লোড
+// প্ল্যাটফর্ম সেটিংস
 async function loadPlatformConfig() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -158,7 +157,6 @@ async function loadPlatformConfig() {
     console.error("Config fetch error:", e);
   }
 
-  // রিয়েল-টাইম রেট ও নোটিস আপডেট
   if (document.getElementById("tradeCoinRate")) {
     document.getElementById("tradeCoinRate").innerText = `$${parseFloat(platformConfig.ltm_rate || 0.10).toFixed(2)}`;
   }
@@ -178,7 +176,7 @@ async function loadPlatformConfig() {
   await renderAgentDirectory();
 }
 
-// ২. অথেন্টিকেশন ও সেশন (সরাসরি ক্লাউড ডাটাবেজ থেকে)
+// সেশন যাচাই
 async function checkSavedAuth() {
   const savedUserId = localStorage.getItem("locatm_session_uid");
   const dbClient = getDB();
@@ -213,7 +211,7 @@ function switchAuthTab(type) {
   }
 }
 
-// ৩. সরাসরি ক্লাউড লগইন
+// লগইন লজিক
 async function handleLogin() {
   const ident = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value.trim();
@@ -257,7 +255,7 @@ async function handleLogin() {
   }
 }
 
-// ৪. সরাসরি ক্লাউড সাইন-আপ (জিরো ডেমো)
+// সাইন-আপ লজিক (নিরাপদ কলাম সিঙ্ক)
 async function handleSignup() {
   const nm = document.getElementById("regName").value.trim();
   const em = document.getElementById("regEmail").value.trim();
@@ -292,6 +290,7 @@ async function handleSignup() {
 
     const newUserId = "LTM" + Math.floor(100000 + Math.random() * 900000);
 
+    // মূল প্রয়োজনীয় কলামসমূহ
     const newUserPayload = {
       user_id: newUserId,
       name: nm,
@@ -303,8 +302,7 @@ async function handleSignup() {
       ltm_balance: 0.00,
       total_profit: 0.00,
       vip_level: 1,
-      referred_by: ref || null,
-      is_agent: false
+      referred_by: ref || null
     };
 
     const { data, error } = await dbClient.from('users').insert([newUserPayload]).select().single();
@@ -371,7 +369,7 @@ function openModalAndCloseDrawer(modalId) {
   openModal(modalId);
 }
 
-// ৫. ডিপোজিট সাবমিট (সরাসরি ক্লাউড টেবিলে জমা)
+// ডিপোজিট
 function renderDepositMethods() {
   const sel = document.getElementById("depositMethodSelect");
   if (!sel) return;
@@ -449,7 +447,7 @@ async function submitDeposit() {
   });
 }
 
-// ৬. উত্তোলন (সরাসরি ক্লাউড টেবিলে জমা ও ব্যালেন্স ডিডাক্ট)
+// উত্তোলন
 async function submitWithdrawal() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.withdrawals === false) {
     alert("কোম্পানি সরাসরি উত্তোলন বর্তমানে বন্ধ আছে।");
@@ -499,7 +497,7 @@ async function submitWithdrawal() {
   });
 }
 
-// ৭. Trade LTM
+// Trade LTM
 function switchTradeMode(mode) {
   currentTradeMode = mode;
   if (mode === 'buy') {
@@ -564,7 +562,7 @@ async function processTradeLTM() {
   }
 }
 
-// ৮. P2P ট্রান্সফার (ক্লাউড এসক্রো)
+// P2P
 async function submitP2PTransfer() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.p2p === false) {
     alert("P2P ট্রান্সফার বর্তমানে বন্ধ আছে।");
@@ -614,7 +612,7 @@ async function submitP2PTransfer() {
   });
 }
 
-// ৯. এজেন্ট আবেদন ও ভেরিফায়েড ডিরেক্টরি
+// এজেন্ট আবেদন
 async function submitAgentApplication() {
   const shop = document.getElementById("agentShopInput").value.trim();
   const phone = document.getElementById("agentPhoneInput").value.trim();
@@ -679,7 +677,7 @@ async function renderAgentDirectory() {
   });
 }
 
-// ১০. স্টক মার্কেট ও আপনার চাওয়া -৫% থেকে +৫% কমিশন রেঞ্জ
+// স্টক মার্কেট
 let activeInvestStock = null;
 
 function initStockMarket() {
@@ -825,7 +823,7 @@ async function checkInvestmentsExpiry() {
   }
 }
 
-// ১১. ডায়নামিক বাটন ও ভিডিও
+// বাটন ও ভিডিও
 function renderDynamicButtons() {
   const wrapper = document.getElementById("dynamicActionBarWrapper");
   const bar = document.getElementById("customActionBar");
@@ -886,7 +884,7 @@ function renderCompanyPosts() {
   });
 }
 
-// কনফার্মেশন ও মোডাল হেল্পার
+// কনফার্মেশন ও মোডাল
 function requestConfirm(msg, callback) {
   document.getElementById("confirmMessage").innerText = msg;
   pendingConfirmCallback = callback;
