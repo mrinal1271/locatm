@@ -150,19 +150,19 @@
         <li>
           <button class="drawer-btn" onclick="switchAdminSection('secDepositMethods')">
             <div class="btn-icon-wrap bg-dep">💳</div>
-            <span>ডিপোজিট মেথডস কনফিগ</span>
+            <span>ডিপোজিট মেথডস ও লিমিট</span>
           </button>
         </li>
         <li>
           <button class="drawer-btn" onclick="switchAdminSection('secWithdrawMethods')">
             <div class="btn-icon-wrap bg-wtd">💸</div>
-            <span>উত্তোলন মেথডস ও ফি কনফিগ</span>
+            <span>উত্তোলন মেথডস ও লিমিট কনফিগ</span>
           </button>
         </li>
         <li>
           <button class="drawer-btn" onclick="switchAdminSection('secStocks')">
             <div class="btn-icon-wrap bg-his">📈</div>
-            <span>১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট</span>
+            <span>১০০+ স্টক কমিশন ও রিসেট কন্ট্রোল</span>
           </button>
         </li>
         <li>
@@ -180,7 +180,7 @@
         <li>
           <button class="drawer-btn" onclick="switchAdminSection('secSettings')">
             <div class="btn-icon-wrap" style="background:rgba(139,92,246,0.2); color:#c084fc;">⚙️</div>
-            <span>ফি, রোডম্যাপ, নোটিস ও সেটিংস</span>
+            <span>ফি, নোটিস ও প্ল্যাটফর্ম সেটিংস</span>
           </button>
         </li>
       </ul>
@@ -189,7 +189,7 @@
     <!-- কন্টেইনার -->
     <div class="container" style="margin-top:20px;">
 
-      <!-- সেকশন ১: ড্যাশবোর্ড ওভারভিউ (মোট সক্রিয় ইনভেস্টমেন্ট মেট্রিকসহ) -->
+      <!-- সেকশন ১: ড্যাশবোর্ড ওভারভিউ -->
       <div id="secOverview" class="admin-panel-section active">
         <div class="section-title">
           <span>📊 প্ল্যাটফর্ম লাইভ মেট্রিক্স ও ওভারভিউ</span>
@@ -347,11 +347,22 @@
         </div>
       </div>
 
-      <!-- সেকশন ৫: ডিপোজিট মেথডস -->
+      <!-- সেকশন ৫: ডিপোজিট মেথডস ও মিনিমাম ডিপোজিট লিমিট -->
       <div id="secDepositMethods" class="admin-panel-section">
         <div class="section-title">
-          <span>💳 ডিপোজিট মেথডস কনফিগারেশন</span>
+          <span>💳 ডিপোজিট মেথডস ও লিমিট কনফিগারেশন</span>
         </div>
+        
+        <!-- গ্লোবাল মিনিমাম ডিপোজিট লিমিট সেটার -->
+        <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px; margin-bottom:16px; max-width:480px;">
+          <h4 style="color:#34d399; margin-bottom:8px;">💵 সর্বনিম্ন ডিপোজিট সীমা (Minimum Deposit Limit)</h4>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">ইউজার কমপক্ষে কত ডলার ডিপোজিট করতে পারবে তা এখানে সেট করুন।</p>
+          <div style="display:flex; gap:8px;">
+            <input type="number" id="settingMinDepositInput" class="input-field" style="margin-bottom:0;" placeholder="যেমন: 1.0" min="0.1" step="0.1">
+            <button class="btn btn-primary" onclick="saveMinDepositLimit()">সেভ লিমিট</button>
+          </div>
+        </div>
+
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
           <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
             <h4 style="color:#34d399; margin-bottom:10px;">➕ নতুন ডিপোজিট মেথড</h4>
@@ -375,11 +386,33 @@
         </div>
       </div>
 
-      <!-- সেকশন ৬: উত্তোলন মেথডস ও ফি -->
+      <!-- সেকশন ৬: উত্তোলন মেথডস ও পৃথক লিমিট কন্ট্রোল -->
       <div id="secWithdrawMethods" class="admin-panel-section">
         <div class="section-title">
-          <span>💸 উত্তোলন মেথডস ও ফি কনফিগারেশন</span>
+          <span>💸 উত্তোলন মেথডস ও পৃথক লিমিট কনফিগারেশন</span>
         </div>
+
+        <!-- পৃথক মিনিমাম উত্তোলন লিমিট কন্ট্রোল (সাধারণ ইউজার বনাম এজেন্ট) -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:16px;">
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
+            <h4 style="color:#fbbf24; margin-bottom:8px;">👤 সাধারণ ইউজার মিনিমাম উত্তোলন ($)</h4>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">সাধারণ সদস্যদের জন্য সর্বনিম্ন উত্তোলন সীমা।</p>
+            <div style="display:flex; gap:8px;">
+              <input type="number" id="settingMinWithdrawUserInput" class="input-field" style="margin-bottom:0;" placeholder="যেমন: 50.0" min="1" step="1">
+              <button class="btn btn-primary" onclick="saveMinWithdrawUser()">সেভ লিমিট</button>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
+            <h4 style="color:#38bdf8; margin-bottom:8px;">📍 ভেরিফাইড এজেন্ট মিনিমাম উত্তোলন ($)</h4>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">অনুমোদিত এজেন্টদের জন্য সর্বনিম্ন উত্তোলন সীমা।</p>
+            <div style="display:flex; gap:8px;">
+              <input type="number" id="settingMinWithdrawAgentInput" class="input-field" style="margin-bottom:0;" placeholder="যেমন: 10.0" min="1" step="1">
+              <button class="btn btn-primary" onclick="saveMinWithdrawAgent()">সেভ লিমিট</button>
+            </div>
+          </div>
+        </div>
+
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
           <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px;">
             <h4 style="color:#fbbf24; margin-bottom:10px;">➕ নতুন উত্তোলন মেথড</h4>
@@ -406,13 +439,13 @@
         </div>
       </div>
 
-      <!-- সেকশন ৭: ১০০+ স্টক রেঞ্জ ও টাইমার বুস্ট -->
+      <!-- সেকশন ৭: ১০০+ স্টক কমিশন রেঞ্জ ও রিসেট সুবিধা -->
       <div id="secStocks" class="admin-panel-section">
         <div class="section-title">
-          <span>📈 ১০০+ স্টক কমিশন রেঞ্জ ও টাইমার বুস্ট</span>
+          <span>📈 ১০০+ স্টক কমিশন রেঞ্জ ও স্পেশাল বুস্ট কন্ট্রোল</span>
         </div>
         <div style="background:var(--bg-card); border:1px solid var(--glass-border); border-radius:var(--card-radius); padding:16px; margin-bottom:16px;">
-          <h4 style="color:#38bdf8; margin-bottom:8px;">গ্লোবাল অটো-কমিশন রেঞ্জ (-৫% থেকে +৫%)</h4>
+          <h4 style="color:#38bdf8; margin-bottom:8px;">গ্লোবাল অটো-কমিশন রেঞ্জ (-৫% থেকে +৫%)[cite: 2]</h4>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <label style="font-size:11px;">মিনিমাম (%):</label>
             <input type="number" id="autoMinPercent" class="input-field" style="width:80px; margin-bottom:0;" value="-5.0" step="0.1">
@@ -428,9 +461,10 @@
               <tr>
                 <th>কোম্পানি</th>
                 <th>টিকার</th>
-                <th>ম্যানুয়াল রেট (%)</th>
-                <th>টাইমার বুস্ট অফার (ঘণ্টা)</th>
-                <th>অ্যাকশন</th>
+                <th>ম্যানুয়াল রেট (%)[cite: 2]</th>
+                <th>টাইমার বুস্ট অফার (ঘণ্টা)[cite: 2]</th>
+                <th>স্ট্যাটাস</th>
+                <th>অ্যাকশন[cite: 2]</th>
               </tr>
             </thead>
             <tbody id="stockProfitTbody"></tbody>

@@ -19,6 +19,9 @@ let platformConfig = {
   feature_toggles: { agent_system: false, withdrawals: true, investments: true, p2p: true, trade_ltm: true },
   deposit_methods: [],
   withdraw_methods: [],
+  min_deposit_limit: 1.0,
+  min_withdraw_user: 50.0,
+  min_withdraw_agent: 10.0,
   withdraw_fee_percent: 0.0,
   p2p_fee_percent: 0.0,
   agent_security_fee: 10.0,
@@ -366,14 +369,18 @@ async function loadPlatformConfig() {
   if (platformConfig.marquee_notice && platformConfig.marquee_notice.trim() !== "") {
     const marqueeBar = document.getElementById("marqueeBarContainer");
     const marqueeTxt = document.getElementById("marqueeNoticeText");
-    marqueeTxt.innerText = platformConfig.marquee_notice;
-    marqueeBar.style.display = "flex";
+    if (marqueeTxt && marqueeBar) {
+      marqueeTxt.innerText = platformConfig.marquee_notice;
+      marqueeBar.style.display = "flex";
+    }
   } else {
-    document.getElementById("marqueeBarContainer").style.display = "none";
+    const marqueeBar = document.getElementById("marqueeBarContainer");
+    if (marqueeBar) marqueeBar.style.display = "none";
   }
 
   if (platformConfig.tutorial_video_url && platformConfig.tutorial_video_url.trim() !== "") {
-    document.getElementById("tutorialVideoIframe").src = platformConfig.tutorial_video_url;
+    const vIframe = document.getElementById("tutorialVideoIframe");
+    if (vIframe) vIframe.src = platformConfig.tutorial_video_url;
   }
 
   const wFee = parseFloat(platformConfig.withdraw_fee_percent || 0.0);
@@ -399,6 +406,13 @@ async function loadPlatformConfig() {
   const agentApplyLi = document.getElementById("agentApplyDrawerItem");
   if (agentApplyLi) {
     agentApplyLi.style.display = (platformConfig.feature_toggles && platformConfig.feature_toggles.agent_system === false) ? "none" : "block";
+  }
+
+  // ডিপোজিট প্লেসহোল্ডারে মিনিমাম লিমিট দেখানো
+  const depAmtInp = document.getElementById("depositAmountInput");
+  if (depAmtInp) {
+    const minD = parseFloat(platformConfig.min_deposit_limit || 1.0);
+    depAmtInp.placeholder = `মিনিমাম $${minD.toFixed(2)}`;
   }
 
   checkAndShowWelcomeNotice();
@@ -668,10 +682,15 @@ function updateUserUI() {
   document.getElementById("coinUsdVal").innerText = `($${(parseFloat(currentUser.ltm_balance || 0) * (platformConfig.ltm_rate || 0.10)).toFixed(2)})`;
   document.getElementById("totalProfit").innerText = `$${parseFloat(currentUser.total_profit || 0).toFixed(2)}`;
   
-  // এজেন্ট বনাম সাধারণ ইউজারের উত্তোলন সীমার হেল্প টেক্সট
+  // অ্যাডমিন কনফিগ অনুযায়ী মিনিমাম উত্তোলনের সঠিক সীমা
+  const minLimit = currentUser.is_agent ? parseFloat(platformConfig.min_withdraw_agent || 10.0) : parseFloat(platformConfig.min_withdraw_user || 50.0);
   const limitHelp = document.getElementById("withdrawLimitHelpText");
   if (limitHelp) {
-    limitHelp.innerText = currentUser.is_agent ? "এজেন্ট ন্যূনতম উত্তোলন: $১০.০০" : "সাধারণ ইউজার ন্যূনতম উত্তোলন: $৫০.০০";
+    limitHelp.innerText = currentUser.is_agent ? `এজেন্ট ন্যূনতম উত্তোলন: $${minLimit.toFixed(2)}` : `সাধারণ ইউজার ন্যূনতম উত্তোলন: $${minLimit.toFixed(2)}`;
+  }
+  const wAmtInp = document.getElementById("withdrawAmountInput");
+  if (wAmtInp) {
+    wAmtInp.placeholder = `মিনিমাম $${minLimit.toFixed(2)}`;
   }
 
   document.getElementById("profUserId").value = currentUser.user_id;
@@ -810,8 +829,9 @@ async function submitDeposit() {
   const amt = parseFloat(document.getElementById("depositAmountInput").value);
   const trx = document.getElementById("depositTrxInput").value.trim();
 
-  if (!curMethod || isNaN(amt) || amt <= 0 || !trx) {
-    alert("সঠিক পরিমাণ এবং Transaction ID লিখুন!");
+  const minD = parseFloat(platformConfig.min_deposit_limit || 1.0);
+  if (!curMethod || isNaN(amt) || amt < minD || !trx) {
+    alert(`ন্যূনতম $${minD.toFixed(2)} ডিপোজিট করতে হবে এবং সঠিক Transaction ID দিতে হবে!`);
     return;
   }
 
@@ -839,7 +859,7 @@ async function submitDeposit() {
   });
 }
 
-// উত্তোলন (এজেন্ট বনাম সাধারণ ইউজার লিমিট)
+// উত্তোলন
 function renderWithdrawMethods() {
   const sel = document.getElementById("withdrawMethodSelect");
   if (!sel) return;
@@ -869,8 +889,8 @@ async function submitWithdrawal() {
   const method = document.getElementById("withdrawMethodSelect").value;
   const target = document.getElementById("withdrawAddressInput").value.trim();
 
-  // উত্তোলন সীমা যাচাই
-  const minLimit = currentUser.is_agent ? 10.0 : 50.0;
+  // অ্যাডমিন নির্ধারিত মিনিমাম উত্তোলন যাচাই
+  const minLimit = currentUser.is_agent ? parseFloat(platformConfig.min_withdraw_agent || 10.0) : parseFloat(platformConfig.min_withdraw_user || 50.0);
   if (isNaN(amt) || amt < minLimit) {
     alert(`আপনার জন্য ন্যূনতম উত্তোলন সীমা $${minLimit.toFixed(2)} ডলার!`);
     return;
@@ -916,7 +936,7 @@ async function submitWithdrawal() {
   });
 }
 
-// ================= P2P ট্রান্সফার লজিক (কোম্পানি বনাম এজেন্ট কমিশন) =================
+// P2P ফান্ড ট্রান্সফার
 async function submitP2PTransfer() {
   if (platformConfig.feature_toggles && platformConfig.feature_toggles.p2p === false) {
     alert("P2P ট্রান্সফার বন্ধ আছে।");
@@ -956,19 +976,17 @@ async function submitP2PTransfer() {
   requestConfirm(`${recipient.name} (${targetId})-কে $${amt} পাঠাতে চান?\nফি (${p2pFeePercent}%): $${p2pFeeAmount.toFixed(2)}\nমোট কাটবে: $${totalSenderDeduct.toFixed(2)}`, async () => {
     const senderBal = parseFloat(currentUser.main_balance) - totalSenderDeduct;
 
-    // যদি প্রাপক সক্রিয় এজেন্ট হন, তবে সে কমিশন পাবে; অন্যথায় কমিশন পাবে কোম্পানি (ইউজার শুধু মূল $amt পাবে)
+    // যদি প্রাপক সক্রিয় এজেন্ট হন তবে সে ফি পাবে কমিশন হিসেবে, সাধারণ ইউজার হলে কোম্পানি ফি পাবে (ইউজার শুধু $amt পাবে)
     let recipientReceives = amt;
     if (recipient.is_agent === true) {
-      recipientReceives = amt + p2pFeeAmount; // এজেন্ট হিসেবে ফি কমিশন লাভ
+      recipientReceives = amt + p2pFeeAmount;
     }
 
     const recBal = parseFloat(recipient.main_balance) + recipientReceives;
 
-    // ডাটাবেজ আপডেট
     await dbClient.from('users').update({ main_balance: senderBal }).eq('user_id', currentUser.user_id);
     await dbClient.from('users').update({ main_balance: recBal }).eq('user_id', targetId);
 
-    // ট্রানজেকশন রেকর্ড
     await dbClient.from('transactions').insert([
       { user_id: currentUser.user_id, type: 'p2p_send', amount: amt, target_user_id: targetId, status: 'approved' },
       { user_id: targetId, type: 'p2p_receive', amount: recipientReceives, target_user_id: currentUser.user_id, status: 'approved' }
@@ -1052,6 +1070,9 @@ function renderHistoryList(txList) {
     } else if (t.type === 'agent_security_fee') {
       title = `🛡️ এজেন্ট সিকিউরিটি ফি`;
       sign = '-';
+    } else if (t.type === 'stock_return') {
+      title = `📈 শেয়ার রিটার্ন (${t.method || 'Stock'})`;
+      sign = '+';
     }
 
     if (t.status === 'approved') badgeColor = 'var(--accent)';
@@ -1201,7 +1222,7 @@ function initStockMarket() {
   });
 }
 
-// লকড ব্যালেন্সে ক্লিকে লাইভ পোর্টফোলিও ওপেন
+// লকড ব্যালেন্সে ক্লিকে লাইভ পোর্টফোলিও ওপেন (কোনো পার্সেন্টেজ থাকবে না)
 async function openLockedInvestDetails() {
   openModal('activeInvestDetailsModal');
   const modalContainer = document.getElementById("modalActiveInvestList");
@@ -1230,7 +1251,7 @@ async function confirmStockInvest() {
 
   closeModal("investModal");
 
-  // রেট নির্ধারণ (ব্যাকগ্রাউন্ডে বুস্ট থাকলে অটো কাজ করবে, ইউজার কিছু দেখবে না)
+  // রেট নির্ধারণ (ব্যাকগ্রাউন্ডে বুস্ট বা ম্যানুয়াল থাকলে কাজ করবে, ইউজার কিছু দেখতে পাবে না)
   const settings = platformConfig.stock_profit_settings || {};
   let finalRate = 0;
 
@@ -1238,7 +1259,7 @@ async function confirmStockInvest() {
   const boost = boosts[activeInvestStock.id];
   if (boost && new Date(boost.expires_at) > new Date()) {
     finalRate = parseFloat(boost.rate);
-  } else if (settings.manual_overrides && settings.manual_overrides[activeInvestStock.id] !== undefined) {
+  } else if (settings.manual_overrides && settings.manual_overrides[activeInvestStock.id] !== undefined && settings.manual_overrides[activeInvestStock.id] !== null) {
     finalRate = parseFloat(settings.manual_overrides[activeInvestStock.id]);
   } else {
     const minP = parseFloat(settings.min_percent !== undefined ? settings.min_percent : -5.0);
@@ -1281,7 +1302,7 @@ async function confirmStockInvest() {
   });
 }
 
-// সক্রিয় ইনভেস্টমেন্ট এবং লকড ব্যালেন্স পপআপ রেন্ডার
+// সক্রিয় ইনভেস্টমেন্ট ডিসপ্লে (প্রফিট পার্সেন্টেজ পুরোপুরি উধাও) এবং ২৪ ঘণ্টা পর অটোমেটিক ক্রেডিট ও হিস্টোরি এন্ট্রি
 async function checkInvestmentsExpiry() {
   if (!currentUser) return;
   const dbClient = getDB();
@@ -1311,6 +1332,7 @@ async function checkInvestmentsExpiry() {
       return;
     }
 
+    // কোনো পার্সেন্টেজ ছাড়া পরিচ্ছন্ন ডিসপ্লে
     let htmlCards = "";
     list.forEach(i => {
       const remainingMs = new Date(i.ends_at) - new Date();
@@ -1329,8 +1351,7 @@ async function checkInvestmentsExpiry() {
             <small style="color:var(--text-muted); font-size:10px;">${remainingText}</small>
           </div>
           <div style="text-align:right;">
-            <span style="color:${i.profit_percent >= 0 ? 'var(--accent)' : 'var(--danger)'}; font-weight:800; font-size:14px;">${i.profit_percent >= 0 ? '+' : ''}${i.profit_percent}%</span><br>
-            <small style="color:var(--gold); font-size:10px; font-weight:700;">চলমান (Active)</small>
+            <small style="color:var(--gold); font-size:11px; font-weight:700;">চলমান (Active)</small>
           </div>
         </div>
       `;
@@ -1339,6 +1360,7 @@ async function checkInvestmentsExpiry() {
     if (container) container.innerHTML = htmlCards;
     if (modalContainer) modalContainer.innerHTML = htmlCards;
 
+    // ২৪ ঘণ্টা শেষ হলে স্বয়ংক্রিয় প্রফিট ক্রেডিট ও ট্রানজেকশন হিস্টোরিতে যুক্ত হওয়া
     const now = new Date();
     for (let inv of list) {
       if (inv.ends_at && new Date(inv.ends_at) <= now) {
@@ -1350,18 +1372,30 @@ async function checkInvestmentsExpiry() {
         const updatedLocked = Math.max(0, parseFloat(currentUser.locked_balance) - capital);
         const updatedTotalProfit = parseFloat(currentUser.total_profit || 0) + profit;
 
+        // ব্যালেন্স আপডেট
         await dbClient.from('users').update({
           main_balance: updatedMain,
           locked_balance: updatedLocked,
           total_profit: updatedTotalProfit
         }).eq('user_id', currentUser.user_id);
 
+        // ইনভেস্টমেন্ট স্ট্যাটাস সম্পন্ন করা
         await dbClient.from('investments').update({ status: 'completed' }).eq('id', inv.id);
+
+        // লেনদেন হিস্টোরিতে স্বয়ংক্রিয় এন্ট্রি দেওয়া
+        await dbClient.from('transactions').insert([{
+          user_id: currentUser.user_id,
+          type: 'stock_return',
+          amount: totalReturn,
+          method: `${inv.stock_name} (মুনাফা সহ)`,
+          status: 'approved'
+        }]);
 
         currentUser.main_balance = updatedMain;
         currentUser.locked_balance = updatedLocked;
         currentUser.total_profit = updatedTotalProfit;
         updateUserUI();
+        await loadUserTransactionHistory();
       }
     }
   } catch (err) {

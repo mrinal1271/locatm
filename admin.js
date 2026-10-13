@@ -19,6 +19,9 @@ let adminSettings = {
   feature_toggles: { agent_system: false, withdrawals: true, investments: true, p2p: true, trade_ltm: true },
   deposit_methods: [],
   withdraw_methods: [],
+  min_deposit_limit: 1.0,
+  min_withdraw_user: 50.0,
+  min_withdraw_agent: 10.0,
   withdraw_fee_percent: 0.0,
   p2p_fee_percent: 0.0,
   agent_security_fee: 10.0,
@@ -30,7 +33,7 @@ let adminSettings = {
   custom_buttons: []
 };
 
-// স্টক কোম্পানি তালিকা
+// ১০৪টি স্টক কোম্পানির পূর্ণাঙ্গ তালিকা
 const ADMIN_STOCKS = [
   { id: 1, name: "Apple Inc.", ticker: "AAPL" },
   { id: 2, name: "Microsoft Corp.", ticker: "MSFT" },
@@ -41,7 +44,101 @@ const ADMIN_STOCKS = [
   { id: 7, name: "Meta Platforms", ticker: "META" },
   { id: 8, name: "Berkshire Hathaway", ticker: "BRK" },
   { id: 9, name: "Taiwan Semi (TSMC)", ticker: "TSM" },
-  { id: 10, name: "Tencent Holdings", ticker: "TCEHY" }
+  { id: 10, name: "Tencent Holdings", ticker: "TCEHY" },
+  { id: 11, name: "Samsung Electronics", ticker: "SSNG" },
+  { id: 12, name: "Visa International", ticker: "V" },
+  { id: 13, name: "Mastercard Inc.", ticker: "MA" },
+  { id: 14, name: "JPMorgan Chase", ticker: "JPM" },
+  { id: 15, name: "Johnson & Johnson", ticker: "JNJ" },
+  { id: 16, name: "Walmart Global", ticker: "WMT" },
+  { id: 17, name: "Procter & Gamble", ticker: "PG" },
+  { id: 18, name: "Oracle Corp.", ticker: "ORCL" },
+  { id: 19, name: "ASML Holding", ticker: "ASML" },
+  { id: 20, name: "Toyota Motor Corp.", ticker: "TM" },
+  { id: 21, name: "Alibaba Group", ticker: "BABA" },
+  { id: 22, name: "Coca-Cola Company", ticker: "KO" },
+  { id: 23, name: "PepsiCo International", ticker: "PEP" },
+  { id: 24, name: "Costco Wholesale", ticker: "COST" },
+  { id: 25, name: "Netflix Streaming", ticker: "NFLX" },
+  { id: 26, name: "Broadcom Inc.", ticker: "AVGO" },
+  { id: 27, name: "Cisco Systems", ticker: "CSCO" },
+  { id: 28, name: "Adobe Creative", ticker: "ADBE" },
+  { id: 29, name: "Walt Disney Co.", ticker: "DIS" },
+  { id: 30, name: "Shell Energy", ticker: "SHEL" },
+  { id: 31, name: "Exxon Mobil", ticker: "XOM" },
+  { id: 32, name: "Chevron Oil", ticker: "CVX" },
+  { id: 33, name: "Sony Group", ticker: "SONY" },
+  { id: 34, name: "Intel Corp.", ticker: "INTC" },
+  { id: 35, name: "AMD Micro Devices", ticker: "AMD" },
+  { id: 36, name: "Qualcomm Tech", ticker: "QCOM" },
+  { id: 37, name: "Nike Athletics", ticker: "NKE" },
+  { id: 38, name: "McDonald's Corp.", ticker: "MCD" },
+  { id: 39, name: "Starbucks Coffee", ticker: "SBUX" },
+  { id: 40, name: "Pfizer Health", ticker: "PFE" },
+  { id: 41, name: "AstraZeneca", ticker: "AZN" },
+  { id: 42, name: "Novartis Pharma", ticker: "NVS" },
+  { id: 43, name: "SAP Software", ticker: "SAP" },
+  { id: 44, name: "Siemens Energy", ticker: "SIE" },
+  { id: 45, name: "IBM Computing", ticker: "IBM" },
+  { id: 46, name: "Airbus Aerospace", ticker: "AIR" },
+  { id: 47, name: "Boeing Aviation", ticker: "BA" },
+  { id: 48, name: "SpaceX Starlink", ticker: "SPCX" },
+  { id: 49, name: "Uber Technologies", ticker: "UBER" },
+  { id: 50, name: "Spotify Music", ticker: "SPOT" },
+  { id: 51, name: "Airbnb Travel", ticker: "ABNB" },
+  { id: 52, name: "Shopify E-Commerce", ticker: "SHOP" },
+  { id: 53, name: "PayPal Payments", ticker: "PYPL" },
+  { id: 54, name: "Square Block", ticker: "SQ" },
+  { id: 55, name: "Robinhood Finance", ticker: "HOOD" },
+  { id: 56, name: "Binance Ecosystem", ticker: "BNB" },
+  { id: 57, name: "Coinbase Global", ticker: "COIN" },
+  { id: 58, name: "Sony Music", ticker: "SME" },
+  { id: 59, name: "Nintendo Corp.", ticker: "NTDOY" },
+  { id: 60, name: "EA Electronic Arts", ticker: "EA" },
+  { id: 61, name: "Target Retail", ticker: "TGT" },
+  { id: 62, name: "LVMH Luxury", ticker: "MC" },
+  { id: 63, name: "Hermes Fashion", ticker: "RMS" },
+  { id: 64, name: "Ferrari Motors", ticker: "RACE" },
+  { id: 65, name: "Porsche Auto", ticker: "P911" },
+  { id: 66, name: "BMW Group", ticker: "BMW" },
+  { id: 67, name: "Mercedes-Benz", ticker: "MBG" },
+  { id: 68, name: "Audi Motors", ticker: "AUDI" },
+  { id: 69, name: "Honda Motor", ticker: "HMC" },
+  { id: 70, name: "Hyundai Auto", ticker: "HYMTF" },
+  { id: 71, name: "FedEx Express", ticker: "FDX" },
+  { id: 72, name: "UPS Logistics", ticker: "UPS" },
+  { id: 73, name: "DHL Global", ticker: "DPW" },
+  { id: 74, name: "Baidu Search", ticker: "BIDU" },
+  { id: 75, name: "JD.com Retail", ticker: "JD" },
+  { id: 76, name: "Xiaomi Tech", ticker: "XIACF" },
+  { id: 77, name: "BYD Electric Auto", ticker: "BYDDY" },
+  { id: 78, name: "Foxconn Industry", ticker: "HNHPF" },
+  { id: 79, name: "Dell Technologies", ticker: "DELL" },
+  { id: 80, name: "HP Computers", ticker: "HPQ" },
+  { id: 81, name: "Lenovo Group", ticker: "LNVGY" },
+  { id: 82, name: "Canon Optics", ticker: "CAJ" },
+  { id: 83, name: "Nikon Imaging", ticker: "NINOY" },
+  { id: 84, name: "Panasonic Corp.", ticker: "PCRFY" },
+  { id: 85, name: "LG Electronics", ticker: "LG" },
+  { id: 86, name: "Tata Motors Global", ticker: "TTM" },
+  { id: 87, name: "Infosys Tech", ticker: "INFY" },
+  { id: 88, name: "Reliance Industries", ticker: "RIGD" },
+  { id: 89, name: "Unilever Consumer", ticker: "UL" },
+  { id: 90, name: "Nestle Nutrition", ticker: "NSRGY" },
+  { id: 91, name: "Mondelez Snacks", ticker: "MDLZ" },
+  { id: 92, name: "Danone Dairy", ticker: "DANOY" },
+  { id: 93, name: "Rolex Holdings", ticker: "ROLX" },
+  { id: 94, name: "Zara Inditex", ticker: "IDEXY" },
+  { id: 95, name: "H&M Fashion", ticker: "HNNMY" },
+  { id: 96, name: "Puma Sportswear", ticker: "PUMSY" },
+  { id: 97, name: "Lego Group", ticker: "LEGO" },
+  { id: 98, name: "Colgate-Palmolive", ticker: "CL" },
+  { id: 99, name: "Red Bull Energy", ticker: "RDBL" },
+  { id: 100, name: "Monster Beverage", ticker: "MNST" },
+  { id: 101, name: "Zoom Communications", ticker: "ZM" },
+  { id: 102, name: "Slack Technologies", ticker: "WORK" },
+  { id: 103, name: "Dropbox Cloud", ticker: "DBX" },
+  { id: 104, name: "Palantir Tech", ticker: "PLTR" }
 ];
 
 function getDB() {
@@ -106,7 +203,7 @@ function adminLogout() {
   window.location.reload();
 }
 
-// রিয়েল-টাইম লিসেনার (কোনো রিফ্রেশ লাগবে না)
+// রিয়েল-টাইম লিসেনার
 function initAdminRealtimeListener() {
   const dbClient = getDB();
   if (!dbClient) return;
@@ -204,6 +301,11 @@ async function loadPlatformOverview() {
     document.getElementById("statPendingWithdrawals").innerText = `${pendingWithdraws} টি`;
     document.getElementById("statLtmRate").innerText = `$${parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2)}`;
 
+    // ইনপুট বক্সসমূহে কনফিগ ডাটা লোড
+    document.getElementById("settingMinDepositInput").value = parseFloat(adminSettings.min_deposit_limit || 1.0).toFixed(2);
+    document.getElementById("settingMinWithdrawUserInput").value = parseFloat(adminSettings.min_withdraw_user || 50.0).toFixed(2);
+    document.getElementById("settingMinWithdrawAgentInput").value = parseFloat(adminSettings.min_withdraw_agent || 10.0).toFixed(2);
+
     document.getElementById("settingLtmRateInput").value = parseFloat(adminSettings.ltm_rate || 0.10).toFixed(2);
     document.getElementById("settingWtdFeeInput").value = parseFloat(adminSettings.withdraw_fee_percent || 0.0);
     document.getElementById("settingP2pFeeInput").value = parseFloat(adminSettings.p2p_fee_percent || 0.0);
@@ -235,6 +337,49 @@ async function toggleMasterFeature(featureKey, isEnabled) {
       value: adminSettings.feature_toggles
     });
     alert("আপডেট হয়েছে!");
+  });
+}
+
+// লিমিট সংরক্ষণ ফাংশনসমূহ
+async function saveMinDepositLimit() {
+  const val = parseFloat(document.getElementById("settingMinDepositInput").value);
+  if (isNaN(val) || val <= 0) {
+    alert("সঠিক ডিপোজিট লিমিট লিখুন!");
+    return;
+  }
+  adminConfirmAction(`সর্বনিম্ন ডিপোজিট সীমা $${val.toFixed(2)} সেট করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.min_deposit_limit = val;
+    await dbClient.from('platform_settings').upsert({ key: 'min_deposit_limit', value: val });
+    alert("ডিপোজিট সীমা সেভ হয়েছে!");
+  });
+}
+
+async function saveMinWithdrawUser() {
+  const val = parseFloat(document.getElementById("settingMinWithdrawUserInput").value);
+  if (isNaN(val) || val <= 0) {
+    alert("সঠিক উত্তোলন লিমিট লিখুন!");
+    return;
+  }
+  adminConfirmAction(`সাধারণ ইউজারের সর্বনিম্ন উত্তোলন $${val.toFixed(2)} সেট করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.min_withdraw_user = val;
+    await dbClient.from('platform_settings').upsert({ key: 'min_withdraw_user', value: val });
+    alert("সাধারণ ইউজার উত্তোলন সীমা সেভ হয়েছে!");
+  });
+}
+
+async function saveMinWithdrawAgent() {
+  const val = parseFloat(document.getElementById("settingMinWithdrawAgentInput").value);
+  if (isNaN(val) || val <= 0) {
+    alert("সঠিক উত্তোলন লিমিট লিখুন!");
+    return;
+  }
+  adminConfirmAction(`এজেন্টের সর্বনিম্ন উত্তোলন $${val.toFixed(2)} সেট করতে চান?`, async () => {
+    const dbClient = getDB();
+    adminSettings.min_withdraw_agent = val;
+    await dbClient.from('platform_settings').upsert({ key: 'min_withdraw_agent', value: val });
+    alert("এজেন্ট উত্তোলন সীমা সেভ হয়েছে!");
   });
 }
 
@@ -531,7 +676,7 @@ async function sendAdminDirectMessage() {
   }
 }
 
-// ডিপোজিট ও উইথড্রাল মেথডস
+// ডিপোজিট ও উত্তোলন মেথডস
 function renderActiveDepositMethods() {
   const tbody = document.getElementById("activeDepMethodsTbody");
   if (!tbody) return;
@@ -647,6 +792,7 @@ async function saveWithdrawFee() {
   });
 }
 
+// ১০০+ স্টক রেন্ডার ও শতভাগ কার্যকরী অটো-রিসেট
 function renderStocksProfitTable() {
   const tbody = document.getElementById("stockProfitTbody");
   if (!tbody) return;
@@ -654,14 +800,27 @@ function renderStocksProfitTable() {
 
   const settings = adminSettings.stock_profit_settings || { mode: 'auto', min_percent: -5.0, max_percent: 5.0, manual_overrides: {}, timed_boosts: {} };
   const overrides = settings.manual_overrides || {};
+  const boosts = settings.timed_boosts || {};
 
   ADMIN_STOCKS.forEach(stk => {
-    const isManual = overrides[stk.id] !== undefined;
+    const hasManual = overrides[stk.id] !== undefined && overrides[stk.id] !== null;
+    const boost = boosts[stk.id];
+    const hasBoost = boost && new Date(boost.expires_at) > new Date();
+
+    let statusHtml = '<span style="color:#38bdf8;">অটো রেঞ্জে চলমান</span>';
+    if (hasBoost) {
+      statusHtml = `<span style="color:var(--gold); font-weight:700;">🔥 বুস্ট: +${boost.rate}%</span>`;
+    } else if (hasManual) {
+      statusHtml = `<span style="color:var(--accent); font-weight:700;">ম্যানুয়াল: ${overrides[stk.id]}%</span>`;
+    }
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${stk.name}</strong></td>
       <td><span style="color:#38bdf8;">${stk.ticker}</span></td>
-      <td><input type="number" id="manual_rate_${stk.id}" value="${isManual ? overrides[stk.id] : ''}" placeholder="${isManual ? overrides[stk.id] : 'Auto'}" step="0.1" style="width:65px; padding:3px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:#fff; text-align:center;"> %</td>
+      <td>
+        <input type="number" id="manual_rate_${stk.id}" value="${hasManual ? overrides[stk.id] : ''}" placeholder="${hasManual ? overrides[stk.id] : 'Auto'}" step="0.1" style="width:65px; padding:3px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:#fff; text-align:center;"> %
+      </td>
       <td>
         <div style="display:flex; gap:3px;">
           <input type="number" id="boost_rate_${stk.id}" placeholder="Rate%" style="width:50px; padding:3px; background:#0b0f19; border:1px solid var(--glass-border); border-radius:6px; color:var(--accent); text-align:center;">
@@ -669,7 +828,11 @@ function renderStocksProfitTable() {
           <button class="btn btn-accent" style="padding:3px 6px; font-size:10px;" onclick="applyTimedStockBoost(${stk.id}, '${stk.name}')">Boost</button>
         </div>
       </td>
-      <td><button class="btn btn-outline" style="padding:3px 6px; font-size:10px;" onclick="saveSingleStockManualRate(${stk.id}, '${stk.name}')">Save</button></td>
+      <td>${statusHtml}</td>
+      <td>
+        <button class="btn btn-outline" style="padding:3px 6px; font-size:10px;" onclick="saveSingleStockManualRate(${stk.id}, '${stk.name}')">Save</button>
+        ${(hasManual || hasBoost) ? `<button class="btn btn-danger" style="padding:3px 6px; font-size:10px; margin-left:3px;" onclick="resetStockCompletelyToAuto(${stk.id}, '${stk.name}')">Reset to Auto</button>` : ''}
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -690,14 +853,21 @@ async function saveGlobalStockRange() {
       value: adminSettings.stock_profit_settings
     });
     alert("রেঞ্জ সেভ হয়েছে!");
+    renderStocksProfitTable();
   });
 }
 
 async function saveSingleStockManualRate(stockId, stockName) {
-  const val = document.getElementById(`manual_rate_${stockId}`).value.trim();
-  if (val === "") return;
-  const rate = parseFloat(val);
+  const inputEl = document.getElementById(`manual_rate_${stockId}`);
+  const val = inputEl.value.trim();
 
+  // যদি খালি করে সেভ চাপ দেওয়া হয়, তবে স্বয়ংক্রিয়ভাবে রিসেট হয়ে যাবে
+  if (val === "") {
+    await resetStockCompletelyToAuto(stockId, stockName);
+    return;
+  }
+
+  const rate = parseFloat(val);
   adminConfirmAction(`${stockName}-এর রেট ${rate}% নির্ধারণ করতে চান?`, async () => {
     const dbClient = getDB();
     if (!adminSettings.stock_profit_settings.manual_overrides) {
@@ -709,7 +879,30 @@ async function saveSingleStockManualRate(stockId, stockName) {
       key: 'stock_profit_settings',
       value: adminSettings.stock_profit_settings
     });
-    alert("সেভ হয়েছে!");
+    alert(`${stockName}-এর রেট সফলভাবে সেভ হয়েছে!`);
+    renderStocksProfitTable();
+  });
+}
+
+// ১০০% কার্যকরী স্টক রিসেট লজিক
+async function resetStockCompletelyToAuto(stockId, stockName) {
+  adminConfirmAction(`${stockName}-এর সকল ম্যানুয়াল রেট ও বুস্ট মুছে পুরোপুরি অটো-রেঞ্জে নিতে চান?`, async () => {
+    const dbClient = getDB();
+    
+    if (adminSettings.stock_profit_settings.manual_overrides) {
+      delete adminSettings.stock_profit_settings.manual_overrides[stockId];
+    }
+    if (adminSettings.stock_profit_settings.timed_boosts) {
+      delete adminSettings.stock_profit_settings.timed_boosts[stockId];
+    }
+
+    await dbClient.from('platform_settings').upsert({
+      key: 'stock_profit_settings',
+      value: adminSettings.stock_profit_settings
+    });
+
+    alert(`${stockName} সফলভাবে স্বাভাবিক অটো-রেঞ্জে ফিরে এসেছে!`);
+    renderStocksProfitTable();
   });
 }
 
@@ -717,7 +910,10 @@ async function applyTimedStockBoost(stockId, stockName) {
   const rateVal = parseFloat(document.getElementById(`boost_rate_${stockId}`).value);
   const hrsVal = parseFloat(document.getElementById(`boost_hrs_${stockId}`).value);
 
-  if (isNaN(rateVal) || isNaN(hrsVal) || hrsVal <= 0) return;
+  if (isNaN(rateVal) || isNaN(hrsVal) || hrsVal <= 0) {
+    alert("সঠিক রেট ও ঘণ্টা লিখুন!");
+    return;
+  }
 
   adminConfirmAction(`${stockName}-এ ${hrsVal} ঘণ্টার জন্য বুস্ট দিতে চান?`, async () => {
     const dbClient = getDB();
@@ -733,6 +929,7 @@ async function applyTimedStockBoost(stockId, stockName) {
       value: adminSettings.stock_profit_settings
     });
     alert("বুস্ট অ্যাক্টিভ হয়েছে!");
+    renderStocksProfitTable();
   });
 }
 
